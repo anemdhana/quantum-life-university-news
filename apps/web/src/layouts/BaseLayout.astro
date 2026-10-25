@@ -1,0 +1,78 @@
+---
+import '../styles/qlu.css'
+
+interface Props {
+  title: string
+  lang?: 'te' | 'en'
+  description?: string
+  mainClass?: string
+  /** Compact chrome for flip-reader or dark news feed */
+  variant?: 'default' | 'reader' | 'news'
+}
+
+const {
+  title,
+  lang = 'en',
+  description = 'Quantum Life University — Jnanodayam & monthly magazine',
+  mainClass = '',
+  variant = 'default',
+} = Astro.props
+const path = Astro.url.pathname
+const isReader = variant === 'reader'
+const isNews = variant === 'news'
+---
+
+<!doctype html>
+<html lang={lang}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="description" content={description} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>{title}</title>
+  </head>
+  <body class:list={[`lang-${lang}`, isReader && 'is-reader', isNews && 'is-news']}>
+    <div
+      class:list={[
+        'qlu-site',
+        isReader && 'qlu-site--reader',
+        isNews && 'qlu-site--news',
+      ]}
+    >
+      {
+        isReader ? (
+          <header class="reader-chrome">
+            <a class="reader-chrome-brand" href="/">QLU</a>
+            <nav class="reader-chrome-nav" aria-label="Primary">
+              <a href="/issues/">Magazine</a>
+              <a href="/jnanodayam/">Jnanodayam</a>
+            </nav>
+          </header>
+        ) : isNews ? null : (
+          <header class="qlu-masthead">
+            <p class="qlu-kicker">Quantum Life University</p>
+            <p class="qlu-brand">నెలవారీ పత్రిక · Jnanodayam</p>
+            <nav class="qlu-nav" aria-label="Primary">
+              <a href="/" aria-current={path === '/' ? 'page' : undefined}>
+                Home
+              </a>
+              <a
+                href="/jnanodayam/"
+                aria-current={path.startsWith('/jnanodayam') ? 'page' : undefined}
+              >
+                Jnanodayam
+              </a>
+              <a href="/issues/" aria-current={path.startsWith('/issues') ? 'page' : undefined}>
+                Magazine
+              </a>
+            </nav>
+          </header>
+        )
+      }
+      <main class:list={['qlu-main', !isReader && !isNews && 'wide', mainClass]}>
+        <slot />
+      </main>
+      {!isReader && !isNews ? <footer class="qlu-footer">Quantum Life University</footer> : null}
+    </div>
+  </body>
+</html>

@@ -1,0 +1,516 @@
+---
+export const prerender = false
+
+import BaseLayout from '../../../layouts/BaseLayout.astro'
+import {
+  getIssue,
+  mediaUrl,
+  type Lang,
+  type MediaDoc,
+} from '../../../lib/payload'
+import { isLexicalEmpty, lexicalToHtml, lexicalToPlain } from '../../../lib/richText'
+
+const { month, lang: langParam } = Astro.params
+const lang = (langParam === 'te' ? 'te' : 'en') as Lang
+
+if (langParam !== 'te' && langParam !== 'en') {
+  return Astro.redirect(`/issues/${month}/en/`)
+}
+
+const viewParam = Astro.url.searchParams.get('view')
+const view = viewParam === 'news' ? 'news' : 'flip'
+
+let issue: Awaited<ReturnType<typeof getIssue>> = null
+let error = ''
+try {
+  issue = await getIssue(month!)
+} catch (e) {
+  error = e instanceof Error ? e.message : 'CMS error'
+}
+
+if (!error && !issue) {
+  return new Response(null, { status: 404, statusText: 'Not Found' })
+}
+
+const title = issue ? (lang === 'te' ? issue.titleTe : issue.titleEn) : month!
+const other = lang === 'te' ? 'en' : 'te'
+
+const CHIP_LABELS: Record<string, { te: string; en: string }> = {
+  masthead: { te: 'ముఖం', en: 'Cover' },
+  themes: { te: 'థీమ్', en: 'Themes' },
+  'highlight-classes': { te: 'క్లాస్', en: 'Classes' },
+  experiences: { te: 'అనుభవం', en: 'Stories' },
+  visits: { te: 'పర్యటన', en: 'Visits' },
+  vanya: { te: 'వన్య', en: 'Vanya' },
+  campus: { te: 'క్యాంపస్', en: 'Campus' },
+  upcoming: { te: 'రాబోయేవి', en: 'Next' },
+  closing: { te: 'ముగింపు', en: 'Close' },
+}
+
+const readMore = lang === 'te' ? 'పూర్తిగా చదవండి >>' : 'Read fully >>'
+const closeLabel = lang === 'te' ? 'మూసివేయి' : 'Close'
+const flipHref = `/issues/${month}/${lang}/`
+const newsHref = `/issues/${month}/${lang}/?view=news`
+const flipHrefOther = `/issues/${month}/${other}/`
+const newsHrefOther = `/issues/${month}/${other}/?view=news`
+const flipHrefTe = `/issues/${month}/te/`
+const flipHrefEn = `/issues/${month}/en/`
+const newsHrefTe = `/issues/${month}/te/?view=news`
+const newsHrefEn = `/issues/${month}/en/?view=news`
+const labelFlip = lang === 'te' ? 'ఫ్లిప్‌బుక్' : 'Flipbook'
+const labelNews = lang === 'te' ? 'న్యూస్ వ్యూ' : 'News view'
+const labelLayout = lang === 'te' ? 'లేఅవుట్' : 'Layout'
+const welcomeLead =
+  lang === 'te' ? 'నా ప్రియమైన మిత్రులారా' : 'Dear friends'
+const welcomeTail = lang === 'te' ? 'కి స్వాగతం' : '— welcome'
+const searchPlaceholder =
+  lang === 'te' ? 'కీలక పదాన్ని నమోదు చేయండి' : 'Enter a keyword'
+const searchMonthLabel = lang === 'te' ? 'నెల ప్రకారం వ్యాసాలు' : 'Articles by month'
+const searchBtn = lang === 'te' ? 'వెతకండి' : 'Search'
+const highlightsLabel = lang === 'te' ? 'ముఖ్యాంశాలు' : 'Highlights'
+const donateLabel = lang === 'te' ? 'సత్కార్యానికి తోడ్పడండి' : 'Support this work'
+
+const pages =
+  issue?.sections?.map((section, i) => {
+    const heading = lang === 'te' ? section.headingTe : section.headingEn
+    const bodyData = lang === 'te' ? section.bodyTe : section.bodyEn
+    const bodyHtml = lexicalToHtml(bodyData)
+    const teaser = lexicalToPlain(bodyData, 140)
+    const emptyBody = isLexicalEmpty(bodyData)
+    const isCover = section.key === 'masthead' || i === 0
+    const chip = CHIP_LABELS[section.key]
+    const images =
+      section.images
+        ?.map((row) => {
+          const src = mediaUrl(row.image as MediaDoc)
+          if (!src) return null
+          const caption = lang === 'te' ? row.captionTe : row.captionEn
+          const alt =
+            (lang === 'te' ? row.altTe : row.altEn) ||
+            caption ||
+            (typeof row.image === 'object' && row.image && 'alt' in row.image
+              ? row.image.alt
+              : '') ||
+            ''
+          return {
+            src,
+            caption,
+            alt,
+            align: row.align || 'center',
+            size: row.size || 'md',
+          }
+        })
+        .filter(Boolean) || []
+    const hero = images[0] || null
+    return {
+      section,
+      heading,
+      bodyHtml,
+      teaser,
+      emptyBody,
+      isCover,
+      images,
+      hero,
+      pageLabel: isCover
+        ? lang === 'te'
+          ? 'ముఖచిత్రం'
+          : 'Cover'
+        : heading || section.key,
+      chipLabel: chip ? chip[lang] : String(i + 1),
+      isUpcoming: section.key === 'upcoming',
+    }
+  }) || []
+
+const cover = pages.find((p) => p.isCover) || null
+const upcomingPage = pages.find((p) => p.isUpcoming) || null
+/** Photo story cards (Canva “ముఖ్యాంశాలు”) — skip themes/closing even if imaged */
+const storyPages = pages.filter(
+  (p) =>
+    !p.isCover &&
+    !p.isUpcoming &&
+    !!p.hero &&
+    p.section.key !== 'themes' &&
+    p.section.key !== 'closing',
+)
+const textPages = pages.filter(
+  (p) => !p.isCover && !p.isUpcoming && !storyPages.includes(p),
+)
+---
+
+{
+  view === 'news' ? (
+    <BaseLayout title={`${title} · QLU`} lang={lang} variant="news" mainClass="news-main">
+      {error ? (
+        <p class="qlu-error">{error}</p>
+      ) : issue ? (
+        <div class="news-desk" data-newsview>
+          <header class="news-brand">
+            <div class="news-brand-inner">
+              <div class="news-brand-row">
+                <a class="news-logo" href="/">
+                  <span class="news-logo-mark">QLU</span>
+                  <span class="news-logo-sub">
+                    {lang === 'te' ? 'న్యూస్ లెటర్' : 'Newsletter'}
+                  </span>
+                </a>
+                <div class="news-brand-tools">
+                  <div class="view-switch" role="navigation" aria-label={labelLayout}>
+                    <a class:list={['view-switch-btn', view === 'flip' && 'is-active']} href={flipHref}>
+                      {labelFlip}
+                    </a>
+                    <a class:list={['view-switch-btn', view === 'news' && 'is-active']} href={newsHref}>
+                      {labelNews}
+                    </a>
+                  </div>
+                  <div class="qlu-lang" role="navigation" aria-label="Language">
+                    <a class:list={{ active: lang === 'te' }} href={newsHrefTe}>
+                      TE
+                    </a>
+                    <a class:list={{ active: lang === 'en' }} href={newsHrefEn}>
+                      EN
+                    </a>
+                  </div>
+                </div>
+              </div>
+              <nav class="news-nav" aria-label={lang === 'te' ? 'విభాగాలు' : 'Sections'}>
+                <a href="#experiences">{lang === 'te' ? 'అభిప్రాయాలు' : 'Experiences'}</a>
+                <a href="/jnanodayam/">{lang === 'te' ? 'QLU ప్రోగ్రామ్‌లు' : 'QLU programmes'}</a>
+                <a href="#themes">{lang === 'te' ? 'సారాంశం' : 'Summary'}</a>
+                <a href="#masthead">{lang === 'te' ? 'QLU గురించి' : 'About QLU'}</a>
+                <a href="/issues/">{lang === 'te' ? 'సంచికలు' : 'Magazine'}</a>
+              </nav>
+            </div>
+          </header>
+
+          <div class="news-shell">
+            <section class="news-welcome" id="masthead">
+              <p class="news-welcome-lead">{welcomeLead}</p>
+              <h1 class="news-welcome-title">
+                <span class="news-welcome-issue">{title}</span>
+                <span class="news-welcome-tail"> {welcomeTail}</span>
+              </h1>
+              {cover && !cover.emptyBody ? (
+                <div class="news-prose news-welcome-lede" set:html={cover.bodyHtml} />
+              ) : null}
+            </section>
+
+            <form class="news-search" data-news-search role="search">
+              <label class="news-search-field">
+                <span class="visually-hidden">{searchPlaceholder}</span>
+                <input
+                  type="search"
+                  name="q"
+                  placeholder={searchPlaceholder}
+                  data-news-q
+                  autocomplete="off"
+                />
+              </label>
+              <label class="news-search-field">
+                <span class="visually-hidden">{searchMonthLabel}</span>
+                <select name="month" data-news-month aria-label={searchMonthLabel}>
+                  <option value={issue.month}>{issue.month}</option>
+                  <option value="archive">{lang === 'te' ? 'అన్ని సంచికలు…' : 'All issues…'}</option>
+                </select>
+              </label>
+              <button type="submit" class="news-search-btn">{searchBtn}</button>
+            </form>
+
+            {storyPages.length ? (
+              <section class="news-highlights" id="highlights" aria-labelledby="news-highlights-h">
+                <h2 id="news-highlights-h" class="news-section-label">
+                  {highlightsLabel}
+                </h2>
+                <div class="news-feed">
+                  {storyPages.map((page, i) => (
+                    <article
+                      class:list={['news-card', i === 0 && 'news-card--feature']}
+                      id={page.section.key}
+                      data-news-card
+                      data-news-item
+                      data-key={page.section.key}
+                      data-search={`${page.heading || ''} ${page.teaser || ''}`}
+                    >
+                      <div class="news-card-media">
+                        <img
+                          src={page.hero!.src}
+                          alt={page.hero!.alt || page.heading || ''}
+                          loading={i === 0 ? 'eager' : 'lazy'}
+                        />
+                        <div class="news-card-shade" aria-hidden="true" />
+                        <div class="news-card-overlay">
+                          <h3 class="news-card-title">{page.heading || page.pageLabel}</h3>
+                          {!page.emptyBody ? (
+                            <button
+                              type="button"
+                              class="news-card-cta"
+                              data-news-toggle
+                              data-open-label={readMore}
+                              data-close-label={closeLabel}
+                              aria-expanded="false"
+                            >
+                              {readMore}
+                            </button>
+                          ) : null}
+                        </div>
+                      </div>
+                      {!page.emptyBody ? (
+                        <div class="news-card-panel" data-news-panel hidden>
+                          <div class="news-prose" set:html={page.bodyHtml} />
+                          {page.images.length > 1 ? (
+                            <div class="news-gallery">
+                              {page.images.slice(1).map((img) =>
+                                img ? (
+                                  <figure>
+                                    <img src={img.src} alt={img.alt || ''} loading="lazy" />
+                                    {img.caption ? <figcaption>{img.caption}</figcaption> : null}
+                                  </figure>
+                                ) : null,
+                              )}
+                            </div>
+                          ) : null}
+                        </div>
+                      ) : null}
+                    </article>
+                  ))}
+                </div>
+              </section>
+            ) : null}
+
+            <div class="news-prose-grid">
+              {upcomingPage ? (
+                <section
+                  class="news-block news-block--events"
+                  id="upcoming"
+                  data-news-item
+                  data-search={`${upcomingPage.heading || ''} ${upcomingPage.teaser || ''}`}
+                >
+                  <h2 class="news-block-title">
+                    {upcomingPage.heading || (lang === 'te' ? 'రాబోయే ఈవెంట్లు' : 'Upcoming events')}
+                  </h2>
+                  {!upcomingPage.emptyBody ? (
+                    <div class="news-prose" set:html={upcomingPage.bodyHtml} />
+                  ) : null}
+                </section>
+              ) : null}
+
+              {textPages.map((page) => (
+                <section
+                  class="news-block"
+                  id={page.section.key}
+                  data-key={page.section.key}
+                  data-news-item
+                  data-search={`${page.heading || ''} ${page.teaser || ''}`}
+                >
+                  <h2 class="news-block-title">{page.heading || page.pageLabel}</h2>
+                  {!page.emptyBody ? (
+                    <div class="news-prose" set:html={page.bodyHtml} />
+                  ) : page.teaser ? (
+                    <p class="news-block-teaser">{page.teaser}</p>
+                  ) : null}
+                  {page.images.length ? (
+                    <div class="news-gallery news-gallery--inline">
+                      {page.images.map((img) =>
+                        img ? (
+                          <figure>
+                            <img src={img.src} alt={img.alt || ''} loading="lazy" />
+                            {img.caption ? <figcaption>{img.caption}</figcaption> : null}
+                          </figure>
+                        ) : null,
+                      )}
+                    </div>
+                  ) : null}
+                </section>
+              ))}
+            </div>
+          </div>
+
+          <footer class="news-site-foot">
+            <div class="news-foot-inner">
+              <p class="news-copy">© {new Date().getFullYear()} Quantum Life University</p>
+              <div class="news-contact">
+                <div>
+                  <h3>Phone</h3>
+                  <a href="tel:+919849492098">+91 98494 92098</a>
+                </div>
+                <div>
+                  <h3>Email</h3>
+                  <a href="mailto:info@qluglobal.org">info@qluglobal.org</a>
+                </div>
+                <div>
+                  <h3>{lang === 'te' ? 'సంప్రదించండి' : 'Reach us'}</h3>
+                  <a
+                    class="news-donate"
+                    href="https://qluglobal.org"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    {donateLabel}
+                  </a>
+                </div>
+              </div>
+              <p class="news-foot-links">
+                <a href="/issues/">{lang === 'te' ? 'అన్ని సంచికలు' : 'All issues'}</a>
+                {' · '}
+                <a href={newsHrefOther}>{other === 'te' ? 'తెలుగు' : 'English'}</a>
+                {' · '}
+                <a href={flipHref}>{labelFlip}</a>
+              </p>
+            </div>
+          </footer>
+        </div>
+      ) : null}
+    </BaseLayout>
+  ) : (
+    <BaseLayout title={`${title} · QLU`} lang={lang} variant="reader" mainClass="flip-main">
+      {error ? (
+        <p class="qlu-error">{error}</p>
+      ) : issue ? (
+        <div class="flip-desk" data-flipbook>
+          <div class="flip-meta">
+            <div class="flip-meta-text">
+              <p class="flip-kicker">Monthly newsletter · {issue.month}</p>
+              <h1 class="flip-title">{title}</h1>
+            </div>
+            <div class="flip-meta-actions">
+              <div class="view-switch" role="navigation" aria-label={labelLayout}>
+                <a class:list={['view-switch-btn', view === 'flip' && 'is-active']} href={flipHref}>
+                  {labelFlip}
+                </a>
+                <a class:list={['view-switch-btn', view === 'news' && 'is-active']} href={newsHref}>
+                  {labelNews}
+                </a>
+              </div>
+              <div class="qlu-lang" role="navigation" aria-label="Language">
+                <a class:list={{ active: lang === 'te' }} href={flipHrefTe}>
+                  TE
+                </a>
+                <a class:list={{ active: lang === 'en' }} href={flipHrefEn}>
+                  EN
+                </a>
+              </div>
+              <a class="flip-archive" href="/issues/">
+                All issues
+              </a>
+            </div>
+          </div>
+
+          <nav class="flip-chips" aria-label={lang === 'te' ? 'విభాగాలు' : 'Sections'}>
+            {pages.map((page, i) => (
+              <button
+                type="button"
+                class:list={['flip-chip', i === 0 && 'is-active']}
+                data-flip-goto={i}
+                title={page.pageLabel}
+                aria-label={page.pageLabel}
+              >
+                <span class="flip-chip-num">{i + 1}</span>
+                <span class="flip-chip-text">{page.chipLabel}</span>
+              </button>
+            ))}
+          </nav>
+
+          <div class="flip-shell" aria-live="polite">
+            <button type="button" class="flip-edge flip-edge--prev" data-flip-prev aria-label="Previous page">
+              ‹
+            </button>
+
+            <div class="flip-stage" data-flip-stage>
+              <div class="flip-book">
+                <div class="flip-spine" aria-hidden="true" />
+                {pages.map((page, i) => (
+                  <article
+                    class:list={[
+                      'flip-page',
+                      page.isCover && 'is-cover',
+                      i === 0 && 'is-current',
+                    ]}
+                    data-flip-page
+                    data-key={page.section.key}
+                  >
+                    <div class="flip-page-inner">
+                      <header class="flip-page-head">
+                        <span class="flip-page-section">{page.pageLabel}</span>
+                        <span class="flip-page-issue">{issue.month}</span>
+                      </header>
+
+                      {page.isCover ? (
+                        <div class="flip-cover">
+                          <p class="flip-cover-brand">Quantum Life University</p>
+                          <h2 class="flip-cover-title">{title}</h2>
+                          {!page.emptyBody ? (
+                            <div class="qlu-prose flip-prose flip-cover-lede" set:html={page.bodyHtml} />
+                          ) : null}
+                        </div>
+                      ) : (
+                        <>
+                          {page.heading ? <h2 class="flip-section-title">{page.heading}</h2> : null}
+                          {!page.emptyBody ? (
+                            <div class="qlu-prose flip-prose" set:html={page.bodyHtml} />
+                          ) : null}
+                        </>
+                      )}
+
+                      {page.images.length ? (
+                        <div class="flip-figures">
+                          {page.images.map((img) =>
+                            img ? (
+                              <figure class:list={[`align-${img.align}`, `size-${img.size}`]}>
+                                <img src={img.src} alt={img.alt || ''} loading="lazy" />
+                                {img.caption ? <figcaption>{img.caption}</figcaption> : null}
+                              </figure>
+                            ) : null,
+                          )}
+                        </div>
+                      ) : null}
+
+                      <footer class="flip-page-foot">QLU · {issue.month}</footer>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </div>
+
+            <button type="button" class="flip-edge flip-edge--next" data-flip-next aria-label="Next page">
+              ›
+            </button>
+          </div>
+
+          <div class="flip-controls">
+            <button type="button" class="flip-btn" data-flip-prev>
+              {lang === 'te' ? '← వెనుక' : '← Back'}
+            </button>
+            <div class="flip-pager">
+              <span class="flip-label" data-flip-label>
+                1 / {pages.length}
+              </span>
+              <div class="flip-dots" data-flip-dots />
+            </div>
+            <button type="button" class="flip-btn" data-flip-next>
+              {lang === 'te' ? 'ముందు →' : 'Forward →'}
+            </button>
+          </div>
+
+          <p class="flip-hint">
+            {lang === 'te'
+              ? 'అంచులను నొక్కండి · ← → కీలు · స్వైప్'
+              : 'Click page edges · ← → keys · swipe'}
+            {' · '}
+            <a href={flipHrefOther}>{other === 'te' ? 'తెలుగు' : 'English'}</a>
+          </p>
+        </div>
+      ) : null}
+    </BaseLayout>
+  )
+}
+
+<script>
+  import { initFlipbook } from '../../../scripts/flipbook'
+  import { initNewsView } from '../../../scripts/newsview'
+
+  document.querySelectorAll<HTMLElement>('[data-flipbook]').forEach((el) => {
+    initFlipbook(el)
+  })
+  document.querySelectorAll<HTMLElement>('[data-newsview]').forEach((el) => {
+    initNewsView(el)
+  })
+</script>

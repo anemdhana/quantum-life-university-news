@@ -1,0 +1,96 @@
+---
+export const prerender = false
+
+import BaseLayout from '../../../../layouts/BaseLayout.astro'
+import { getReading, listReadings, type Lang } from '../../../../lib/payload'
+
+const { series, day: dayParam, lang: langParam } = Astro.params
+const day = Number(dayParam)
+const lang = (langParam === 'te' ? 'te' : 'en') as Lang
+
+if (!Number.isFinite(day) || day < 1) {
+  return new Response(null, { status: 404 })
+}
+if (langParam !== 'te' && langParam !== 'en') {
+  return Astro.redirect(`/jnanodayam/${series}/${day}/en/`)
+}
+
+let reading: Awaited<ReturnType<typeof getReading>> = null
+let all: Awaited<ReturnType<typeof listReadings>> = []
+let error = ''
+try {
+  ;[reading, all] = await Promise.all([getReading(series!, day), listReadings(series)])
+} catch (e) {
+  error = e instanceof Error ? e.message : 'CMS error'
+}
+
+if (!error && !reading) {
+  return new Response(null, { status: 404 })
+}
+
+const title = reading
+  ? lang === 'te'
+    ? reading.titleTe
+    : reading.titleEn
+  : `Day ${day}`
+const subtitle = reading
+  ? lang === 'te'
+    ? reading.subtitleTe || reading.subtitleEn
+    : reading.subtitleEn || reading.subtitleTe
+  : ''
+const body = reading
+  ? lang === 'te'
+    ? reading.bodyHtmlTe
+    : reading.bodyHtmlEn
+  : ''
+
+const prev = all.find((r) => r.day === day - 1)
+const next = all.find((r) => r.day === day + 1)
+---
+
+<BaseLayout title={`${title} · Jnanodayam`} lang={lang}>
+  {
+    error ? (
+      <p class="qlu-error">{error}</p>
+    ) : reading ? (
+      <>
+        <p class="qlu-kicker">
+          <a href={`/jnanodayam/${series}/`}>Programme</a> · Day {reading.day}
+        </p>
+        <h1>{title}</h1>
+        {subtitle ? <p class="qlu-lede">{subtitle}</p> : null}
+        <div class="qlu-lang" role="navigation" aria-label="Language">
+          <a
+            class:list={{ active: lang === 'te' }}
+            href={`/jnanodayam/${series}/${day}/te/`}
+          >
+            TE
+          </a>
+          <a
+            class:list={{ active: lang === 'en' }}
+            href={`/jnanodayam/${series}/${day}/en/`}
+          >
+            EN
+          </a>
+        </div>
+        {body ? <article class="qlu-prose" set:html={body} /> : null}
+        <nav class="qlu-day-nav" aria-label="Day navigation">
+          <span>
+            {prev ? (
+              <a href={`/jnanodayam/${series}/${prev.day}/${lang}/`}>← Day {prev.day}</a>
+            ) : (
+              <span class="qlu-meta">←</span>
+            )}
+          </span>
+          <span>
+            {next ? (
+              <a href={`/jnanodayam/${series}/${next.day}/${lang}/`}>Day {next.day} →</a>
+            ) : (
+              <span class="qlu-meta">→</span>
+            )}
+          </span>
+        </nav>
+      </>
+    ) : null
+  }
+</BaseLayout>

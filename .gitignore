@@ -1,0 +1,15 @@
+node_modules
+.DS_Store
+.env
+.env.local
+*.log
+dist
+.next
+.astro
+apps/cms/media
+apps/cms/src/app/(payload)/admin/importMap.js
+!.env.example
+.turbo
+coverage
+playwright-report
+test-results

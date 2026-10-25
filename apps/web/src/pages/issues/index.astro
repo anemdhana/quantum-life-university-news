@@ -1,0 +1,32 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro'
+import { listIssues } from '../../lib/payload'
+
+let issues: Awaited<ReturnType<typeof listIssues>> = []
+let error = ''
+try {
+  issues = await listIssues()
+} catch (e) {
+  error = e instanceof Error ? e.message : 'CMS error'
+}
+---
+
+<BaseLayout title="Magazine issues · QLU">
+  <h1>Monthly magazine</h1>
+  <p class="qlu-lede">Parallel Telugu and English editions per month.</p>
+  {error ? <p class="qlu-error">{error}</p> : null}
+  <ul class="qlu-card-list">
+    {
+      issues.map((issue) => (
+        <li>
+          <a href={`/issues/${issue.month}/en/`}>
+            <strong>{issue.titleEn}</strong>
+            <div class="qlu-meta">
+              {issue.month} · <span lang="te">{issue.titleTe}</span>
+            </div>
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</BaseLayout>

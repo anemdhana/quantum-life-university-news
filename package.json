@@ -1,0 +1,22 @@
+{
+  "name": "quantum-life-university-news",
+  "private": true,
+  "version": "0.1.0",
+  "description": "QLU Jnanodayam reader + monthly magazine — Payload CMS + Astro",
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspaces --if-present",
+    "dev:cms": "npm run dev -w @qlu/cms",
+    "dev:web": "npm run dev -w @qlu/web",
+    "build": "npm run build -w @qlu/cms && npm run build -w @qlu/web",
+    "seed": "npm run seed -w @qlu/cms",
+    "generate:types": "npm run generate:types -w @qlu/cms",
+    "db:up": "docker compose up -d",
+    "db:down": "docker compose down"
+  },
+  "engines": {
+    "node": ">=22.21.0"
+  }
+}

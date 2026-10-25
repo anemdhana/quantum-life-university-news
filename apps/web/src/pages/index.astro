@@ -1,0 +1,72 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro'
+import { listIssues, listReadings } from '../lib/payload'
+
+let issues: Awaited<ReturnType<typeof listIssues>> = []
+let readings: Awaited<ReturnType<typeof listReadings>> = []
+let error = ''
+
+try {
+  ;[issues, readings] = await Promise.all([listIssues(), listReadings()])
+} catch (e) {
+  error = e instanceof Error ? e.message : 'Could not reach Payload CMS'
+}
+
+const latest = issues[0]
+---
+
+<BaseLayout title="QLU News · Jnanodayam & Magazine">
+  <h1>Self-knowledge reading & monthly magazine</h1>
+  <p class="qlu-lede">
+    Telugu + English. Full Devi Navaratri readings (Jnanodayam) and monthly campus magazine issues.
+  </p>
+
+  {
+    error ? (
+      <p class="qlu-error">
+        CMS offline or empty. Start Postgres + Payload, then run <code>npm run seed</code>. ({error})
+      </p>
+    ) : null
+  }
+
+  <div class="qlu-home-grid">
+    <section class="qlu-home-panel">
+      <h2>Jnanodayam</h2>
+      <p class="qlu-meta">Devi Navaratrula Jnanam · {readings.length} days</p>
+      <p>
+        <a href="/jnanodayam/devi-navaratri/">Open programme</a>
+        {
+          readings[0] ? (
+            <>
+              {' '}
+              · <a href={`/jnanodayam/devi-navaratri/${readings[0].day}/en/`}>Day 1 · En</a> ·{' '}
+              <a href={`/jnanodayam/devi-navaratri/${readings[0].day}/te/`}>రోజు 1 · Te</a>
+            </>
+          ) : null
+        }
+      </p>
+    </section>
+    <section class="qlu-home-panel">
+      <h2>Magazine</h2>
+      {
+        latest ? (
+          <p>
+            Latest:{' '}
+            <a href={`/issues/${latest.month}/en/`}>{latest.titleEn}</a>
+            {' · '}
+            <a href={`/issues/${latest.month}/te/`}>{latest.titleTe}</a>
+            <br />
+            <span class="qlu-meta">
+              <a href={`/issues/${latest.month}/en/?view=news`}>News view</a>
+              {' · '}
+              <a href={`/issues/${latest.month}/en/`}>Flipbook</a>
+            </span>
+          </p>
+        ) : (
+          <p class="qlu-meta">No published issues yet.</p>
+        )
+      }
+      <p><a href="/issues/">All issues</a></p>
+    </section>
+  </div>
+</BaseLayout>

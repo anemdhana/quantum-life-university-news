@@ -1,0 +1,43 @@
+---
+export const prerender = false
+
+import BaseLayout from '../../../layouts/BaseLayout.astro'
+import { listReadings } from '../../../lib/payload'
+
+const { series } = Astro.params
+let readings: Awaited<ReturnType<typeof listReadings>> = []
+let error = ''
+try {
+  readings = await listReadings(series)
+} catch (e) {
+  error = e instanceof Error ? e.message : 'CMS error'
+}
+
+const seriesTitle =
+  series === 'devi-navaratri' ? 'Devi Navaratrula Jnanam' : series
+---
+
+<BaseLayout title={`${seriesTitle} · Jnanodayam`}>
+  <h1>{seriesTitle}</h1>
+  <p class="qlu-lede">Choose a day. Switch Te | En on each reading.</p>
+  {error ? <p class="qlu-error">{error}</p> : null}
+  <ul class="qlu-card-list">
+    {
+      readings.map((r) => (
+        <li>
+          <a href={`/jnanodayam/${series}/${r.day}/en/`}>
+            <strong>
+              Day {r.day}
+              {r.subtitleEn ? ` · ${r.subtitleEn}` : ''}
+            </strong>
+            <div class="qlu-meta">
+              <a href={`/jnanodayam/${series}/${r.day}/te/`}>తెలుగు</a>
+              {' · '}
+              <a href={`/jnanodayam/${series}/${r.day}/en/`}>English</a>
+            </div>
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</BaseLayout>
