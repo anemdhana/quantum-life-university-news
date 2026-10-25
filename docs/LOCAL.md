@@ -8,19 +8,27 @@
 
 If `npm run db:up` fails with a pipe/`dockerDesktopLinuxEngine` error, start Docker Desktop and retry.
 
-## First-time setup
+## First-time setup / Run
+
+Double-click or run **`dev.cmd`** from the repo root. On first run it:
+
+1. Creates `apps/cms/.env` and `apps/web/.env` from examples if missing  
+2. Runs `npm install` if `node_modules` is missing  
+3. Starts Postgres (`docker compose up -d --wait`)  
+4. Runs **`npm run seed`** once (writes marker `.qlu-seeded`)  
+5. Opens Payload (:3000) and Astro (:4321)
+
+To force seed again: `del .qlu-seeded` or `set FORCE_SEED=1` then `.\dev.cmd`.
+
+Manual equivalent:
 
 ```powershell
-cd c:\Users\dhana\GitHub\quantum-life-university-news
 npm run db:up
-# Ensure apps/cms/.env has DATABASE_URL + PAYLOAD_SECRET (create-payload-app already wrote one)
 npm install
-npm run seed -w @qlu/cms
+npm run seed
+npm run dev:cms
+npm run dev:web
 ```
-
-## Run
-
-Double-click or run **`dev.cmd`** from the repo root (starts Postgres, then CMS + Astro in two windows).
 
 Or two terminals:
 

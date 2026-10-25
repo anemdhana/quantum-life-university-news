@@ -20,14 +20,12 @@ Needs **Node 22.21+**, **Docker**, **npm**.
 
 ```powershell
 cd quantum-life-university-news
-copy .env.example apps\cms\.env   # if cms .env missing; edit secrets
-npm run db:up
-npm install
-npm run seed -w @qlu/cms
-.\dev.cmd                        # CMS + Astro together (or use npm run below)
+.\dev.cmd
 ```
 
-Or manually: `npm run dev:cms` and `npm run dev:web` in two terminals.
+`dev.cmd` will: create `.env` from examples if missing, `npm install` if needed, start Postgres, **seed once** (magazine + Jnanodayam), then open CMS + Astro. Re-seed later with `npm run seed`, or `set FORCE_SEED=1` before `.\dev.cmd`, or delete `.qlu-seeded`.
+
+Or manually: `npm run db:up`, `npm install`, `npm run seed`, then `npm run dev:cms` and `npm run dev:web` in two terminals.
 
 | Service | URL |
 |---------|-----|
