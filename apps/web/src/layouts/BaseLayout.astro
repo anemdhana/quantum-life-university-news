@@ -6,8 +6,8 @@ interface Props {
   lang?: 'te' | 'en'
   description?: string
   mainClass?: string
-  /** Compact chrome for flip-reader or dark news feed */
-  variant?: 'default' | 'reader' | 'news'
+  /** Compact chrome for flip-reader, news feed, or print sheets */
+  variant?: 'default' | 'reader' | 'news' | 'print'
 }
 
 const {
@@ -20,6 +20,8 @@ const {
 const path = Astro.url.pathname
 const isReader = variant === 'reader'
 const isNews = variant === 'news'
+const isPrint = variant === 'print'
+const bareChrome = isReader || isNews || isPrint
 ---
 
 <!doctype html>
@@ -31,12 +33,20 @@ const isNews = variant === 'news'
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>{title}</title>
   </head>
-  <body class:list={[`lang-${lang}`, isReader && 'is-reader', isNews && 'is-news']}>
+  <body
+    class:list={[
+      `lang-${lang}`,
+      isReader && 'is-reader',
+      isNews && 'is-news',
+      isPrint && 'is-print',
+    ]}
+  >
     <div
       class:list={[
         'qlu-site',
         isReader && 'qlu-site--reader',
         isNews && 'qlu-site--news',
+        isPrint && 'qlu-site--print',
       ]}
     >
       {
@@ -48,7 +58,7 @@ const isNews = variant === 'news'
               <a href="/jnanodayam/">Jnanodayam</a>
             </nav>
           </header>
-        ) : isNews ? null : (
+        ) : isNews || isPrint ? null : (
           <header class="qlu-masthead">
             <p class="qlu-kicker">Quantum Life University</p>
             <p class="qlu-brand">నెలవారీ పత్రిక · Jnanodayam</p>
@@ -69,10 +79,10 @@ const isNews = variant === 'news'
           </header>
         )
       }
-      <main class:list={['qlu-main', !isReader && !isNews && 'wide', mainClass]}>
+      <main class:list={['qlu-main', !bareChrome && 'wide', mainClass]}>
         <slot />
       </main>
-      {!isReader && !isNews ? <footer class="qlu-footer">Quantum Life University</footer> : null}
+      {!bareChrome ? <footer class="qlu-footer">Quantum Life University</footer> : null}
     </div>
   </body>
 </html>

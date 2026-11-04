@@ -1,0 +1,53 @@
+---
+import type { IssueSection, Lang } from '../../lib/payload'
+import { linesToParagraphs } from '../../lib/printText'
+import PrintFreeform from './PrintFreeform.astro'
+
+interface Props {
+  section: IssueSection
+  lang: Lang
+  bodyHtml: string
+  emptyLine: string
+}
+
+const { section, lang, bodyHtml, emptyLine } = Astro.props
+const blocks = [
+  {
+    label: 'Goloka',
+    text: (lang === 'te' ? section.golokaTe : section.golokaEn)?.trim() || '',
+  },
+  {
+    label: 'Sahasrara',
+    text: (lang === 'te' ? section.sahasraraTe : section.sahasraraEn)?.trim() || '',
+  },
+  {
+    label: 'QLU',
+    text: (lang === 'te' ? section.qluTe : section.qluEn)?.trim() || '',
+  },
+].filter((b) => b.text)
+const hasBody = Boolean(bodyHtml?.replace(/<[^>]+>/g, '').trim())
+---
+
+{
+  blocks.length ? (
+    <>
+      <div class="print-campus">
+        {blocks.map((block) => (
+          <article class="print-campus-block">
+            <h3>{block.label}</h3>
+            {linesToParagraphs(block.text).map((p) =>
+              p ? <p>{p}</p> : <p class="print-spacer" aria-hidden="true" />,
+            )}
+          </article>
+        ))}
+      </div>
+      {hasBody ? (
+        <div class="print-body-follow">
+          <PrintFreeform html={bodyHtml} emptyLine={emptyLine} />
+        </div>
+      ) : null}
+    </>
+  ) : (
+    <PrintFreeform html={bodyHtml} emptyLine={emptyLine} />
+  )
+}

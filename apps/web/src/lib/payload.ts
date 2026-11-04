@@ -15,6 +15,59 @@ export type MediaDoc = {
 export type ImageAlign = 'left' | 'center' | 'right' | 'full'
 export type ImageSize = 'sm' | 'md' | 'lg' | 'full'
 
+export type ThemeItem = {
+  id?: string
+  titleTe?: string | null
+  titleEn?: string | null
+  blurbTe?: string | null
+  blurbEn?: string | null
+}
+
+export type ClassItem = {
+  id?: string
+  titleTe?: string | null
+  titleEn?: string | null
+  speaker?: string | null
+  date?: string | null
+  insightTe?: string | null
+  insightEn?: string | null
+}
+
+export type StoryItem = {
+  id?: string
+  name?: string | null
+  location?: string | null
+  bodyTe?: string | null
+  bodyEn?: string | null
+}
+
+export type VisitItem = {
+  id?: string
+  date?: string | null
+  place?: string | null
+  noteTe?: string | null
+  noteEn?: string | null
+}
+
+export type FeatureItem = {
+  id?: string
+  titleTe?: string | null
+  titleEn?: string | null
+  bodyTe?: string | null
+  bodyEn?: string | null
+}
+
+export type EventItem = {
+  id?: string
+  when?: string | null
+  titleTe?: string | null
+  titleEn?: string | null
+  venueTe?: string | null
+  venueEn?: string | null
+  detailsTe?: string | null
+  detailsEn?: string | null
+}
+
 export type IssueSection = {
   id?: string
   key: string
@@ -22,6 +75,20 @@ export type IssueSection = {
   headingEn?: string | null
   bodyTe?: unknown
   bodyEn?: unknown
+  leadTe?: string | null
+  leadEn?: string | null
+  themeItems?: ThemeItem[] | null
+  classItems?: ClassItem[] | null
+  stories?: StoryItem[] | null
+  visitItems?: VisitItem[] | null
+  featureItems?: FeatureItem[] | null
+  golokaTe?: string | null
+  golokaEn?: string | null
+  sahasraraTe?: string | null
+  sahasraraEn?: string | null
+  qluTe?: string | null
+  qluEn?: string | null
+  eventItems?: EventItem[] | null
   images?: Array<{
     id?: string
     image?: MediaDoc | number | string | null
@@ -40,6 +107,17 @@ export type Issue = {
   titleTe: string
   titleEn: string
   published?: boolean
+  taglineTe?: string | null
+  taglineEn?: string | null
+  foundersLineTe?: string | null
+  foundersLineEn?: string | null
+  foundersSubTe?: string | null
+  foundersSubEn?: string | null
+  invitationTe?: string | null
+  invitationEn?: string | null
+  coverKickerTe?: string | null
+  coverKickerEn?: string | null
+  coverImage?: MediaDoc | number | string | null
   sections?: IssueSection[]
 }
 
@@ -120,4 +198,31 @@ export function pickLang<T extends Record<string, unknown>>(
 ): string {
   const value = lang === 'te' ? doc[teKey] : doc[enKey]
   return typeof value === 'string' ? value : ''
+}
+
+const MONTH_NAMES_EN = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+]
+
+export function formatCoverKicker(month: string, lang: Lang, custom?: string | null): string {
+  if (custom?.trim()) return custom.trim()
+  const m = /^(\d{4})-(\d{2})$/.exec(month)
+  if (!m) return month
+  const year = m[1]
+  const idx = Math.max(0, Math.min(11, Number(m[2]) - 1))
+  if (lang === 'te') {
+    return `${MONTH_NAMES_EN[idx].toUpperCase()} ${year} · సంచిక`
+  }
+  return `${MONTH_NAMES_EN[idx].toUpperCase()} ${year} · ISSUE`
 }

@@ -173,12 +173,33 @@ export interface Media {
 export interface Issue {
   id: number;
   /**
+   * Switch once — only that language’s fields show below (cover, sections, bodies). Other language is kept; switch back to edit it.
+   */
+  editLang?: ('en' | 'te') | null;
+  /**
    * Issue id YYYY-MM (e.g. 2026-10)
    */
   month: string;
-  titleTe: string;
-  titleEn: string;
+  titleTe?: string | null;
+  titleEn?: string | null;
   published?: boolean | null;
+  /**
+   * Hero / logo art for Print page 1 (same role as the image on the PDF cover).
+   */
+  coverImage?: (number | null) | Media;
+  taglineTe?: string | null;
+  taglineEn?: string | null;
+  foundersLineTe?: string | null;
+  foundersLineEn?: string | null;
+  foundersSubTe?: string | null;
+  foundersSubEn?: string | null;
+  invitationTe?: string | null;
+  invitationEn?: string | null;
+  coverKickerTe?: string | null;
+  coverKickerEn?: string | null;
+  /**
+   * Each section = a PDF layout block. Fill slots for the active editing language. Print titles stay fixed.
+   */
   sections?:
     | {
         key:
@@ -193,6 +214,80 @@ export interface Issue {
           | 'closing';
         headingTe?: string | null;
         headingEn?: string | null;
+        leadTe?: string | null;
+        leadEn?: string | null;
+        themeItems?:
+          | {
+              titleTe?: string | null;
+              titleEn?: string | null;
+              blurbTe?: string | null;
+              blurbEn?: string | null;
+              id?: string | null;
+            }[]
+          | null;
+        classItems?:
+          | {
+              titleTe?: string | null;
+              titleEn?: string | null;
+              speaker?: string | null;
+              date?: string | null;
+              insightTe?: string | null;
+              insightEn?: string | null;
+              id?: string | null;
+            }[]
+          | null;
+        stories?:
+          | {
+              name?: string | null;
+              location?: string | null;
+              bodyTe?: string | null;
+              bodyEn?: string | null;
+              id?: string | null;
+            }[]
+          | null;
+        visitItems?:
+          | {
+              date?: string | null;
+              place?: string | null;
+              noteTe?: string | null;
+              noteEn?: string | null;
+              id?: string | null;
+            }[]
+          | null;
+        featureItems?:
+          | {
+              titleTe?: string | null;
+              titleEn?: string | null;
+              bodyTe?: string | null;
+              bodyEn?: string | null;
+              id?: string | null;
+            }[]
+          | null;
+        golokaTe?: string | null;
+        golokaEn?: string | null;
+        sahasraraTe?: string | null;
+        sahasraraEn?: string | null;
+        qluTe?: string | null;
+        qluEn?: string | null;
+        eventItems?:
+          | {
+              when?: string | null;
+              titleTe?: string | null;
+              titleEn?: string | null;
+              venueTe?: string | null;
+              venueEn?: string | null;
+              detailsTe?: string | null;
+              detailsEn?: string | null;
+              id?: string | null;
+            }[]
+          | null;
+        /**
+         * On Save → Body. Cleared after save. Use for bullets / freeform under PDF slots.
+         */
+        bodyTeMd?: string | null;
+        /**
+         * Freeform body (lists, paragraphs). Shows in all views; in Print it appears under the PDF slots when both are filled.
+         */
         bodyTe?: {
           root: {
             type: string;
@@ -208,6 +303,13 @@ export interface Issue {
           };
           [k: string]: unknown;
         } | null;
+        /**
+         * On Save → Body. Cleared after save. Use for bullets / freeform under PDF slots.
+         */
+        bodyEnMd?: string | null;
+        /**
+         * Freeform body (lists, paragraphs). Shows in all views; in Print it appears under the PDF slots when both are filled.
+         */
         bodyEn?: {
           root: {
             type: string;
@@ -394,17 +496,98 @@ export interface MediaSelect<T extends boolean = true> {
  * via the `definition` "issues_select".
  */
 export interface IssuesSelect<T extends boolean = true> {
+  editLang?: T;
   month?: T;
   titleTe?: T;
   titleEn?: T;
   published?: T;
+  coverImage?: T;
+  taglineTe?: T;
+  taglineEn?: T;
+  foundersLineTe?: T;
+  foundersLineEn?: T;
+  foundersSubTe?: T;
+  foundersSubEn?: T;
+  invitationTe?: T;
+  invitationEn?: T;
+  coverKickerTe?: T;
+  coverKickerEn?: T;
   sections?:
     | T
     | {
         key?: T;
         headingTe?: T;
         headingEn?: T;
+        leadTe?: T;
+        leadEn?: T;
+        themeItems?:
+          | T
+          | {
+              titleTe?: T;
+              titleEn?: T;
+              blurbTe?: T;
+              blurbEn?: T;
+              id?: T;
+            };
+        classItems?:
+          | T
+          | {
+              titleTe?: T;
+              titleEn?: T;
+              speaker?: T;
+              date?: T;
+              insightTe?: T;
+              insightEn?: T;
+              id?: T;
+            };
+        stories?:
+          | T
+          | {
+              name?: T;
+              location?: T;
+              bodyTe?: T;
+              bodyEn?: T;
+              id?: T;
+            };
+        visitItems?:
+          | T
+          | {
+              date?: T;
+              place?: T;
+              noteTe?: T;
+              noteEn?: T;
+              id?: T;
+            };
+        featureItems?:
+          | T
+          | {
+              titleTe?: T;
+              titleEn?: T;
+              bodyTe?: T;
+              bodyEn?: T;
+              id?: T;
+            };
+        golokaTe?: T;
+        golokaEn?: T;
+        sahasraraTe?: T;
+        sahasraraEn?: T;
+        qluTe?: T;
+        qluEn?: T;
+        eventItems?:
+          | T
+          | {
+              when?: T;
+              titleTe?: T;
+              titleEn?: T;
+              venueTe?: T;
+              venueEn?: T;
+              detailsTe?: T;
+              detailsEn?: T;
+              id?: T;
+            };
+        bodyTeMd?: T;
         bodyTe?: T;
+        bodyEnMd?: T;
         bodyEn?: T;
         images?:
           | T

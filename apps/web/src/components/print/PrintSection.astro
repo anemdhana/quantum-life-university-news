@@ -1,0 +1,101 @@
+---
+import type { IssueSection, Lang, MediaDoc } from '../../lib/payload'
+import { mediaUrl } from '../../lib/payload'
+import { EMPTY_SECTION, PDF_SECTION_TITLES, isSectionKey } from '../../lib/magazineSections'
+import PrintThemes from './PrintThemes.astro'
+import PrintClasses from './PrintClasses.astro'
+import PrintStories from './PrintStories.astro'
+import PrintVisits from './PrintVisits.astro'
+import PrintVanya from './PrintVanya.astro'
+import PrintCampus from './PrintCampus.astro'
+import PrintEvents from './PrintEvents.astro'
+import PrintFreeform from './PrintFreeform.astro'
+
+interface Props {
+  section: IssueSection
+  lang: Lang
+  bodyHtml: string
+  month: string
+  year: string
+}
+
+const { section, lang, bodyHtml, month, year } = Astro.props
+const key = isSectionKey(section.key) ? section.key : null
+const pdf = key ? PDF_SECTION_TITLES[key] : null
+/** Fixed PDF template name in eyebrow; editor heading is the page headline */
+const sectionLabel = pdf ? (lang === 'te' ? pdf.te : pdf.en) : section.key
+const headline = ((lang === 'te' ? section.headingTe : section.headingEn) || '').trim()
+const num = pdf?.num || ''
+const emptyLine = lang === 'te' ? EMPTY_SECTION.te : EMPTY_SECTION.en
+const images =
+  section.images
+    ?.map((row) => {
+      const src = mediaUrl(row.image as MediaDoc)
+      if (!src) return null
+      const caption = lang === 'te' ? row.captionTe : row.captionEn
+      const alt =
+        (lang === 'te' ? row.altTe : row.altEn) ||
+        caption ||
+        (typeof row.image === 'object' && row.image && 'alt' in row.image ? row.image.alt : '') ||
+        ''
+      return { src, caption, alt }
+    })
+    .filter(Boolean) || []
+---
+
+<section class="print-sheet print-section" id={`print-${section.key}`}>
+  <header class="print-sheet-head">
+    <p class="print-sheet-brand">Quantum Life University</p>
+    <p class="print-sheet-meta">Monthly / {year}</p>
+  </header>
+  {
+    num ? (
+      <p class="print-eyebrow">
+        {num} / {sectionLabel}
+      </p>
+    ) : (
+      <p class="print-eyebrow">{sectionLabel}</p>
+    )
+  }
+  <h2 class="print-sheet-title">{headline || sectionLabel}</h2>
+
+  {
+    images.length ? (
+      <div class="print-figures print-figures--lead">
+        {images.map((img) =>
+          img ? (
+            <figure>
+              <img src={img.src} alt={img.alt || ''} loading="lazy" />
+              {img.caption ? <figcaption>{img.caption}</figcaption> : null}
+            </figure>
+          ) : null,
+        )}
+      </div>
+    ) : null
+  }
+
+  {
+    key === 'themes' ? (
+      <PrintThemes section={section} lang={lang} bodyHtml={bodyHtml} emptyLine={emptyLine} />
+    ) : key === 'highlight-classes' ? (
+      <PrintClasses section={section} lang={lang} bodyHtml={bodyHtml} emptyLine={emptyLine} />
+    ) : key === 'experiences' ? (
+      <PrintStories section={section} lang={lang} bodyHtml={bodyHtml} emptyLine={emptyLine} />
+    ) : key === 'visits' ? (
+      <PrintVisits section={section} lang={lang} bodyHtml={bodyHtml} emptyLine={emptyLine} />
+    ) : key === 'vanya' ? (
+      <PrintVanya section={section} lang={lang} bodyHtml={bodyHtml} emptyLine={emptyLine} />
+    ) : key === 'campus' ? (
+      <PrintCampus section={section} lang={lang} bodyHtml={bodyHtml} emptyLine={emptyLine} />
+    ) : key === 'upcoming' ? (
+      <PrintEvents section={section} lang={lang} bodyHtml={bodyHtml} emptyLine={emptyLine} />
+    ) : (
+      <PrintFreeform html={bodyHtml} emptyLine={emptyLine} />
+    )
+  }
+
+  <footer class="print-sheet-foot">
+    <span>Quantum Life University</span>
+    <span>{month}</span>
+  </footer>
+</section>

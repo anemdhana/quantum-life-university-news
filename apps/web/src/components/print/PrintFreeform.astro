@@ -1,0 +1,17 @@
+---
+interface Props {
+  html: string
+  emptyLine: string
+}
+
+const { html, emptyLine } = Astro.props
+const has = Boolean(html?.replace(/<[^>]+>/g, '').trim())
+---
+
+{
+  has ? (
+    <div class="print-prose" set:html={html} />
+  ) : (
+    <p class="print-empty">{emptyLine}</p>
+  )
+}

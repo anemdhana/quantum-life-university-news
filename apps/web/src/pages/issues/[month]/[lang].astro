@@ -2,12 +2,17 @@
 export const prerender = false
 
 import BaseLayout from '../../../layouts/BaseLayout.astro'
+import PrintCover from '../../../components/print/PrintCover.astro'
+import PrintContents from '../../../components/print/PrintContents.astro'
+import PrintSection from '../../../components/print/PrintSection.astro'
 import {
   getIssue,
   mediaUrl,
+  type IssueSection,
   type Lang,
   type MediaDoc,
 } from '../../../lib/payload'
+import { PDF_CONTENTS_KEYS, PDF_SECTION_TITLES } from '../../../lib/magazineSections'
 import { isLexicalEmpty, lexicalToHtml, lexicalToPlain } from '../../../lib/richText'
 
 const { month, lang: langParam } = Astro.params
@@ -18,7 +23,7 @@ if (langParam !== 'te' && langParam !== 'en') {
 }
 
 const viewParam = Astro.url.searchParams.get('view')
-const view = viewParam === 'news' ? 'news' : 'flip'
+const view = viewParam === 'print' ? 'print' : viewParam === 'news' ? 'news' : 'flip'
 
 let issue: Awaited<ReturnType<typeof getIssue>> = null
 let error = ''
@@ -51,14 +56,18 @@ const readMore = lang === 'te' ? 'పూర్తిగా చదవండి >>
 const closeLabel = lang === 'te' ? 'మూసివేయి' : 'Close'
 const flipHref = `/issues/${month}/${lang}/`
 const newsHref = `/issues/${month}/${lang}/?view=news`
+const printHref = `/issues/${month}/${lang}/?view=print`
 const flipHrefOther = `/issues/${month}/${other}/`
 const newsHrefOther = `/issues/${month}/${other}/?view=news`
 const flipHrefTe = `/issues/${month}/te/`
 const flipHrefEn = `/issues/${month}/en/`
 const newsHrefTe = `/issues/${month}/te/?view=news`
 const newsHrefEn = `/issues/${month}/en/?view=news`
+const printHrefTe = `/issues/${month}/te/?view=print`
+const printHrefEn = `/issues/${month}/en/?view=print`
 const labelFlip = lang === 'te' ? 'ఫ్లిప్‌బుక్' : 'Flipbook'
 const labelNews = lang === 'te' ? 'న్యూస్ వ్యూ' : 'News view'
+const labelPrint = lang === 'te' ? 'ప్రింట్' : 'Print'
 const labelLayout = lang === 'te' ? 'లేఅవుట్' : 'Layout'
 const welcomeLead =
   lang === 'te' ? 'నా ప్రియమైన మిత్రులారా' : 'Dear friends'
@@ -70,56 +79,84 @@ const searchBtn = lang === 'te' ? 'వెతకండి' : 'Search'
 const highlightsLabel = lang === 'te' ? 'ముఖ్యాంశాలు' : 'Highlights'
 const donateLabel = lang === 'te' ? 'సత్కార్యానికి తోడ్పడండి' : 'Support this work'
 
-const pages =
-  issue?.sections?.map((section, i) => {
-    const heading = lang === 'te' ? section.headingTe : section.headingEn
-    const bodyData = lang === 'te' ? section.bodyTe : section.bodyEn
-    const bodyHtml = lexicalToHtml(bodyData)
-    const teaser = lexicalToPlain(bodyData, 140)
-    const emptyBody = isLexicalEmpty(bodyData)
-    const isCover = section.key === 'masthead' || i === 0
-    const chip = CHIP_LABELS[section.key]
-    const images =
-      section.images
-        ?.map((row) => {
-          const src = mediaUrl(row.image as MediaDoc)
-          if (!src) return null
-          const caption = lang === 'te' ? row.captionTe : row.captionEn
-          const alt =
-            (lang === 'te' ? row.altTe : row.altEn) ||
-            caption ||
-            (typeof row.image === 'object' && row.image && 'alt' in row.image
-              ? row.image.alt
-              : '') ||
-            ''
-          return {
-            src,
-            caption,
-            alt,
-            align: row.align || 'center',
-            size: row.size || 'md',
-          }
-        })
-        .filter(Boolean) || []
-    const hero = images[0] || null
-    return {
-      section,
-      heading,
-      bodyHtml,
-      teaser,
-      emptyBody,
-      isCover,
-      images,
-      hero,
-      pageLabel: isCover
-        ? lang === 'te'
-          ? 'ముఖచిత్రం'
-          : 'Cover'
-        : heading || section.key,
-      chipLabel: chip ? chip[lang] : String(i + 1),
-      isUpcoming: section.key === 'upcoming',
-    }
-  }) || []
+function mapSectionPage(section: IssueSection, i: number) {
+  const heading = lang === 'te' ? section.headingTe : section.headingEn
+  const bodyData = lang === 'te' ? section.bodyTe : section.bodyEn
+  const bodyHtml = lexicalToHtml(bodyData)
+  const teaser = lexicalToPlain(bodyData, 140)
+  const emptyBody = isLexicalEmpty(bodyData)
+  /** Only the masthead section is the cover — never fall back to index 0 */
+  const isCover = section.key === 'masthead'
+  const chip = CHIP_LABELS[section.key]
+  const images =
+    section.images
+      ?.map((row) => {
+        const src = mediaUrl(row.image as MediaDoc)
+        if (!src) return null
+        const caption = lang === 'te' ? row.captionTe : row.captionEn
+        const alt =
+          (lang === 'te' ? row.altTe : row.altEn) ||
+          caption ||
+          (typeof row.image === 'object' && row.image && 'alt' in row.image
+            ? row.image.alt
+            : '') ||
+          ''
+        return {
+          src,
+          caption,
+          alt,
+          align: row.align || 'center',
+          size: row.size || 'md',
+        }
+      })
+      .filter(Boolean) || []
+  const hero = images[0] || null
+  const pdfTitle = PDF_SECTION_TITLES[section.key as keyof typeof PDF_SECTION_TITLES]
+  return {
+    section,
+    heading,
+    bodyHtml,
+    teaser,
+    emptyBody,
+    isCover,
+    images,
+    hero,
+    pageLabel: isCover
+      ? lang === 'te'
+        ? 'ముఖచిత్రం'
+        : 'Cover'
+      : heading || (pdfTitle ? (lang === 'te' ? pdfTitle.te : pdfTitle.en) : section.key),
+    chipLabel: chip ? chip[lang] : String(i + 1),
+    isUpcoming: section.key === 'upcoming',
+  }
+}
+
+const sectionsByKey = new Map(
+  (issue?.sections || []).map((s) => [s.key, s] as const),
+)
+
+const mastheadSection = sectionsByKey.get('masthead')
+const closingSection = sectionsByKey.get('closing')
+
+/** Always include the 7 main newsletter sections (stub empty ones). */
+const ensuredMainSections: IssueSection[] = PDF_CONTENTS_KEYS.map((key) => {
+  const existing = sectionsByKey.get(key)
+  if (existing) return existing
+  return {
+    key,
+    headingTe: null,
+    headingEn: null,
+    bodyTe: null,
+    bodyEn: null,
+    images: [],
+  }
+})
+
+const pages = [
+  ...(mastheadSection ? [mapSectionPage(mastheadSection, 0)] : []),
+  ...ensuredMainSections.map((s, i) => mapSectionPage(s, i + 1)),
+  ...(closingSection ? [mapSectionPage(closingSection, ensuredMainSections.length + 1)] : []),
+]
 
 const cover = pages.find((p) => p.isCover) || null
 const upcomingPage = pages.find((p) => p.isUpcoming) || null
@@ -135,10 +172,65 @@ const storyPages = pages.filter(
 const textPages = pages.filter(
   (p) => !p.isCover && !p.isUpcoming && !storyPages.includes(p),
 )
+
+const printSections = ensuredMainSections.map((s, i) => mapSectionPage(s, i))
+const printPresentKeys = [...PDF_CONTENTS_KEYS]
+const mastheadHtml = cover && !cover.emptyBody ? cover.bodyHtml : ''
+const printYear = (issue?.month || month || '').slice(0, 4)
 ---
 
 {
-  view === 'news' ? (
+  view === 'print' ? (
+    <BaseLayout title={`${title} · QLU`} lang={lang} variant="print" mainClass="print-main">
+      {error ? (
+        <p class="qlu-error">{error}</p>
+      ) : issue ? (
+        <div class="print-desk">
+          <div class="print-toolbar">
+            <p class="print-toolbar-title">
+              {lang === 'te' ? 'PDF టెంప్లేట్ వ్యూ' : 'PDF template view'} · {issue.month}
+            </p>
+            <div class="print-toolbar-actions">
+              <div class="view-switch" role="navigation" aria-label={labelLayout}>
+                <a class:list={['view-switch-btn', view === 'flip' && 'is-active']} href={flipHref}>
+                  {labelFlip}
+                </a>
+                <a class:list={['view-switch-btn', view === 'news' && 'is-active']} href={newsHref}>
+                  {labelNews}
+                </a>
+                <a class:list={['view-switch-btn', view === 'print' && 'is-active']} href={printHref}>
+                  {labelPrint}
+                </a>
+              </div>
+              <div class="qlu-lang" role="navigation" aria-label="Language">
+                <a class:list={{ active: lang === 'te' }} href={printHrefTe}>
+                  TE
+                </a>
+                <a class:list={{ active: lang === 'en' }} href={printHrefEn}>
+                  EN
+                </a>
+              </div>
+              <a class="flip-archive" href="/issues/">
+                {lang === 'te' ? 'అన్ని సంచికలు' : 'All issues'}
+              </a>
+            </div>
+          </div>
+
+          <PrintCover issue={issue} lang={lang} title={title} mastheadHtml={mastheadHtml} />
+          <PrintContents lang={lang} month={issue.month} presentKeys={printPresentKeys} />
+          {printSections.map((page) => (
+            <PrintSection
+              section={page.section}
+              lang={lang}
+              bodyHtml={page.bodyHtml}
+              month={issue.month}
+              year={printYear}
+            />
+          ))}
+        </div>
+      ) : null}
+    </BaseLayout>
+  ) : view === 'news' ? (
     <BaseLayout title={`${title} · QLU`} lang={lang} variant="news" mainClass="news-main">
       {error ? (
         <p class="qlu-error">{error}</p>
@@ -160,6 +252,9 @@ const textPages = pages.filter(
                     </a>
                     <a class:list={['view-switch-btn', view === 'news' && 'is-active']} href={newsHref}>
                       {labelNews}
+                    </a>
+                    <a class:list={['view-switch-btn', view === 'print' && 'is-active']} href={printHref}>
+                      {labelPrint}
                     </a>
                   </div>
                   <div class="qlu-lang" role="navigation" aria-label="Language">
@@ -287,6 +382,18 @@ const textPages = pages.filter(
                   <h2 class="news-block-title">
                     {upcomingPage.heading || (lang === 'te' ? 'రాబోయే ఈవెంట్లు' : 'Upcoming events')}
                   </h2>
+                  {upcomingPage.images.length ? (
+                    <div class="news-gallery news-gallery--inline">
+                      {upcomingPage.images.map((img) =>
+                        img ? (
+                          <figure>
+                            <img src={img.src} alt={img.alt || ''} loading="lazy" />
+                            {img.caption ? <figcaption>{img.caption}</figcaption> : null}
+                          </figure>
+                        ) : null,
+                      )}
+                    </div>
+                  ) : null}
                   {!upcomingPage.emptyBody ? (
                     <div class="news-prose" set:html={upcomingPage.bodyHtml} />
                   ) : null}
@@ -302,11 +409,6 @@ const textPages = pages.filter(
                   data-search={`${page.heading || ''} ${page.teaser || ''}`}
                 >
                   <h2 class="news-block-title">{page.heading || page.pageLabel}</h2>
-                  {!page.emptyBody ? (
-                    <div class="news-prose" set:html={page.bodyHtml} />
-                  ) : page.teaser ? (
-                    <p class="news-block-teaser">{page.teaser}</p>
-                  ) : null}
                   {page.images.length ? (
                     <div class="news-gallery news-gallery--inline">
                       {page.images.map((img) =>
@@ -318,6 +420,11 @@ const textPages = pages.filter(
                         ) : null,
                       )}
                     </div>
+                  ) : null}
+                  {!page.emptyBody ? (
+                    <div class="news-prose" set:html={page.bodyHtml} />
+                  ) : page.teaser ? (
+                    <p class="news-block-teaser">{page.teaser}</p>
                   ) : null}
                 </section>
               ))}
@@ -354,6 +461,8 @@ const textPages = pages.filter(
                 <a href={newsHrefOther}>{other === 'te' ? 'తెలుగు' : 'English'}</a>
                 {' · '}
                 <a href={flipHref}>{labelFlip}</a>
+                {' · '}
+                <a href={printHref}>{labelPrint}</a>
               </p>
             </div>
           </footer>
@@ -378,6 +487,9 @@ const textPages = pages.filter(
                 </a>
                 <a class:list={['view-switch-btn', view === 'news' && 'is-active']} href={newsHref}>
                   {labelNews}
+                </a>
+                <a class:list={['view-switch-btn', view === 'print' && 'is-active']} href={printHref}>
+                  {labelPrint}
                 </a>
               </div>
               <div class="qlu-lang" role="navigation" aria-label="Language">
@@ -437,6 +549,18 @@ const textPages = pages.filter(
                         <div class="flip-cover">
                           <p class="flip-cover-brand">Quantum Life University</p>
                           <h2 class="flip-cover-title">{title}</h2>
+                          {page.images.length ? (
+                            <div class="flip-figures">
+                              {page.images.map((img) =>
+                                img ? (
+                                  <figure class:list={[`align-${img.align}`, `size-${img.size}`]}>
+                                    <img src={img.src} alt={img.alt || ''} loading="lazy" />
+                                    {img.caption ? <figcaption>{img.caption}</figcaption> : null}
+                                  </figure>
+                                ) : null,
+                              )}
+                            </div>
+                          ) : null}
                           {!page.emptyBody ? (
                             <div class="qlu-prose flip-prose flip-cover-lede" set:html={page.bodyHtml} />
                           ) : null}
@@ -444,24 +568,23 @@ const textPages = pages.filter(
                       ) : (
                         <>
                           {page.heading ? <h2 class="flip-section-title">{page.heading}</h2> : null}
+                          {page.images.length ? (
+                            <div class="flip-figures">
+                              {page.images.map((img) =>
+                                img ? (
+                                  <figure class:list={[`align-${img.align}`, `size-${img.size}`]}>
+                                    <img src={img.src} alt={img.alt || ''} loading="lazy" />
+                                    {img.caption ? <figcaption>{img.caption}</figcaption> : null}
+                                  </figure>
+                                ) : null,
+                              )}
+                            </div>
+                          ) : null}
                           {!page.emptyBody ? (
                             <div class="qlu-prose flip-prose" set:html={page.bodyHtml} />
                           ) : null}
                         </>
                       )}
-
-                      {page.images.length ? (
-                        <div class="flip-figures">
-                          {page.images.map((img) =>
-                            img ? (
-                              <figure class:list={[`align-${img.align}`, `size-${img.size}`]}>
-                                <img src={img.src} alt={img.alt || ''} loading="lazy" />
-                                {img.caption ? <figcaption>{img.caption}</figcaption> : null}
-                              </figure>
-                            ) : null,
-                          )}
-                        </div>
-                      ) : null}
 
                       <footer class="flip-page-foot">QLU · {issue.month}</footer>
                     </div>

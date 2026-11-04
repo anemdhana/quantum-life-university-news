@@ -1,0 +1,89 @@
+---
+import type { Issue, Lang, MediaDoc } from '../../lib/payload'
+import { formatCoverKicker, mediaUrl } from '../../lib/payload'
+
+interface Props {
+  issue: Issue
+  lang: Lang
+  title: string
+  mastheadHtml?: string
+}
+
+const { issue, lang, title, mastheadHtml = '' } = Astro.props
+
+const coverSrc = mediaUrl(issue.coverImage as MediaDoc)
+const tagline =
+  (lang === 'te' ? issue.taglineTe : issue.taglineEn)?.trim() ||
+  (lang === 'te' ? 'జ్ఞానం · ధ్యానం · సచేతన జీవనం' : 'Wisdom · Meditation · Conscious Living')
+const founders =
+  (lang === 'te' ? issue.foundersLineTe : issue.foundersLineEn)?.trim() ||
+  (lang === 'te' ? 'డా. న్యూటన్ & లక్ష్మి' : 'Dr. Newton & Lakshmi')
+const foundersSub =
+  (lang === 'te' ? issue.foundersSubTe : issue.foundersSubEn)?.trim() ||
+  (lang === 'te' ? 'సచేతన జీవనం యొక్క భాగస్వామ్య దృష్టి' : 'A Shared Vision of Conscious Living')
+const invitation =
+  (lang === 'te' ? issue.invitationTe : issue.invitationEn)?.trim() ||
+  (lang === 'te'
+    ? 'అవగాహన, దయ, అంతర శాంతితో జీవించమని ఆహ్వానం. ధ్యానం మరియు భాగస్వామ్య అధ్యయనం ద్వారా, లోపలి జ్ఞానాన్ని కనుగొని రోజువారీ జీవితంలో కరుణను తీసుకురావడం యొక్క ప్రయాణాన్ని మేము జరుపుకుంటాము.'
+    : 'An invitation to live with awareness, kindness and inner peace. Through the spirit of meditation and shared learning, we celebrate the journey of discovering wisdom within and bringing compassion into everyday life.')
+const kicker = formatCoverKicker(
+  issue.month,
+  lang,
+  lang === 'te' ? issue.coverKickerTe : issue.coverKickerEn,
+)
+const magLabel = lang === 'te' ? 'నెలవారీ వార్తాపత్రిక' : 'The Monthly Newsletter'
+---
+
+<section class="print-sheet print-cover" aria-label={lang === 'te' ? 'ముఖచిత్రం' : 'Cover'}>
+  <p class="print-brand">Quantum Life University</p>
+  <h1 class="print-cover-title">{magLabel}</h1>
+  <p class="print-tagline">{tagline}</p>
+
+  {
+    coverSrc ? (
+      <figure class="print-cover-hero">
+        <img
+          src={coverSrc}
+          alt={
+            (typeof issue.coverImage === 'object' && issue.coverImage && 'alt' in issue.coverImage
+              ? issue.coverImage.alt
+              : null) || (lang === 'te' ? 'ముఖచిత్రం' : 'Cover')
+          }
+          loading="eager"
+        />
+      </figure>
+    ) : (
+      <div class="print-cover-hero print-cover-hero--empty" aria-hidden="true">
+        <span>{lang === 'te' ? 'ముఖచిత్రం జోడించండి' : 'Add cover image in admin'}</span>
+      </div>
+    )
+  }
+
+  <div class="print-founders">
+    <p class="print-founders-line">{founders}</p>
+    <p class="print-founders-sub">{foundersSub}</p>
+  </div>
+
+  {
+    invitation ? (
+      <div class="print-invitation">
+        {invitation.split(/\n+/).map((para) => (
+          <p>{para}</p>
+        ))}
+      </div>
+    ) : null
+  }
+
+  {
+    mastheadHtml ? (
+      <div class="print-prose print-cover-extra" set:html={mastheadHtml} />
+    ) : null
+  }
+
+  <p class="print-kicker">{kicker}</p>
+  <p class="print-issue-title">{title}</p>
+  <footer class="print-sheet-foot">
+    <span>Quantum Life University</span>
+    <span>{lang === 'te' ? 'నెలవారీ వార్తాపత్రిక' : 'Monthly Newsletter'}</span>
+  </footer>
+</section>

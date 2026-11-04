@@ -46,8 +46,9 @@ function renderNode(node: LexNode): string {
     case 'linebreak':
       return '<br />'
     case 'paragraph': {
-      const inner = renderChildren(node.children)
-      return inner ? `<p>${inner}</p>` : '<p></p>'
+      const inner = renderChildren(node.children).trim()
+      // Keep empty paragraphs so extra blank lines between bullets/blocks survive
+      return inner ? `<p>${inner}</p>` : '<p class="lex-blank">&nbsp;</p>'
     }
     case 'heading': {
       const tag = (node.tag as string) || 'h2'
@@ -58,8 +59,13 @@ function renderNode(node: LexNode): string {
       const tag = node.listType === 'number' || node.tag === 'ol' ? 'ol' : 'ul'
       return `<${tag}>${renderChildren(node.children)}</${tag}>`
     }
-    case 'listitem':
-      return `<li>${renderChildren(node.children)}</li>`
+    case 'listitem': {
+      // Lexical often wraps item text in a paragraph; keep structure, drop empty wrappers
+      const inner = renderChildren(node.children)
+        .replace(/<p>\s*<\/p>/g, '')
+        .replace(/^<p>([\s\S]*)<\/p>$/i, '$1')
+      return `<li>${inner}</li>`
+    }
     case 'quote':
       return `<blockquote>${renderChildren(node.children)}</blockquote>`
     case 'link': {
