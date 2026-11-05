@@ -17,9 +17,10 @@ interface Props {
   bodyHtml: string
   month: string
   year: string
+  entryIndex?: number
 }
 
-const { section, lang, bodyHtml, month, year } = Astro.props
+const { section, lang, bodyHtml, month, year, entryIndex = 0 } = Astro.props
 const key = isSectionKey(section.key) ? section.key : null
 const pdf = key ? PDF_SECTION_TITLES[key] : null
 /** Fixed PDF template name in eyebrow; editor heading is the page headline */
@@ -27,6 +28,7 @@ const sectionLabel = pdf ? (lang === 'te' ? pdf.te : pdf.en) : section.key
 const headline = ((lang === 'te' ? section.headingTe : section.headingEn) || '').trim()
 const num = pdf?.num || ''
 const emptyLine = lang === 'te' ? EMPTY_SECTION.te : EMPTY_SECTION.en
+const sheetId = `print-${section.key}-${entryIndex + 1}`
 const images =
   section.images
     ?.map((row) => {
@@ -43,7 +45,7 @@ const images =
     .filter(Boolean) || []
 ---
 
-<section class="print-sheet print-section" id={`print-${section.key}`}>
+<section class="print-sheet print-section" id={sheetId}>
   <header class="print-sheet-head">
     <p class="print-sheet-brand">Quantum Life University</p>
     <p class="print-sheet-meta">Monthly / {year}</p>

@@ -172,17 +172,14 @@ export interface Media {
  */
 export interface Issue {
   id: number;
-  /**
-   * Switch once — only that language’s fields show below (cover, sections, bodies). Other language is kept; switch back to edit it.
-   */
   editLang?: ('en' | 'te') | null;
+  published?: boolean | null;
   /**
    * Issue id YYYY-MM (e.g. 2026-10)
    */
   month: string;
   titleTe?: string | null;
   titleEn?: string | null;
-  published?: boolean | null;
   /**
    * Hero / logo art for Print page 1 (same role as the image on the PDF cover).
    */
@@ -197,9 +194,6 @@ export interface Issue {
   invitationEn?: string | null;
   coverKickerTe?: string | null;
   coverKickerEn?: string | null;
-  /**
-   * Each section = a PDF layout block. Fill slots for the active editing language. Print titles stay fixed.
-   */
   sections?:
     | {
         key:
@@ -497,10 +491,10 @@ export interface MediaSelect<T extends boolean = true> {
  */
 export interface IssuesSelect<T extends boolean = true> {
   editLang?: T;
+  published?: T;
   month?: T;
   titleTe?: T;
   titleEn?: T;
-  published?: T;
   coverImage?: T;
   taglineTe?: T;
   taglineEn?: T;

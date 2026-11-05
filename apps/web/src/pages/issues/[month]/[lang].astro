@@ -131,25 +131,23 @@ function mapSectionPage(section: IssueSection, i: number) {
   }
 }
 
-const sectionsByKey = new Map(
-  (issue?.sections || []).map((s) => [s.key, s] as const),
-)
+const allSections = issue?.sections || []
+const mastheadSection = allSections.find((s) => s.key === 'masthead')
+const closingSection = [...allSections].reverse().find((s) => s.key === 'closing')
 
-const mastheadSection = sectionsByKey.get('masthead')
-const closingSection = sectionsByKey.get('closing')
+/** Main newsletter sections — multiple entries per key are kept in order. */
+const emptySectionStub = (key: (typeof PDF_CONTENTS_KEYS)[number]): IssueSection => ({
+  key,
+  headingTe: null,
+  headingEn: null,
+  bodyTe: null,
+  bodyEn: null,
+  images: [],
+})
 
-/** Always include the 7 main newsletter sections (stub empty ones). */
-const ensuredMainSections: IssueSection[] = PDF_CONTENTS_KEYS.map((key) => {
-  const existing = sectionsByKey.get(key)
-  if (existing) return existing
-  return {
-    key,
-    headingTe: null,
-    headingEn: null,
-    bodyTe: null,
-    bodyEn: null,
-    images: [],
-  }
+const ensuredMainSections: IssueSection[] = PDF_CONTENTS_KEYS.flatMap((key) => {
+  const matches = allSections.filter((s) => s.key === key)
+  return matches.length ? matches : [emptySectionStub(key)]
 })
 
 const pages = [
@@ -218,13 +216,14 @@ const printYear = (issue?.month || month || '').slice(0, 4)
 
           <PrintCover issue={issue} lang={lang} title={title} mastheadHtml={mastheadHtml} />
           <PrintContents lang={lang} month={issue.month} presentKeys={printPresentKeys} />
-          {printSections.map((page) => (
+          {printSections.map((page, entryIndex) => (
             <PrintSection
               section={page.section}
               lang={lang}
               bodyHtml={page.bodyHtml}
               month={issue.month}
               year={printYear}
+              entryIndex={entryIndex}
             />
           ))}
         </div>

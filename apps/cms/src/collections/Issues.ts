@@ -73,6 +73,11 @@ export const Issues: CollectionConfig = {
     useAsTitle: 'month',
     defaultColumns: ['month', 'titleEn', 'published', 'updatedAt'],
     group: 'Magazine',
+    components: {
+      edit: {
+        beforeDocumentControls: ['/components/admin/IssueDocMetaControls#IssueDocMetaControls'],
+      },
+    },
   },
   access: {
     read: ({ req: { user } }) => {
@@ -99,53 +104,8 @@ export const Issues: CollectionConfig = {
         { label: 'తెలుగు (Telugu)', value: 'te' },
       ],
       admin: {
-        description:
-          'Switch once — only that language’s fields show below (cover, sections, bodies). Other language is kept; switch back to edit it.',
-      },
-    },
-    {
-      name: 'month',
-      type: 'text',
-      required: true,
-      unique: true,
-      admin: {
-        description: 'Issue id YYYY-MM (e.g. 2026-10)',
-      },
-      validate: (value: string | null | undefined) => {
-        if (!value || !/^\d{4}-\d{2}$/.test(value)) {
-          return 'Use YYYY-MM'
-        }
-        return true
-      },
-    },
-    {
-      name: 'titleTe',
-      type: 'text',
-      label: 'Issue title',
-      admin: {
-        condition: isTe,
-        placeholder: 'నెలవారీ పత్రిక శీర్షిక',
-      },
-      validate: (value, { data }) => {
-        if (editLang(data as Record<string, unknown>) === 'te' && !value?.trim()) {
-          return 'Issue title is required'
-        }
-        return true
-      },
-    },
-    {
-      name: 'titleEn',
-      type: 'text',
-      label: 'Issue title',
-      admin: {
-        condition: isEn,
-        placeholder: 'Monthly newsletter title',
-      },
-      validate: (value, { data }) => {
-        if (editLang(data as Record<string, unknown>) === 'en' && !value?.trim()) {
-          return 'Issue title is required'
-        }
-        return true
+        // Kept in sidebar for form state; visible UI is IssueDocMetaControls in doc-controls meta row.
+        position: 'sidebar',
       },
     },
     {
@@ -157,64 +117,134 @@ export const Issues: CollectionConfig = {
       },
     },
     {
-      type: 'collapsible',
-      label: 'Print cover (PDF layout slots)',
+      name: 'sectionWizard',
+      type: 'ui',
       admin: {
-        initCollapsed: false,
-        description:
-          'Page 1 of the PDF template: cover image + copy slots. Brand chrome stays fixed in Print view.',
+        components: {
+          Field: '/components/admin/SectionWizard#SectionWizard',
+        },
+      },
+    },
+    {
+      type: 'group',
+      label: false,
+      admin: {
+        hideGutter: true,
+        className: 'qlu-issue-cover-pane',
       },
       fields: [
         {
-          name: 'coverImage',
-          type: 'upload',
-          relationTo: 'media',
-          label: 'Front cover image',
+          name: 'month',
+          type: 'text',
+          required: true,
+          unique: true,
           admin: {
-            description:
-              'Hero / logo art for Print page 1 (same role as the image on the PDF cover).',
+            description: 'Issue id YYYY-MM (e.g. 2026-10)',
+          },
+          validate: (value: string | null | undefined) => {
+            if (!value || !/^\d{4}-\d{2}$/.test(value)) {
+              return 'Use YYYY-MM'
+            }
+            return true
           },
         },
-        ...langPair({
-          nameTe: 'taglineTe',
-          nameEn: 'taglineEn',
-          label: 'Tagline',
+        {
+          name: 'titleTe',
           type: 'text',
-          phTe: PDF_PH.cover.taglineTe,
-          phEn: PDF_PH.cover.taglineEn,
-        }),
-        ...langPair({
-          nameTe: 'foundersLineTe',
-          nameEn: 'foundersLineEn',
-          label: 'Founders line',
+          label: 'Issue title',
+          admin: {
+            condition: isTe,
+            placeholder: 'నెలవారీ పత్రిక శీర్షిక',
+          },
+          validate: (
+            value: string | null | undefined,
+            { data }: { data?: Record<string, unknown> },
+          ) => {
+            if (editLang(data) === 'te' && !value?.trim()) {
+              return 'Issue title is required'
+            }
+            return true
+          },
+        },
+        {
+          name: 'titleEn',
           type: 'text',
-          phTe: PDF_PH.cover.foundersLineTe,
-          phEn: PDF_PH.cover.foundersLineEn,
-        }),
-        ...langPair({
-          nameTe: 'foundersSubTe',
-          nameEn: 'foundersSubEn',
-          label: 'Founders subtitle',
-          type: 'text',
-          phTe: PDF_PH.cover.foundersSubTe,
-          phEn: PDF_PH.cover.foundersSubEn,
-        }),
-        ...langPair({
-          nameTe: 'invitationTe',
-          nameEn: 'invitationEn',
-          label: 'Cover invitation',
-          rows: 4,
-          phTe: PDF_PH.cover.invitationTe,
-          phEn: PDF_PH.cover.invitationEn,
-        }),
-        ...langPair({
-          nameTe: 'coverKickerTe',
-          nameEn: 'coverKickerEn',
-          label: 'Cover kicker (month line)',
-          type: 'text',
-          phTe: PDF_PH.cover.coverKickerTe,
-          phEn: PDF_PH.cover.coverKickerEn,
-        }),
+          label: 'Issue title',
+          admin: {
+            condition: isEn,
+            placeholder: 'Monthly newsletter title',
+          },
+          validate: (
+            value: string | null | undefined,
+            { data }: { data?: Record<string, unknown> },
+          ) => {
+            if (editLang(data) === 'en' && !value?.trim()) {
+              return 'Issue title is required'
+            }
+            return true
+          },
+        },
+        {
+          type: 'collapsible',
+          label: 'Print cover (PDF layout slots)',
+          admin: {
+            initCollapsed: false,
+            description:
+              'Page 1 of the PDF template: cover image + copy slots. Brand chrome stays fixed in Print view.',
+          },
+          fields: [
+            {
+              name: 'coverImage',
+              type: 'upload',
+              relationTo: 'media',
+              label: 'Front cover image',
+              admin: {
+                description:
+                  'Hero / logo art for Print page 1 (same role as the image on the PDF cover).',
+              },
+            },
+            ...langPair({
+              nameTe: 'taglineTe',
+              nameEn: 'taglineEn',
+              label: 'Tagline',
+              type: 'text',
+              phTe: PDF_PH.cover.taglineTe,
+              phEn: PDF_PH.cover.taglineEn,
+            }),
+            ...langPair({
+              nameTe: 'foundersLineTe',
+              nameEn: 'foundersLineEn',
+              label: 'Founders line',
+              type: 'text',
+              phTe: PDF_PH.cover.foundersLineTe,
+              phEn: PDF_PH.cover.foundersLineEn,
+            }),
+            ...langPair({
+              nameTe: 'foundersSubTe',
+              nameEn: 'foundersSubEn',
+              label: 'Founders subtitle',
+              type: 'text',
+              phTe: PDF_PH.cover.foundersSubTe,
+              phEn: PDF_PH.cover.foundersSubEn,
+            }),
+            ...langPair({
+              nameTe: 'invitationTe',
+              nameEn: 'invitationEn',
+              label: 'Cover invitation',
+              rows: 4,
+              phTe: PDF_PH.cover.invitationTe,
+              phEn: PDF_PH.cover.invitationEn,
+            }),
+            ...langPair({
+              nameTe: 'coverKickerTe',
+              nameEn: 'coverKickerEn',
+              label: 'Cover kicker (month line)',
+              type: 'text',
+              phTe: PDF_PH.cover.coverKickerTe,
+              phEn: PDF_PH.cover.coverKickerEn,
+            }),
+          ],
+        },
       ],
     },
     {
@@ -222,9 +252,12 @@ export const Issues: CollectionConfig = {
       type: 'array',
       labels: { singular: 'Section', plural: 'Sections' },
       admin: {
+        // Keep open so wizard right-pane fields (slots, body, images) are editable.
         initCollapsed: false,
-        description:
-          'Each section = a PDF layout block. Fill slots for the active editing language. Print titles stay fixed.',
+        isSortable: false,
+        components: {
+          RowLabel: '/components/admin/SectionRowLabel#SectionRowLabel',
+        },
       },
       fields: [
         {
@@ -232,6 +265,10 @@ export const Issues: CollectionConfig = {
           type: 'select',
           required: true,
           options: SECTION_OPTIONS,
+          admin: {
+            // Section is chosen from the left wizard pane; key stays in data for Print/seed.
+            hidden: true,
+          },
         },
         ...langPair({
           nameTe: 'headingTe',
