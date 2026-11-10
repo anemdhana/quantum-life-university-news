@@ -209,7 +209,7 @@ export interface Issue {
         headingTe?: string | null;
         headingEn?: string | null;
         /**
-         * Themes experiment: tall rounded card (photo on top, text below). Use the first Images row as the card photo. Multiple card entries wrap side-by-side in Print.
+         * Print: section headline + lead above a grid; each Theme Item is its own card (Markdown blurbs). Optional first Images row shows above the cards.
          */
         asCard?: boolean | null;
         leadTe?: string | null;

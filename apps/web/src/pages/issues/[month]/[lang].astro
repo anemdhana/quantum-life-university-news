@@ -7,6 +7,7 @@ import PrintContents from '../../../components/print/PrintContents.astro'
 import PrintSection from '../../../components/print/PrintSection.astro'
 import PrintThemeCards from '../../../components/print/PrintThemeCards.astro'
 import ShortItems from '../../../components/ShortItems.astro'
+import BirthdaySplash from '../../../components/BirthdaySplash.astro'
 import {
   getIssue,
   mediaUrl,
@@ -208,6 +209,7 @@ const printSectionPages = printSectionsNormal.map(() => nextPrintPage())
       {error ? (
         <p class="qlu-error">{error}</p>
       ) : issue ? (
+        <>
         <div class="print-desk">
           <div class="print-toolbar">
             <div class="view-switch" role="navigation" aria-label={labelLayout}>
@@ -272,6 +274,8 @@ const printSectionPages = printSectionsNormal.map(() => nextPrintPage())
             />
           ))}
         </div>
+        <BirthdaySplash lang={lang} />
+        </>
       ) : null}
     </BaseLayout>
   ) : view === 'news' ? (
@@ -279,6 +283,7 @@ const printSectionPages = printSectionsNormal.map(() => nextPrintPage())
       {error ? (
         <p class="qlu-error">{error}</p>
       ) : issue ? (
+        <>
         <div class="news-desk" data-newsview>
           <header class="news-brand">
             <div class="news-brand-inner">
@@ -520,6 +525,8 @@ const printSectionPages = printSectionsNormal.map(() => nextPrintPage())
             </div>
           </footer>
         </div>
+        <BirthdaySplash lang={lang} />
+        </>
       ) : null}
     </BaseLayout>
   ) : (
@@ -527,6 +534,7 @@ const printSectionPages = printSectionsNormal.map(() => nextPrintPage())
       {error ? (
         <p class="qlu-error">{error}</p>
       ) : issue ? (
+        <>
         <div class="flip-desk" data-flipbook>
           <div class="flip-meta">
             <div class="flip-meta-text">
@@ -677,6 +685,8 @@ const printSectionPages = printSectionsNormal.map(() => nextPrintPage())
             <a href={flipHrefOther}>{other === 'te' ? 'తెలుగు' : 'English'}</a>
           </p>
         </div>
+        <BirthdaySplash lang={lang} />
+        </>
       ) : null}
     </BaseLayout>
   )
@@ -685,6 +695,8 @@ const printSectionPages = printSectionsNormal.map(() => nextPrintPage())
 <script>
   import { initFlipbook } from '../../../scripts/flipbook'
   import { initNewsView } from '../../../scripts/newsview'
+  import { initBirthdaySplash } from '../../../scripts/birthdaySplash'
+  import { initCardMasonry } from '../../../scripts/cardMasonry'
 
   document.querySelectorAll<HTMLElement>('[data-flipbook]').forEach((el) => {
     initFlipbook(el)
@@ -692,4 +704,8 @@ const printSectionPages = printSectionsNormal.map(() => nextPrintPage())
   document.querySelectorAll<HTMLElement>('[data-newsview]').forEach((el) => {
     initNewsView(el)
   })
+  document.querySelectorAll<HTMLElement>('[data-birthday-splash]').forEach((el) => {
+    initBirthdaySplash(el)
+  })
+  initCardMasonry()
 </script>

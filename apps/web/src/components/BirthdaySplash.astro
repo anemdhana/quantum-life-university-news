@@ -1,0 +1,62 @@
+---
+import type { Lang } from '../lib/payload'
+
+interface Props {
+  lang: Lang
+}
+
+const { lang } = Astro.props
+const headline =
+  lang === 'te'
+    ? 'డా. న్యూటన్ కొండవీటి గారికి పుట్టినరోజు శుభాకాంక్షలు'
+    : 'Happy Birthday, Dr. Newton Kondaveeti'
+const sub =
+  lang === 'te' ? 'ప్రేమతో · ఆశీస్సులతో…' : 'With love and blessings…'
+const continueLabel = lang === 'te' ? 'కొనసాగించండి' : 'Continue'
+const wishBits =
+  lang === 'te'
+    ? [
+        'ప్రేమతో, కృతజ్ఞతతో జన్మదిన శుభాకాంక్షలు!',
+        'ఆనందమయ జన్మదిన శుభాకాంక్షలు!',
+        'మీ జ్ఞానప్రవాహం నిరంతరం కొనసాగాలి!',
+      ].join('|')
+    : 'Happy Birthday|Blessings|With love|Joy|Celebrate|Many happy returns'
+const flowerBits = '🌸|🌺|🌼|❀|❁|✿|🌷'
+---
+
+<div
+  class="birthday-splash"
+  data-birthday-splash
+  data-wish-bits={wishBits}
+  data-flower-bits={flowerBits}
+  hidden
+  aria-hidden="true"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="birthday-splash-title"
+>
+  <div class="birthday-splash__veil" aria-hidden="true" />
+  <div class="birthday-splash__pour" data-birthday-pour aria-hidden="true" />
+
+  <div class="birthday-splash__stage">
+    <figure class="birthday-splash__frame">
+      <div class="birthday-splash__frame-glow" aria-hidden="true" />
+      <div class="birthday-splash__frame-mat">
+        <img
+          class="birthday-splash__photo"
+          src="/newton-birthday.jpg"
+          alt={lang === 'te' ? 'డా. న్యూటన్ కొండవీటి' : 'Dr. Newton Kondaveeti'}
+          width="720"
+          height="900"
+          decoding="async"
+        />
+      </div>
+    </figure>
+
+    <p id="birthday-splash-title" class="birthday-splash__title">{headline}</p>
+    <p class="birthday-splash__sub">{sub}</p>
+    <button type="button" class="birthday-splash__btn" data-birthday-dismiss>
+      {continueLabel}
+    </button>
+  </div>
+</div>

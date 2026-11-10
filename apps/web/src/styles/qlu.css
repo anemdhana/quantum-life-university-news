@@ -1977,7 +1977,8 @@ body.is-print {
   position: relative;
   margin: 0 0 1.1rem;
   padding: 0.55rem 0.85rem 0.6rem 1rem;
-  border: none;
+  border: none; /* clears global h2 border-top */
+  border-top: 0;
   border-left: 3px solid #a17b43;
   border-radius: 0 8px 8px 0;
   font-size: clamp(1.02rem, 2.2vw, 1.18rem);
@@ -2080,69 +2081,115 @@ body.is-print {
   align-items: start;
 }
 
-/* Themes experiment: readable tall cards — balanced type, modest chrome */
-.print-theme-card-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.85rem 0.9rem;
-  align-items: stretch;
-  margin: 0.35rem 0 0.5rem;
+/* Themes as cards: headline/lead above; one card per Theme Item */
+.print-theme-sheet {
+  display: grid;
+  gap: 0.65rem;
 }
 
-.print-theme-card {
-  flex: 0 0 12.25rem;
-  width: 12.25rem;
-  max-width: 12.25rem;
-  display: flex;
-  flex-direction: column;
-  border: 1px solid #e0d5c4;
-  border-radius: 0.85rem;
-  background: #fffdf8;
-  overflow: hidden;
-}
-
-.print-theme-card__photo {
-  margin: 0;
-  flex: 0 0 auto;
-  height: 4.5rem;
-  background: #efe6d8;
-  overflow: hidden;
-}
-
-.print-theme-card__photo img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.print-theme-card__body {
-  flex: 1 1 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  padding: 0.65rem 0.7rem 0.75rem;
-  min-height: 0;
-}
-
-.print-theme-card__continued {
-  margin: 0;
-  font-size: 0.62rem;
-  font-weight: 700;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-  color: #a17b43;
-}
-
-.print-theme-card__title {
-  margin: 0;
-  font-size: 0.88rem;
+.print-theme-sheet__title {
+  margin: 0.15rem 0 0.35rem;
+  padding-top: 0;
+  border-top: 0; /* override global h2 rule */
+  font-size: 1.15rem;
   line-height: 1.3;
   font-weight: 700;
   color: #3d2f1c;
 }
 
-.print-theme-card__text,
+.print-theme-sheet__lead {
+  margin: 0;
+}
+
+.print-theme-sheet__photo {
+  margin: 0.15rem 0 0.25rem;
+  border-radius: 0.65rem;
+  overflow: hidden;
+  background: #efe6d8;
+}
+
+.print-theme-sheet__photo img {
+  display: block;
+  width: 100%;
+  max-height: 9rem;
+  object-fit: cover;
+}
+
+.print-theme-sheet__photo figcaption {
+  margin: 0;
+  padding: 0.35rem 0.55rem;
+  font-size: 0.7rem;
+  color: #7a664f;
+  background: #fffdf8;
+}
+
+.print-theme-sheet__body {
+  margin: 0.35rem 0 0;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: #5a4a36;
+}
+
+/* LTR masonry via JS (shortest-column); native grid-lanes when supported */
+.print-theme-card-grid {
+  position: relative;
+  display: block;
+  column-gap: 0.85rem;
+  margin: 0.15rem 0 0.35rem;
+}
+
+@supports (display: grid-lanes) {
+  .print-theme-card-grid.is-grid-lanes {
+    display: grid-lanes;
+    grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+    gap: 0.85rem;
+    height: auto !important;
+  }
+
+  .print-theme-card-grid.is-grid-lanes > .print-theme-card {
+    position: static !important;
+    left: auto !important;
+    top: auto !important;
+    width: auto !important;
+    margin: 0;
+  }
+}
+
+.print-theme-card {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #e0d5c4;
+  border-radius: 0.85rem;
+  background: #fffdf8;
+  overflow: visible;
+  height: auto;
+  min-height: 0;
+  width: 100%;
+  margin: 0 0 0.85rem;
+  box-sizing: border-box;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.print-theme-card-grid.is-masonry-laid > .print-theme-card {
+  margin: 0;
+}
+
+.print-theme-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.7rem 0.75rem 0.8rem;
+}
+
+.print-theme-card__title {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.3;
+  font-weight: 700;
+  color: #3d2f1c;
+}
+
 .print-theme-card__html,
 .print-theme-card__html :is(p, li) {
   margin: 0;
@@ -2177,9 +2224,30 @@ body.is-print {
   font-style: italic;
 }
 
+.print-theme-card__link {
+  margin-top: 0.35rem;
+  padding-top: 0;
+}
+
 @media print {
-  .print-theme-card {
+  .print-theme-card-grid,
+  .print-theme-card-grid.is-masonry-laid,
+  .print-theme-card-grid.is-grid-lanes {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.85rem;
+    height: auto !important;
+    position: static;
+  }
+
+  .print-theme-card-grid > .print-theme-card {
+    position: static !important;
+    left: auto !important;
+    top: auto !important;
+    width: auto !important;
+    margin: 0;
     break-inside: avoid;
+    page-break-inside: avoid;
   }
 }
 
@@ -2431,7 +2499,12 @@ body.is-print {
   margin: 0.5rem 0 1.5rem;
 }
 
-.story-detail-body p {
+.story-detail-body.md-prose {
+  line-height: 1.65;
+}
+
+.story-detail-body p,
+.story-detail-body.md-prose p {
   margin: 0.55rem 0;
   line-height: 1.65;
 }
@@ -2460,6 +2533,53 @@ body.is-print {
   display: grid;
   gap: 1rem;
   margin: 0.85rem 0 0;
+}
+
+.short-items--cards {
+  position: relative;
+  display: block;
+  column-gap: 0.85rem;
+}
+
+.short-items--cards.is-masonry-laid > .short-item--card {
+  margin: 0;
+}
+
+@supports (display: grid-lanes) {
+  .short-items--cards.is-grid-lanes {
+    display: grid-lanes;
+    grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+    gap: 0.85rem;
+    height: auto !important;
+  }
+
+  .short-items--cards.is-grid-lanes > .short-item--card {
+    position: static !important;
+    left: auto !important;
+    top: auto !important;
+    width: auto !important;
+    margin: 0;
+  }
+}
+
+.short-item--card {
+  border: 1px solid color-mix(in srgb, currentColor 14%, transparent);
+  border-radius: 0.85rem;
+  padding: 0.85rem 0.95rem 1rem;
+  background: color-mix(in srgb, currentColor 3%, transparent);
+  height: auto;
+  width: 100%;
+  margin: 0 0 0.85rem;
+  box-sizing: border-box;
+  break-inside: avoid;
+}
+
+.short-item--card .short-item-title {
+  font-size: 1rem;
+}
+
+.short-item--card .story-link-wrap {
+  margin-top: 0.55rem;
 }
 
 .short-item,
@@ -2499,6 +2619,315 @@ body.is-print {
   line-height: 1.55;
 }
 
-.print-theme-card__link {
-  margin: 0.4rem 0 0;
+.md-prose {
+  margin: 0.35rem 0 0;
+  line-height: 1.55;
+}
+
+.md-prose > :first-child {
+  margin-top: 0;
+}
+
+.md-prose > :last-child {
+  margin-bottom: 0;
+}
+
+.md-prose p,
+.md-prose ul,
+.md-prose ol,
+.md-prose blockquote {
+  margin: 0.4rem 0;
+}
+
+.md-prose ul,
+.md-prose ol {
+  padding-left: 1.25rem;
+}
+
+.md-prose li {
+  margin: 0.15rem 0;
+}
+
+.md-prose strong {
+  font-weight: 700;
+}
+
+.md-prose em {
+  font-style: italic;
+}
+
+.md-prose a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.12em;
+}
+
+.short-item-body.md-prose {
+  margin-top: 0.25rem;
+}
+
+.print-theme-list .md-prose,
+.print-lead .md-prose,
+.print-theme-card__body .md-prose,
+.print-theme-sheet__lead .md-prose {
+  font-size: inherit;
+}
+
+/* —— Birthday splash —— */
+.birthday-splash {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: grid;
+  place-items: center;
+  padding: 1.25rem 1rem 1.75rem;
+  pointer-events: auto;
+  transition: opacity 0.4s ease, visibility 0.4s ease;
+}
+
+.birthday-splash[hidden] {
+  display: none !important;
+}
+
+.birthday-splash.is-leaving {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.birthday-splash__veil {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 70% 60% at 50% 40%, rgba(255, 236, 200, 0.28), transparent 72%),
+    color-mix(in srgb, #140c04 48%, transparent);
+  backdrop-filter: blur(2px);
+}
+
+.birthday-splash__pour {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  /* Above the photo so wish cards stay readable */
+  z-index: 3;
+}
+
+.birthday-splash__flake {
+  position: absolute;
+  top: -12%;
+  animation-name: birthday-pour;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  white-space: nowrap;
+  will-change: transform, opacity;
+}
+
+.birthday-splash__flake--wish {
+  padding: 0.5rem 0.75rem;
+  border-radius: 1rem;
+  max-width: min(14.5rem, 32vw);
+  white-space: normal;
+  text-align: center;
+  background: linear-gradient(180deg, #fffaf0, #f6e2b4);
+  color: #4a2e06;
+  border: 1px solid rgba(184, 134, 11, 0.65);
+  box-shadow:
+    0 6px 18px rgba(20, 10, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.4) inset;
+  font-family: 'Noto Serif Telugu', 'Georgia', serif;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  line-height: 1.4;
+}
+
+.birthday-splash__flake--flower {
+  color: #ff6b8a;
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.35));
+  text-shadow:
+    0 0 8px rgba(255, 240, 200, 0.9),
+    0 2px 4px rgba(80, 20, 40, 0.35);
+  opacity: 1 !important;
+  white-space: nowrap;
+}
+
+.birthday-splash__flake--left {
+  transform-origin: left center;
+}
+
+.birthday-splash__flake--right {
+  transform-origin: right center;
+}
+
+/* Float down beside the photo (visible above it, not tucked under) */
+@keyframes birthday-side-left {
+  0% {
+    transform: translate3d(-30%, -8vh, 0);
+    opacity: 0;
+  }
+  8% {
+    opacity: 1;
+  }
+  18% {
+    transform: translate3d(2vw, 8vh, 0);
+  }
+  100% {
+    transform: translate3d(3vw, 108vh, 0);
+    opacity: 0.9;
+  }
+}
+
+@keyframes birthday-side-right {
+  0% {
+    transform: translate3d(30%, -8vh, 0);
+    opacity: 0;
+  }
+  8% {
+    opacity: 1;
+  }
+  18% {
+    transform: translate3d(-2vw, 8vh, 0);
+  }
+  100% {
+    transform: translate3d(-3vw, 108vh, 0);
+    opacity: 0.9;
+  }
+}
+
+@keyframes birthday-pour {
+  0% {
+    transform: translate3d(0, -12vh, 0) rotate(-6deg);
+    opacity: 0;
+  }
+  6% {
+    opacity: 1;
+  }
+  88% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(10px, 112vh, 0) rotate(10deg);
+    opacity: 0.85;
+  }
+}
+
+.birthday-splash__stage {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.7rem;
+  max-width: min(30rem, 94vw);
+  text-align: center;
+  isolation: isolate;
+}
+
+@media (max-width: 720px) {
+  .birthday-splash__flake--wish {
+    max-width: min(11.5rem, 38vw);
+    font-size: 0.74rem;
+    padding: 0.4rem 0.55rem;
+  }
+}
+
+.birthday-splash__frame {
+  position: relative;
+  margin: 0;
+  width: min(20rem, 76vw);
+  padding: 0.55rem;
+  border-radius: 1.15rem;
+  background:
+    linear-gradient(145deg, #f7e7b8 0%, #d4a84b 42%, #8c6418 100%);
+  box-shadow:
+    0 22px 48px rgba(20, 10, 0, 0.5),
+    0 0 0 1px rgba(255, 236, 190, 0.45) inset;
+}
+
+.birthday-splash__frame-glow {
+  position: absolute;
+  inset: -18% -20%;
+  background: radial-gradient(
+    ellipse at 50% 45%,
+    rgba(255, 220, 140, 0.55),
+    rgba(255, 200, 100, 0.12) 48%,
+    transparent 70%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+.birthday-splash__frame-mat {
+  position: relative;
+  z-index: 1;
+  border-radius: 0.78rem;
+  overflow: hidden;
+  background: #1a1208;
+  box-shadow: inset 0 0 0 1px rgba(255, 248, 220, 0.35);
+}
+
+.birthday-splash__photo {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  object-position: center 16%;
+}
+
+.birthday-splash__title {
+  margin: 0.45rem 0 0;
+  font-family: 'Noto Serif Telugu', 'Georgia', serif;
+  font-size: clamp(1.2rem, 3.8vw, 1.65rem);
+  font-weight: 700;
+  line-height: 1.4;
+  color: #fff8e8;
+  text-shadow: 0 2px 16px rgba(20, 10, 0, 0.65);
+}
+
+.birthday-splash__sub {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #ffe9b8;
+  text-shadow: 0 1px 8px rgba(20, 10, 0, 0.5);
+}
+
+.birthday-splash__btn {
+  margin-top: 0.35rem;
+  appearance: none;
+  border: 1px solid rgba(232, 196, 110, 0.75);
+  background: color-mix(in srgb, #2a1a0a 55%, transparent);
+  color: #fff4dc;
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  padding: 0.55rem 1.35rem;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.15s ease;
+}
+
+.birthday-splash__btn:hover {
+  background: color-mix(in srgb, #3a2812 70%, transparent);
+  transform: translateY(-1px);
+}
+
+html.birthday-splash-open .qlu-site > *:not(main),
+html.birthday-splash-open .qlu-main > *:not(.birthday-splash) {
+  opacity: 0.5;
+  transition: opacity 0.35s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .birthday-splash__flake {
+    animation: none !important;
+    display: none;
+  }
+}
+
+@media print {
+  .birthday-splash {
+    display: none !important;
+  }
 }

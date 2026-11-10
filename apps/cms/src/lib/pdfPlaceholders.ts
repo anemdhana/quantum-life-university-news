@@ -22,8 +22,8 @@ export const PDF_PH = {
       'ఈ నెలకు మూలాధారమైన సారాంశంతో ఈ పరిచయాన్ని భర్తీ చేయండి. నెల ప్రధాన బోధనలను కలిపే రెండు లేదా మూడు పేరాలు రాయండి — మూలంలో ఉన్న థీమ్స్ మాత్రమే.',
     themeTitleEn: 'Theme one — title and short verified explanation',
     themeTitleTe: 'థీమ్ ఒకటి — శీర్షిక మరియు సంక్షిప్త వివరణ',
-    themeBlurbEn: 'Short verified explanation',
-    themeBlurbTe: 'సంక్షిప్త నిర్ధారిత వివరణ',
+    themeBlurbEn: 'Short verified explanation. Markdown OK: **bold**, lists, links…',
+    themeBlurbTe: 'సంక్షిప్త నిర్ధారిత వివరణ. Markdown OK: **బోల్డ్**, జాబితాలు…',
   },
   classes: {
     titleEn: 'Class title',

@@ -2,6 +2,7 @@
 export const prerender = false
 
 import BaseLayout from '../../../../../../../layouts/BaseLayout.astro'
+import { mdToHtml } from '../../../../../../../lib/markdown'
 import { getIssue, type Lang } from '../../../../../../../lib/payload'
 import {
   findFullStory,
@@ -46,11 +47,7 @@ const title =
   story?.blurb.split(/\n+/).map((l) => l.trim()).find(Boolean) ||
   story?.fullStory.split(/\n+/).map((l) => l.trim()).find(Boolean) ||
   (lang === 'te' ? 'ఇంకా చదవండి' : 'Full story')
-const bodyLines = (story?.fullStory || '')
-  .split(/\n+/)
-  .map((l) => l.trim())
-  .filter(Boolean)
-  .filter((line, i) => !(i === 0 && title && line === title))
+const bodyHtml = mdToHtml(story?.fullStory || '')
 const issueTitle = issue ? (lang === 'te' ? issue.titleTe : issue.titleEn) : month!
 const backHref = newsletterReturnHref(month!, lang, sectionKey, itemKey, returnView)
 const teHref = `/issues/${month}/te/story/${encodeURIComponent(sectionKey)}/${encodeURIComponent(itemKey)}/${fromQuery}`
@@ -78,9 +75,7 @@ const enHref = `/issues/${month}/en/story/${encodeURIComponent(sectionKey)}/${en
         </div>
         {title ? <h1 class="story-detail-title">{title}</h1> : null}
         {story.meta ? <p class="story-detail-meta">{story.meta}</p> : null}
-        <div class="story-detail-body">
-          {bodyLines.map((line) => <p>{line}</p>)}
-        </div>
+        {bodyHtml ? <div class="story-detail-body md-prose" set:html={bodyHtml} /> : null}
         <p class="story-detail-back">
           <a href={backHref}>{storyBackLabel(lang)}</a>
         </p>

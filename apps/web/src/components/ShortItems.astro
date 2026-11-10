@@ -1,5 +1,6 @@
 ---
 import type { IssueSection, Lang } from '../lib/payload'
+import { mdToHtml } from '../lib/markdown'
 import { shortItemsForSection } from '../lib/storyLink'
 import StoryLink from './StoryLink.astro'
 
@@ -12,19 +13,26 @@ interface Props {
 }
 
 const { section, lang, month, from = 'news', class: className } = Astro.props
-const items = shortItemsForSection(section, lang, month, from)
+const asCards = section.key === 'themes' && Boolean(section.asCard)
+const items = shortItemsForSection(section, lang, month, from).map((item) => ({
+  ...item,
+  bodyHtml: mdToHtml(item.body),
+}))
 ---
 
 {
   items.length ? (
-    <div class:list={['short-items', className]}>
+    <div
+      class:list={[asCards ? 'short-items short-items--cards' : 'short-items', className]}
+      {...(asCards ? { 'data-card-masonry': true, 'data-masonry-min': '240' } : {})}
+    >
       {items.map((item) => (
-        <article class="short-item" id={item.anchorId}>
+        <article class:list={['short-item', asCards && 'short-item--card']} id={item.anchorId}>
           {item.title ? <h3 class="short-item-title">{item.title}</h3> : null}
           {item.meta ? <p class="short-item-meta">{item.meta}</p> : null}
-          {item.body
-            ? item.body.split(/\n+/).map((line) => (line.trim() ? <p>{line.trim()}</p> : null))
-            : null}
+          {item.bodyHtml ? (
+            <div class="short-item-body md-prose" set:html={item.bodyHtml} />
+          ) : null}
           <StoryLink href={item.href} external={item.external} lang={lang} />
         </article>
       ))}

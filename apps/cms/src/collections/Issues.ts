@@ -75,10 +75,10 @@ const fullStoryFields = (): Field[] =>
   langPair({
     nameTe: 'fullStoryTe',
     nameEn: 'fullStoryEn',
-    label: 'Full story',
-    rows: 8,
-    phTe: 'పూర్తి కథ ఇక్కడ… (న్యూస్‌లెటర్‌లో చిన్న బ్లర్బ్ మాత్రమే కనిపిస్తుంది)',
-    phEn: 'Full article here… (newsletter shows only the short blurb)',
+    label: 'Full story (Markdown)',
+    rows: 10,
+    phTe: 'పూర్తి కథ మార్క్‌డౌన్‌లో… (న్యూస్‌లెటర్‌లో చిన్న బ్లర్బ్ మాత్రమే)',
+    phEn: 'Full article in Markdown… (newsletter shows only the short blurb)',
   })
 
 const storyUrlField = (): Field => ({
@@ -337,7 +337,7 @@ export const Issues: CollectionConfig = {
           admin: {
             condition: keyIs('themes'),
             description:
-              'Themes experiment: tall rounded card (photo on top, text below). Use the first Images row as the card photo. Multiple card entries wrap side-by-side in Print.',
+              'Print: section headline + lead above a grid; each Theme Item is its own card (Markdown blurbs). Optional first Images row shows above the cards.',
           },
         },
 
@@ -354,17 +354,34 @@ export const Issues: CollectionConfig = {
             ...langPair({
               nameTe: 'leadTe',
               nameEn: 'leadEn',
-              label: 'Editorial lead',
-              rows: 4,
+              label: 'Editorial lead (Markdown)',
+              rows: 6,
               phTe: PDF_PH.themes.leadTe,
               phEn: PDF_PH.themes.leadEn,
               extraCondition: keyIs('themes'),
             }),
             {
+              name: 'themeItemsNav',
+              type: 'ui',
+              admin: {
+                condition: keyIs('themes'),
+                components: {
+                  Field: '/components/admin/ThemeItemsTabs#ThemeItemsTabs',
+                },
+              },
+            },
+            {
               name: 'themeItems',
               type: 'array',
               labels: { singular: 'Theme', plural: 'Themes' },
-              admin: { condition: keyIs('themes') },
+              admin: {
+                condition: keyIs('themes'),
+                className: 'qlu-theme-items-array',
+                initCollapsed: false,
+                components: {
+                  RowLabel: '/components/admin/ThemeItemRowLabel#ThemeItemRowLabel',
+                },
+              },
               fields: [
                 ...langPair({
                   nameTe: 'titleTe',
@@ -377,10 +394,10 @@ export const Issues: CollectionConfig = {
                 ...langPair({
                   nameTe: 'blurbTe',
                   nameEn: 'blurbEn',
-                  label: 'Theme blurb',
-                  rows: 2,
-                  phTe: PDF_PH.themes.themeBlurbTe,
-                  phEn: PDF_PH.themes.themeBlurbEn,
+                  label: 'Theme blurb (Markdown)',
+                  rows: 6,
+                  phTe: 'మార్క్‌డౌన్ సపోర్ట్: **బొద్దు**, జాబితాలు, పేరాలు…',
+                  phEn: 'Markdown supported: **bold**, lists, paragraphs…',
                 }),
                 ...storyLinkFields(),
               ],

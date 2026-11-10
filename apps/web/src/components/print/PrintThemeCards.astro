@@ -3,12 +3,7 @@ import type { IssueSection, Lang, MediaDoc } from '../../lib/payload'
 import { mediaUrl } from '../../lib/payload'
 import { pickLocalized } from '../../lib/localeText'
 import { PDF_SECTION_TITLES } from '../../lib/magazineSections'
-import {
-  htmlToFlowBlocks,
-  linesToParagraphs,
-  packFlowIntoCards,
-  type FlowBlock,
-} from '../../lib/printText'
+import { mdToHtml } from '../../lib/markdown'
 import {
   itemKeyAt,
   pickLangText,
@@ -50,85 +45,72 @@ function cardPhoto(section: IssueSection) {
   return { src, caption, alt }
 }
 
-function buildFlowBlocks(section: IssueSection, bodyHtml: string): FlowBlock[] {
-  const blocks: FlowBlock[] = []
-  const headline = pickLocalized(lang, section.headingTe, section.headingEn)
-  if (headline) blocks.push({ kind: 'title', text: headline })
-
-  const lead = pickLocalized(lang, section.leadTe, section.leadEn)
-  for (const line of linesToParagraphs(lead)) {
-    if (line.trim()) blocks.push({ kind: 'text', text: line.trim() })
-  }
-
-  for (const [index, item] of (section.themeItems || []).entries()) {
-    const title = pickLocalized(lang, item.titleTe, item.titleEn)
-    const blurb = pickLocalized(lang, item.blurbTe, item.blurbEn)
-    if (title) blocks.push({ kind: 'title', text: title })
-    for (const line of linesToParagraphs(blurb)) {
-      if (line.trim()) blocks.push({ kind: 'text', text: line.trim() })
-    }
-    const link = resolveStoryLink({
-      month,
-      lang,
-      sectionKey: 'themes',
-      itemKey: itemKeyAt(item.id, index),
-      fullStory: pickLangText(lang, item.fullStoryTe, item.fullStoryEn),
-      storyUrl: item.storyUrl,
-      from: 'print',
-    })
-    if (link.href) {
-      blocks.push({
-        kind: 'link',
-        href: link.href,
-        label: storyLinkLabel(lang),
-        external: link.external,
-        id: link.anchorId,
-      })
-    }
-  }
-
-  const bodyBlocks = htmlToFlowBlocks(bodyHtml || '')
-  if (bodyBlocks.length) {
-    blocks.push(...bodyBlocks)
-  } else if (bodyHtml?.replace(/<[^>]+>/g, '').trim()) {
-    // Fallback: keep whole body HTML if splitter found nothing usable
-    blocks.push({
-      kind: 'html',
-      html: bodyHtml,
-      chars: bodyHtml.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().length,
-    })
-  }
-
-  return blocks
+type ThemeCard = {
+  id?: string
+  title: string
+  blurbHtml: string
+  href: string | null
+  external: boolean
+  anchorId: string
+  label: string
 }
 
-type PackedCard = {
+type ThemeSheet = {
+  headline: string
+  leadHtml: string
   photo: { src: string; alt: string; caption?: string | null } | null
-  continued: boolean
-  blocks: FlowBlock[]
+  items: ThemeCard[]
+  bodyHtml: string
 }
 
-const packedStories = cards.map(({ section, bodyHtml }) => {
-  const photo = cardPhoto(section)
-  const flow = buildFlowBlocks(section, bodyHtml)
-  const columns = packFlowIntoCards(flow, {
-    // Comfortable chunks for reading; overflow still continues beside
-    firstBudget: photo ? 340 : 460,
-    nextBudget: 520,
-  })
-  const cols = columns.length ? columns : [[]]
-  return cols.map((blocks, i) => ({
-    photo: i === 0 ? photo : null,
-    continued: i > 0,
-    blocks,
-  })) as PackedCard[]
+const sheets: ThemeSheet[] = cards.map(({ section, bodyHtml }) => {
+  const items: ThemeCard[] = (section.themeItems || [])
+    .map((item, index) => {
+      const title = pickLocalized(lang, item.titleTe, item.titleEn)
+      const blurbHtml = mdToHtml(pickLocalized(lang, item.blurbTe, item.blurbEn))
+      if (!title && !blurbHtml) return null
+      const link = resolveStoryLink({
+        month,
+        lang,
+        sectionKey: 'themes',
+        itemKey: itemKeyAt(item.id, index),
+        fullStory: pickLangText(lang, item.fullStoryTe, item.fullStoryEn),
+        storyUrl: item.storyUrl,
+        from: 'print',
+      })
+      return {
+        id: item.id,
+        title,
+        blurbHtml,
+        href: link.href,
+        external: link.external,
+        anchorId: link.anchorId,
+        label: storyLinkLabel(lang),
+      }
+    })
+    .filter(Boolean) as ThemeCard[]
+
+  return {
+    headline: pickLocalized(lang, section.headingTe, section.headingEn),
+    leadHtml: mdToHtml(pickLocalized(lang, section.leadTe, section.leadEn)),
+    photo: cardPhoto(section),
+    items,
+    bodyHtml: bodyHtml || '',
+  }
 })
 
-const allCardColumns = packedStories.flat()
+const hasContent = sheets.some(
+  (s) =>
+    s.headline ||
+    s.leadHtml ||
+    s.photo ||
+    s.items.length ||
+    s.bodyHtml.replace(/<[^>]+>/g, '').trim(),
+)
 ---
 
 {
-  allCardColumns.length ? (
+  hasContent ? (
     <section class="print-sheet print-section print-section--theme-cards" id="print-themes-cards">
       <PrintSheetHeader
         lang={lang}
@@ -139,60 +121,65 @@ const allCardColumns = packedStories.flat()
       />
 
       <div class="print-sheet-body">
-        <div class="print-theme-card-grid">
-          {allCardColumns.map((col) => (
-            <article class="print-theme-card">
-              {col.photo ? (
-                <figure class="print-theme-card__photo">
-                  <img src={col.photo.src} alt={col.photo.alt || ''} loading="lazy" />
-                </figure>
-              ) : null}
+        {sheets.map((sheet) => (
+          <div class="print-theme-sheet">
+            {sheet.headline ? <h2 class="print-theme-sheet__title">{sheet.headline}</h2> : null}
 
-              <div class="print-theme-card__body">
-                {col.continued ? (
-                  <p class="print-theme-card__continued">
-                    {lang === 'te' ? 'కొనసాగింపు…' : 'Continued…'}
-                  </p>
-                ) : null}
-
-                {col.blocks.length ? (
-                  col.blocks.map((block) =>
-                    block.kind === 'title' ? (
-                      <h3 class="print-theme-card__title">{block.text}</h3>
-                    ) : block.kind === 'text' ? (
-                      <p class="print-theme-card__text">{block.text}</p>
-                    ) : block.kind === 'link' ? (
-                      <p class="print-theme-card__link story-link-wrap" id={block.id}>
-                        {block.external ? (
-                          <a
-                            class="story-link print-story-link"
-                            href={block.href}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            {block.label}
-                          </a>
-                        ) : (
-                          <a class="story-link print-story-link" href={block.href}>
-                            {block.label}
-                          </a>
-                        )}
-                      </p>
-                    ) : (
-                      <div class="print-theme-card__html" set:html={block.html} />
-                    ),
-                  )
-                ) : (
-                  <p class="print-theme-card__empty">
-                    {lang === 'te'
-                      ? 'ఫోటో కింద కంటెంట్ లేదు — హెడ్‌లైన్ లేదా బాడీ నింపండి.'
-                      : 'No text under the photo — add a headline or body on this entry.'}
-                  </p>
-                )}
+            {sheet.leadHtml ? (
+              <div class="print-lead print-theme-sheet__lead">
+                <div class="md-prose" set:html={sheet.leadHtml} />
               </div>
-            </article>
-          ))}
-        </div>
+            ) : null}
+
+            {sheet.photo ? (
+              <figure class="print-theme-sheet__photo">
+                <img src={sheet.photo.src} alt={sheet.photo.alt || ''} loading="lazy" />
+                {sheet.photo.caption ? <figcaption>{sheet.photo.caption}</figcaption> : null}
+              </figure>
+            ) : null}
+
+            {sheet.items.length ? (
+              <div class="print-theme-card-grid" data-card-masonry data-masonry-min="192">
+                {sheet.items.map((item) => (
+                  <article class="print-theme-card" id={item.anchorId}>
+                    <div class="print-theme-card__body">
+                      {item.title ? <h3 class="print-theme-card__title">{item.title}</h3> : null}
+                      {item.blurbHtml ? (
+                        <div class="print-theme-card__html md-prose" set:html={item.blurbHtml} />
+                      ) : (
+                        <p class="print-theme-card__empty">
+                          {lang === 'te' ? 'బ్లర్బ్ లేదు.' : 'No blurb yet.'}
+                        </p>
+                      )}
+                      {item.href ? (
+                        <p class="print-theme-card__link story-link-wrap">
+                          {item.external ? (
+                            <a
+                              class="story-link print-story-link"
+                              href={item.href}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              {item.label}
+                            </a>
+                          ) : (
+                            <a class="story-link print-story-link" href={item.href}>
+                              {item.label}
+                            </a>
+                          )}
+                        </p>
+                      ) : null}
+                    </div>
+                  </article>
+                ))}
+              </div>
+            ) : null}
+
+            {sheet.bodyHtml.replace(/<[^>]+>/g, '').trim() ? (
+              <div class="print-theme-sheet__body md-prose" set:html={sheet.bodyHtml} />
+            ) : null}
+          </div>
+        ))}
       </div>
 
       <PrintSheetFooter lang={lang} month={month} page={page} pages={pages} />
