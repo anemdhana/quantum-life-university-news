@@ -1,0 +1,50 @@
+---
+import type { IssueSection, Lang } from '../lib/payload'
+import { resolveThemeCards } from '../lib/themeCards'
+
+interface Props {
+  section: IssueSection
+  lang: Lang
+  /** Optional heading above the card grid */
+  heading?: string | null
+  showHint?: boolean
+  class?: string
+}
+
+const { section, lang, heading, showHint = true, class: className } = Astro.props
+const cards = resolveThemeCards(section, lang)
+const hint =
+  lang === 'te'
+    ? 'టెక్స్ట్‌ను ఎంచుకుని కాపీ చేసి ఎక్కడైనా షేర్ చేయవచ్చు.'
+    : 'Select the text to copy and share anywhere.'
+---
+
+{
+  cards.length ? (
+    <div class:list={['share-cards-section', className]}>
+      {heading ? <h3 class="share-cards-heading">{heading}</h3> : null}
+      {showHint ? <p class="share-cards-hint">{hint}</p> : null}
+      <div class="share-cards">
+        {cards.map((card) => (
+          <article class="share-card">
+            {card.src ? (
+              <div class="share-card__media">
+                <img src={card.src} alt={card.alt || ''} loading="lazy" />
+              </div>
+            ) : (
+              <div class="share-card__media share-card__media--empty" aria-hidden="true" />
+            )}
+            <div class="share-card__body">
+              {card.title ? <h4 class="share-card__title">{card.title}</h4> : null}
+              <div class="share-card__text" tabindex="0">
+                {card.bodyLines.map((p) =>
+                  p ? <p>{p}</p> : <p class="share-card__spacer" aria-hidden="true" />,
+                )}
+              </div>
+            </div>
+          </article>
+        ))}
+      </div>
+    </div>
+  ) : null
+}

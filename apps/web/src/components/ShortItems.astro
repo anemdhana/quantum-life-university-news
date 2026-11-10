@@ -1,0 +1,31 @@
+---
+import type { IssueSection, Lang } from '../lib/payload'
+import { shortItemsForSection } from '../lib/storyLink'
+import StoryLink from './StoryLink.astro'
+
+interface Props {
+  section: IssueSection
+  lang: Lang
+  class?: string
+}
+
+const { section, lang, class: className } = Astro.props
+const items = shortItemsForSection(section, lang)
+---
+
+{
+  items.length ? (
+    <div class:list={['short-items', className]}>
+      {items.map((item) => (
+        <article class="short-item">
+          {item.title ? <h3 class="short-item-title">{item.title}</h3> : null}
+          {item.meta ? <p class="short-item-meta">{item.meta}</p> : null}
+          {item.body
+            ? item.body.split(/\n+/).map((line) => (line.trim() ? <p>{line.trim()}</p> : null))
+            : null}
+          <StoryLink url={item.storyUrl} lang={lang} />
+        </article>
+      ))}
+    </div>
+  ) : null
+}

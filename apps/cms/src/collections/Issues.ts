@@ -4,19 +4,16 @@ import { applyMarkdownPasteToSections } from '../lib/applyMarkdownPaste'
 import { SECTION_OPTIONS } from '../lib/magazineSections'
 import { PDF_PH } from '../lib/pdfPlaceholders'
 
-type CondCtx = {
-  siblingData?: Record<string, unknown>
-}
-
 const editLang = (data?: Record<string, unknown> | null) =>
   data?.editLang === 'te' ? 'te' : 'en'
 
 const isTe = (data: Record<string, unknown> = {}) => editLang(data) === 'te'
 const isEn = (data: Record<string, unknown> = {}) => editLang(data) === 'en'
 
+/** Payload 3 conditions: (data, siblingData, ctx) — siblingData is the adjacent object/row. */
 const keyIs =
   (key: string) =>
-  (_data: unknown, { siblingData }: CondCtx = {}) =>
+  (_data: unknown, siblingData: Record<string, unknown> = {}) =>
     siblingData?.key === key
 
 /** One language at a time — pair of Te/En fields with shared label */
@@ -29,15 +26,21 @@ const langPair = (opts: {
   phTe?: string
   phEn?: string
   required?: boolean
-  extraCondition?: (data: Record<string, unknown>, ctx: CondCtx) => boolean
+  extraCondition?: (
+    data: Record<string, unknown>,
+    siblingData: Record<string, unknown>,
+  ) => boolean
 }): Field[] => {
   const type = opts.type || 'textarea'
   const base = (lang: 'te' | 'en'): Field => {
     const name = lang === 'te' ? opts.nameTe : opts.nameEn
     const ph = lang === 'te' ? opts.phTe : opts.phEn
     const langOk = lang === 'te' ? isTe : isEn
-    const condition = (data: Record<string, unknown> = {}, ctx: CondCtx = {}) => {
-      if (opts.extraCondition && !opts.extraCondition(data, ctx)) return false
+    const condition = (
+      data: Record<string, unknown> = {},
+      siblingData: Record<string, unknown> = {},
+    ) => {
+      if (opts.extraCondition && !opts.extraCondition(data, siblingData)) return false
       return langOk(data)
     }
     if (type === 'text') {
@@ -65,6 +68,27 @@ const sharedText = (name: string, label: string, placeholder?: string): Field =>
   type: 'text',
   label,
   admin: { placeholder },
+})
+
+const storyUrlField = (): Field => ({
+  name: 'storyUrl',
+  type: 'text',
+  label: 'Full story URL',
+  admin: {
+    placeholder: 'https://…',
+    description: 'Optional. Short blurb in the newsletter; readers open the full story here.',
+  },
+})
+
+const campusUrlField = (name: string, label: string): Field => ({
+  name,
+  type: 'text',
+  label,
+  admin: {
+    placeholder: 'https://…',
+    description: 'Optional. Short blurb in the newsletter; readers open the full story here.',
+    condition: keyIs('campus'),
+  },
 })
 
 export const Issues: CollectionConfig = {
@@ -279,6 +303,17 @@ export const Issues: CollectionConfig = {
           phEn:
             'e.g. Jnanodayam — Day 583 | … (shows as main title; PDF section name stays in the eyebrow)',
         }),
+        {
+          name: 'asCard',
+          type: 'checkbox',
+          label: 'Show as card',
+          defaultValue: false,
+          admin: {
+            condition: keyIs('themes'),
+            description:
+              'Themes experiment: tall rounded card (photo on top, text below). Use the first Images row as the card photo. Multiple card entries wrap side-by-side in Print.',
+          },
+        },
 
         // themes
         {
@@ -321,6 +356,7 @@ export const Issues: CollectionConfig = {
                   phTe: PDF_PH.themes.themeBlurbTe,
                   phEn: PDF_PH.themes.themeBlurbEn,
                 }),
+                storyUrlField(),
               ],
             },
           ],
@@ -358,6 +394,7 @@ export const Issues: CollectionConfig = {
                   phTe: PDF_PH.classes.insightTe,
                   phEn: PDF_PH.classes.insightEn,
                 }),
+                storyUrlField(),
               ],
             },
           ],
@@ -387,6 +424,7 @@ export const Issues: CollectionConfig = {
                   phTe: PDF_PH.stories.bodyTe,
                   phEn: PDF_PH.stories.bodyEn,
                 }),
+                storyUrlField(),
               ],
             },
           ],
@@ -416,6 +454,7 @@ export const Issues: CollectionConfig = {
                   phTe: PDF_PH.visits.noteTe,
                   phEn: PDF_PH.visits.noteEn,
                 }),
+                storyUrlField(),
               ],
             },
           ],
@@ -451,6 +490,7 @@ export const Issues: CollectionConfig = {
                   phTe: PDF_PH.vanya.bodyTe,
                   phEn: PDF_PH.vanya.bodyEn,
                 }),
+                storyUrlField(),
               ],
             },
           ],
@@ -474,6 +514,7 @@ export const Issues: CollectionConfig = {
               phEn: PDF_PH.campus.golokaEn,
               extraCondition: keyIs('campus'),
             }),
+            campusUrlField('golokaUrl', 'Goloka full story URL'),
             ...langPair({
               nameTe: 'sahasraraTe',
               nameEn: 'sahasraraEn',
@@ -483,6 +524,7 @@ export const Issues: CollectionConfig = {
               phEn: PDF_PH.campus.sahasraraEn,
               extraCondition: keyIs('campus'),
             }),
+            campusUrlField('sahasraraUrl', 'Sahasrara full story URL'),
             ...langPair({
               nameTe: 'qluTe',
               nameEn: 'qluEn',
@@ -492,6 +534,7 @@ export const Issues: CollectionConfig = {
               phEn: PDF_PH.campus.qluEn,
               extraCondition: keyIs('campus'),
             }),
+            campusUrlField('qluUrl', 'QLU full story URL'),
           ],
         },
 
@@ -534,6 +577,7 @@ export const Issues: CollectionConfig = {
                   phTe: PDF_PH.events.detailsTe,
                   phEn: PDF_PH.events.detailsEn,
                 }),
+                storyUrlField(),
               ],
             },
           ],

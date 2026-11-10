@@ -5,6 +5,8 @@ import BaseLayout from '../../../layouts/BaseLayout.astro'
 import PrintCover from '../../../components/print/PrintCover.astro'
 import PrintContents from '../../../components/print/PrintContents.astro'
 import PrintSection from '../../../components/print/PrintSection.astro'
+import PrintThemeCards from '../../../components/print/PrintThemeCards.astro'
+import ShortItems from '../../../components/ShortItems.astro'
 import {
   getIssue,
   mediaUrl,
@@ -13,7 +15,9 @@ import {
   type MediaDoc,
 } from '../../../lib/payload'
 import { PDF_CONTENTS_KEYS, PDF_SECTION_TITLES } from '../../../lib/magazineSections'
+import { pickLocalized, pickLocalizedLexical } from '../../../lib/localeText'
 import { isLexicalEmpty, lexicalToHtml, lexicalToPlain } from '../../../lib/richText'
+import { shortItemsForSection } from '../../../lib/storyLink'
 
 const { month, lang: langParam } = Astro.params
 const lang = (langParam === 'te' ? 'te' : 'en') as Lang
@@ -80,8 +84,8 @@ const highlightsLabel = lang === 'te' ? 'ముఖ్యాంశాలు' : 'H
 const donateLabel = lang === 'te' ? 'సత్కార్యానికి తోడ్పడండి' : 'Support this work'
 
 function mapSectionPage(section: IssueSection, i: number) {
-  const heading = lang === 'te' ? section.headingTe : section.headingEn
-  const bodyData = lang === 'te' ? section.bodyTe : section.bodyEn
+  const heading = pickLocalized(lang, section.headingTe, section.headingEn)
+  const bodyData = pickLocalizedLexical(lang, section.bodyTe, section.bodyEn)
   const bodyHtml = lexicalToHtml(bodyData)
   const teaser = lexicalToPlain(bodyData, 140)
   const emptyBody = isLexicalEmpty(bodyData)
@@ -112,12 +116,15 @@ function mapSectionPage(section: IssueSection, i: number) {
       .filter(Boolean) || []
   const hero = images[0] || null
   const pdfTitle = PDF_SECTION_TITLES[section.key as keyof typeof PDF_SECTION_TITLES]
+  const shortItems = shortItemsForSection(section, lang)
+  const hasShortItems = shortItems.length > 0
   return {
     section,
     heading,
     bodyHtml,
     teaser,
     emptyBody,
+    hasShortItems,
     isCover,
     images,
     hero,
@@ -172,6 +179,12 @@ const textPages = pages.filter(
 )
 
 const printSections = ensuredMainSections.map((s, i) => mapSectionPage(s, i))
+const printThemeCards = printSections.filter(
+  (page) => page.section.key === 'themes' && Boolean(page.section.asCard),
+)
+const printSectionsNormal = printSections.filter(
+  (page) => !(page.section.key === 'themes' && Boolean(page.section.asCard)),
+)
 const printPresentKeys = [...PDF_CONTENTS_KEYS]
 const mastheadHtml = cover && !cover.emptyBody ? cover.bodyHtml : ''
 const printYear = (issue?.month || month || '').slice(0, 4)
@@ -216,7 +229,13 @@ const printYear = (issue?.month || month || '').slice(0, 4)
 
           <PrintCover issue={issue} lang={lang} title={title} mastheadHtml={mastheadHtml} />
           <PrintContents lang={lang} month={issue.month} presentKeys={printPresentKeys} />
-          {printSections.map((page, entryIndex) => (
+          <PrintThemeCards
+            cards={printThemeCards}
+            lang={lang}
+            month={issue.month}
+            year={printYear}
+          />
+          {printSectionsNormal.map((page, entryIndex) => (
             <PrintSection
               section={page.section}
               lang={lang}
@@ -333,7 +352,7 @@ const printYear = (issue?.month || month || '').slice(0, 4)
                         <div class="news-card-shade" aria-hidden="true" />
                         <div class="news-card-overlay">
                           <h3 class="news-card-title">{page.heading || page.pageLabel}</h3>
-                          {!page.emptyBody ? (
+                          {!page.emptyBody || page.hasShortItems ? (
                             <button
                               type="button"
                               class="news-card-cta"
@@ -347,9 +366,14 @@ const printYear = (issue?.month || month || '').slice(0, 4)
                           ) : null}
                         </div>
                       </div>
-                      {!page.emptyBody ? (
+                      {!page.emptyBody || page.hasShortItems || page.images.length > 1 ? (
                         <div class="news-card-panel" data-news-panel hidden>
-                          <div class="news-prose" set:html={page.bodyHtml} />
+                          {!page.emptyBody ? (
+                            <div class="news-prose" set:html={page.bodyHtml} />
+                          ) : null}
+                          {page.hasShortItems ? (
+                            <ShortItems section={page.section} lang={lang} />
+                          ) : null}
                           {page.images.length > 1 ? (
                             <div class="news-gallery">
                               {page.images.slice(1).map((img) =>
@@ -396,6 +420,9 @@ const printYear = (issue?.month || month || '').slice(0, 4)
                   {!upcomingPage.emptyBody ? (
                     <div class="news-prose" set:html={upcomingPage.bodyHtml} />
                   ) : null}
+                  {upcomingPage.hasShortItems ? (
+                    <ShortItems section={upcomingPage.section} lang={lang} />
+                  ) : null}
                 </section>
               ) : null}
 
@@ -422,9 +449,10 @@ const printYear = (issue?.month || month || '').slice(0, 4)
                   ) : null}
                   {!page.emptyBody ? (
                     <div class="news-prose" set:html={page.bodyHtml} />
-                  ) : page.teaser ? (
+                  ) : page.teaser && !page.hasShortItems ? (
                     <p class="news-block-teaser">{page.teaser}</p>
                   ) : null}
+                  {page.hasShortItems ? <ShortItems section={page.section} lang={lang} /> : null}
                 </section>
               ))}
             </div>
@@ -581,6 +609,9 @@ const printYear = (issue?.month || month || '').slice(0, 4)
                           ) : null}
                           {!page.emptyBody ? (
                             <div class="qlu-prose flip-prose" set:html={page.bodyHtml} />
+                          ) : null}
+                          {page.hasShortItems ? (
+                            <ShortItems section={page.section} lang={lang} />
                           ) : null}
                         </>
                       )}

@@ -15,6 +15,23 @@ const dirname = path.dirname(filename)
 
 const serverURL = process.env.PAYLOAD_PUBLIC_SERVER_URL || 'http://localhost:3000'
 
+/** pg treats URI sslmode=require as verify-full; that breaks Supabase's pooler cert chain. */
+function postgresPoolConfig() {
+  const raw = process.env.DATABASE_URL || ''
+  const isLocal = /127\.0\.0\.1|localhost/.test(raw)
+  const connectionString = raw
+    .replace(/[?&]sslmode=[^&]*/gi, '')
+    .replace(/[?&]uselibpqcompat=[^&]*/gi, '')
+    .replace(/\?&/, '?')
+    .replace(/[?&]$/, '')
+    .replace(/\?$/, '')
+
+  return {
+    connectionString,
+    ...(isLocal ? {} : { ssl: { rejectUnauthorized: false as const } }),
+  }
+}
+
 export default buildConfig({
   serverURL,
   admin: {
@@ -33,9 +50,7 @@ export default buildConfig({
     outputFile: path.resolve(dirname, 'payload-types.ts'),
   },
   db: postgresAdapter({
-    pool: {
-      connectionString: process.env.DATABASE_URL || '',
-    },
+    pool: postgresPoolConfig(),
   }),
   cors: [
     'http://localhost:4321',

@@ -1,6 +1,7 @@
 ---
 import type { IssueSection, Lang } from '../../lib/payload'
 import { linesToParagraphs } from '../../lib/printText'
+import StoryLink from '../StoryLink.astro'
 import PrintFreeform from './PrintFreeform.astro'
 
 interface Props {
@@ -37,6 +38,7 @@ const hasBody = Boolean(bodyHtml?.replace(/<[^>]+>/g, '').trim())
               {linesToParagraphs(insight).map((p) =>
                 p ? <p>{p}</p> : <p class="print-spacer" aria-hidden="true" />,
               )}
+              <StoryLink url={item.storyUrl} lang={lang} class="print-story-link" />
             </article>
           )
         })}

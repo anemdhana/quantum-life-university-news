@@ -52,7 +52,7 @@ function renderNode(node: LexNode): string {
     }
     case 'heading': {
       const tag = (node.tag as string) || 'h2'
-      const safe = ['h1', 'h2', 'h3', 'h4'].includes(tag) ? tag : 'h2'
+      const safe = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'].includes(tag) ? tag : 'h2'
       return `<${safe}>${renderChildren(node.children)}</${safe}>`
     }
     case 'list': {

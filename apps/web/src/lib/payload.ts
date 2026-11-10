@@ -21,6 +21,7 @@ export type ThemeItem = {
   titleEn?: string | null
   blurbTe?: string | null
   blurbEn?: string | null
+  storyUrl?: string | null
 }
 
 export type ClassItem = {
@@ -31,6 +32,7 @@ export type ClassItem = {
   date?: string | null
   insightTe?: string | null
   insightEn?: string | null
+  storyUrl?: string | null
 }
 
 export type StoryItem = {
@@ -39,6 +41,7 @@ export type StoryItem = {
   location?: string | null
   bodyTe?: string | null
   bodyEn?: string | null
+  storyUrl?: string | null
 }
 
 export type VisitItem = {
@@ -47,6 +50,7 @@ export type VisitItem = {
   place?: string | null
   noteTe?: string | null
   noteEn?: string | null
+  storyUrl?: string | null
 }
 
 export type FeatureItem = {
@@ -55,6 +59,7 @@ export type FeatureItem = {
   titleEn?: string | null
   bodyTe?: string | null
   bodyEn?: string | null
+  storyUrl?: string | null
 }
 
 export type EventItem = {
@@ -66,6 +71,7 @@ export type EventItem = {
   venueEn?: string | null
   detailsTe?: string | null
   detailsEn?: string | null
+  storyUrl?: string | null
 }
 
 export type IssueSection = {
@@ -75,6 +81,8 @@ export type IssueSection = {
   headingEn?: string | null
   bodyTe?: unknown
   bodyEn?: unknown
+  /** Themes experiment: render entry as a tall wrapping card in Print */
+  asCard?: boolean | null
   leadTe?: string | null
   leadEn?: string | null
   themeItems?: ThemeItem[] | null
@@ -84,10 +92,13 @@ export type IssueSection = {
   featureItems?: FeatureItem[] | null
   golokaTe?: string | null
   golokaEn?: string | null
+  golokaUrl?: string | null
   sahasraraTe?: string | null
   sahasraraEn?: string | null
+  sahasraraUrl?: string | null
   qluTe?: string | null
   qluEn?: string | null
+  qluUrl?: string | null
   eventItems?: EventItem[] | null
   images?: Array<{
     id?: string

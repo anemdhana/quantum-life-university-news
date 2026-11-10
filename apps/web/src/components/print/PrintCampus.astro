@@ -1,6 +1,7 @@
 ---
 import type { IssueSection, Lang } from '../../lib/payload'
 import { linesToParagraphs } from '../../lib/printText'
+import StoryLink from '../StoryLink.astro'
 import PrintFreeform from './PrintFreeform.astro'
 
 interface Props {
@@ -15,16 +16,19 @@ const blocks = [
   {
     label: 'Goloka',
     text: (lang === 'te' ? section.golokaTe : section.golokaEn)?.trim() || '',
+    url: section.golokaUrl,
   },
   {
     label: 'Sahasrara',
     text: (lang === 'te' ? section.sahasraraTe : section.sahasraraEn)?.trim() || '',
+    url: section.sahasraraUrl,
   },
   {
     label: 'QLU',
     text: (lang === 'te' ? section.qluTe : section.qluEn)?.trim() || '',
+    url: section.qluUrl,
   },
-].filter((b) => b.text)
+].filter((b) => b.text || (b.url || '').trim())
 const hasBody = Boolean(bodyHtml?.replace(/<[^>]+>/g, '').trim())
 ---
 
@@ -38,6 +42,7 @@ const hasBody = Boolean(bodyHtml?.replace(/<[^>]+>/g, '').trim())
             {linesToParagraphs(block.text).map((p) =>
               p ? <p>{p}</p> : <p class="print-spacer" aria-hidden="true" />,
             )}
+            <StoryLink url={block.url} lang={lang} class="print-story-link" />
           </article>
         ))}
       </div>

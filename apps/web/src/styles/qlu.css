@@ -1775,6 +1775,109 @@ body.is-print {
   align-items: start;
 }
 
+/* Themes experiment: readable tall cards — balanced type, modest chrome */
+.print-theme-card-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem 0.9rem;
+  align-items: stretch;
+  margin: 0.35rem 0 0.5rem;
+}
+
+.print-theme-card {
+  flex: 0 0 12.25rem;
+  width: 12.25rem;
+  max-width: 12.25rem;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #e0d5c4;
+  border-radius: 0.85rem;
+  background: #fffdf8;
+  overflow: hidden;
+}
+
+.print-theme-card__photo {
+  margin: 0;
+  flex: 0 0 auto;
+  height: 4.5rem;
+  background: #efe6d8;
+  overflow: hidden;
+}
+
+.print-theme-card__photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.print-theme-card__body {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.65rem 0.7rem 0.75rem;
+  min-height: 0;
+}
+
+.print-theme-card__continued {
+  margin: 0;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: #a17b43;
+}
+
+.print-theme-card__title {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.3;
+  font-weight: 700;
+  color: #3d2f1c;
+}
+
+.print-theme-card__text,
+.print-theme-card__html,
+.print-theme-card__html :is(p, li) {
+  margin: 0;
+  font-size: 0.76rem;
+  line-height: 1.42;
+  color: #5a4a36;
+}
+
+.print-theme-card__html :is(h1, h2, h3, h4, h5, h6) {
+  margin: 0.15rem 0 0.2rem;
+  font-size: 0.82rem;
+  line-height: 1.28;
+  font-weight: 700;
+  color: #3d2f1c;
+}
+
+.print-theme-card__html :is(ul, ol) {
+  margin: 0.15rem 0 0;
+  padding-left: 0.95rem;
+}
+
+.print-theme-card__html p + p,
+.print-theme-card__html :is(h1, h2, h3, h4, h5, h6) + p {
+  margin-top: 0.3rem;
+}
+
+.print-theme-card__empty {
+  margin: 0;
+  font-size: 0.72rem;
+  line-height: 1.4;
+  color: #9a8570;
+  font-style: italic;
+}
+
+@media print {
+  .print-theme-card {
+    break-inside: avoid;
+  }
+}
+
 .print-item-num {
   color: #a17b43;
   font-weight: 700;
@@ -1966,4 +2069,55 @@ body.is-print {
 
 .print-figures--lead {
   margin: 0.75rem 0 1.15rem;
+}
+
+/* Full-story external links on short newsletter items */
+.story-link-wrap {
+  margin: 0.45rem 0 0;
+}
+
+.story-link,
+.print-story-link {
+  font-size: 0.92em;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+  color: inherit;
+}
+
+.story-link:hover,
+.print-story-link:hover {
+  opacity: 0.8;
+}
+
+.short-items {
+  display: grid;
+  gap: 1rem;
+  margin: 0.85rem 0 0;
+}
+
+.short-item {
+  margin: 0;
+}
+
+.short-item-title {
+  margin: 0 0 0.25rem;
+  font-size: 1.05rem;
+  font-weight: 650;
+  line-height: 1.3;
+}
+
+.short-item-meta {
+  margin: 0 0 0.35rem;
+  font-size: 0.88rem;
+  opacity: 0.75;
+}
+
+.short-item p {
+  margin: 0.3rem 0;
+  line-height: 1.55;
+}
+
+.print-theme-card__link {
+  margin: 0.4rem 0 0;
 }

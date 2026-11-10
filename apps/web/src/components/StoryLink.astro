@@ -1,0 +1,23 @@
+---
+import type { Lang } from '../lib/payload'
+import { normalizeStoryUrl, storyLinkLabel } from '../lib/storyLink'
+
+interface Props {
+  url?: string | null
+  lang: Lang
+  class?: string
+}
+
+const { url, lang, class: className } = Astro.props
+const href = normalizeStoryUrl(url)
+---
+
+{
+  href ? (
+    <p class:list={['story-link-wrap', className]}>
+      <a class="story-link" href={href} target="_blank" rel="noopener noreferrer">
+        {storyLinkLabel(lang)}
+      </a>
+    </p>
+  ) : null
+}

@@ -20,6 +20,16 @@ Double-click or run **`dev.cmd`** from the repo root. On first run it:
 
 To force seed again: `del .qlu-seeded` or `set FORCE_SEED=1` then `.\dev.cmd`.
 
+## Remote Postgres (no local Docker)
+
+Same idea as `start-atlas.cmd` in other repos: run apps locally, database in the cloud.
+
+1. Copy root `.env.example` → `.env`
+2. Set a remote URI, e.g. `DATABASE_URL=postgres://USER:PASSWORD@HOST/DB?sslmode=require`
+3. Run **`.\dev-remote.cmd`**
+
+That launcher skips Docker and does **not** auto-seed. Keep local Docker settings in `apps/cms/.env` for `.\dev.cmd`.
+
 Manual equivalent:
 
 ```powershell

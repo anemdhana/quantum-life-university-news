@@ -23,7 +23,15 @@ cd quantum-life-university-news
 .\dev.cmd
 ```
 
-`dev.cmd` will: create `.env` from examples if missing, `npm install` if needed, start Postgres, **seed once** (magazine + Jnanodayam), then open CMS + Astro. Re-seed later with `npm run seed`, or `set FORCE_SEED=1` before `.\dev.cmd`, or delete `.qlu-seeded`.
+`dev.cmd` will: create `.env` from examples if missing, `npm install` if needed, start **local** Docker Postgres, **seed once** (magazine + Jnanodayam), then open CMS + Astro. Re-seed later with `npm run seed`, or `set FORCE_SEED=1` before `.\dev.cmd`, or delete `.qlu-seeded`.
+
+**Remote Postgres** (Neon / Supabase / etc. — same idea as `start-atlas.cmd` elsewhere): put `DATABASE_URL=postgres://…?sslmode=require` in **repo-root** `.env`, then:
+
+```powershell
+.\dev-remote.cmd
+```
+
+That skips Docker, does **not** auto-seed the remote DB, and starts CMS + Astro with the remote URL.
 
 Or manually: `npm run db:up`, `npm install`, `npm run seed`, then `npm run dev:cms` and `npm run dev:web` in two terminals.
 
@@ -50,6 +58,8 @@ Default seed admin (change after first login): `admin@qlu.local` / `qlu-admin-ch
 
 | Command | Purpose |
 |---------|---------|
+| `.\dev.cmd` | Local Docker Postgres + seed + CMS + Astro |
+| `.\dev-remote.cmd` | Remote `DATABASE_URL` from root `.env` (no Docker / no auto-seed) |
 | `npm run db:up` | Start Postgres (Docker) |
 | `npm run seed` | Import magazine + Devi readings |
 | `npm run dev:cms` | Payload on :3000 |

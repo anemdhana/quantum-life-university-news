@@ -208,6 +208,10 @@ export interface Issue {
           | 'closing';
         headingTe?: string | null;
         headingEn?: string | null;
+        /**
+         * Themes experiment: tall rounded card (photo on top, text below). Use the first Images row as the card photo. Multiple card entries wrap side-by-side in Print.
+         */
+        asCard?: boolean | null;
         leadTe?: string | null;
         leadEn?: string | null;
         themeItems?:
@@ -216,6 +220,10 @@ export interface Issue {
               titleEn?: string | null;
               blurbTe?: string | null;
               blurbEn?: string | null;
+              /**
+               * Optional. Short blurb in the newsletter; readers open the full story here.
+               */
+              storyUrl?: string | null;
               id?: string | null;
             }[]
           | null;
@@ -227,6 +235,10 @@ export interface Issue {
               date?: string | null;
               insightTe?: string | null;
               insightEn?: string | null;
+              /**
+               * Optional. Short blurb in the newsletter; readers open the full story here.
+               */
+              storyUrl?: string | null;
               id?: string | null;
             }[]
           | null;
@@ -236,6 +248,10 @@ export interface Issue {
               location?: string | null;
               bodyTe?: string | null;
               bodyEn?: string | null;
+              /**
+               * Optional. Short blurb in the newsletter; readers open the full story here.
+               */
+              storyUrl?: string | null;
               id?: string | null;
             }[]
           | null;
@@ -245,6 +261,10 @@ export interface Issue {
               place?: string | null;
               noteTe?: string | null;
               noteEn?: string | null;
+              /**
+               * Optional. Short blurb in the newsletter; readers open the full story here.
+               */
+              storyUrl?: string | null;
               id?: string | null;
             }[]
           | null;
@@ -254,15 +274,31 @@ export interface Issue {
               titleEn?: string | null;
               bodyTe?: string | null;
               bodyEn?: string | null;
+              /**
+               * Optional. Short blurb in the newsletter; readers open the full story here.
+               */
+              storyUrl?: string | null;
               id?: string | null;
             }[]
           | null;
         golokaTe?: string | null;
         golokaEn?: string | null;
+        /**
+         * Optional. Short blurb in the newsletter; readers open the full story here.
+         */
+        golokaUrl?: string | null;
         sahasraraTe?: string | null;
         sahasraraEn?: string | null;
+        /**
+         * Optional. Short blurb in the newsletter; readers open the full story here.
+         */
+        sahasraraUrl?: string | null;
         qluTe?: string | null;
         qluEn?: string | null;
+        /**
+         * Optional. Short blurb in the newsletter; readers open the full story here.
+         */
+        qluUrl?: string | null;
         eventItems?:
           | {
               when?: string | null;
@@ -272,6 +308,10 @@ export interface Issue {
               venueEn?: string | null;
               detailsTe?: string | null;
               detailsEn?: string | null;
+              /**
+               * Optional. Short blurb in the newsletter; readers open the full story here.
+               */
+              storyUrl?: string | null;
               id?: string | null;
             }[]
           | null;
@@ -512,6 +552,7 @@ export interface IssuesSelect<T extends boolean = true> {
         key?: T;
         headingTe?: T;
         headingEn?: T;
+        asCard?: T;
         leadTe?: T;
         leadEn?: T;
         themeItems?:
@@ -521,6 +562,7 @@ export interface IssuesSelect<T extends boolean = true> {
               titleEn?: T;
               blurbTe?: T;
               blurbEn?: T;
+              storyUrl?: T;
               id?: T;
             };
         classItems?:
@@ -532,6 +574,7 @@ export interface IssuesSelect<T extends boolean = true> {
               date?: T;
               insightTe?: T;
               insightEn?: T;
+              storyUrl?: T;
               id?: T;
             };
         stories?:
@@ -541,6 +584,7 @@ export interface IssuesSelect<T extends boolean = true> {
               location?: T;
               bodyTe?: T;
               bodyEn?: T;
+              storyUrl?: T;
               id?: T;
             };
         visitItems?:
@@ -550,6 +594,7 @@ export interface IssuesSelect<T extends boolean = true> {
               place?: T;
               noteTe?: T;
               noteEn?: T;
+              storyUrl?: T;
               id?: T;
             };
         featureItems?:
@@ -559,14 +604,18 @@ export interface IssuesSelect<T extends boolean = true> {
               titleEn?: T;
               bodyTe?: T;
               bodyEn?: T;
+              storyUrl?: T;
               id?: T;
             };
         golokaTe?: T;
         golokaEn?: T;
+        golokaUrl?: T;
         sahasraraTe?: T;
         sahasraraEn?: T;
+        sahasraraUrl?: T;
         qluTe?: T;
         qluEn?: T;
+        qluUrl?: T;
         eventItems?:
           | T
           | {
@@ -577,6 +626,7 @@ export interface IssuesSelect<T extends boolean = true> {
               venueEn?: T;
               detailsTe?: T;
               detailsEn?: T;
+              storyUrl?: T;
               id?: T;
             };
         bodyTeMd?: T;
