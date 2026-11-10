@@ -1,5 +1,32 @@
 /** NewsView: expand story cards + keyword filter (Canva-style shell). */
 
+function openNewsCard(card: HTMLElement) {
+  const toggle = card.querySelector<HTMLButtonElement>('[data-news-toggle]')
+  const panel = card.querySelector<HTMLElement>('[data-news-panel]')
+  if (!toggle || !panel) return
+  const closeLabel = toggle.dataset.closeLabel || 'Close'
+  card.classList.add('is-open')
+  toggle.setAttribute('aria-expanded', 'true')
+  toggle.textContent = closeLabel
+  panel.hidden = false
+}
+
+/** Expand parent card (if any) and scroll to #story-… after returning from full story. */
+function restoreStoryAnchor(root: HTMLElement) {
+  const id = decodeURIComponent((window.location.hash || '').replace(/^#/, ''))
+  if (!id.startsWith('story-')) return
+  const target = root.querySelector<HTMLElement>(`#${CSS.escape(id)}`)
+  if (!target) return
+
+  const card = target.closest<HTMLElement>('[data-news-card]')
+  if (card) openNewsCard(card)
+
+  // Wait a frame so the panel is visible before scrolling.
+  requestAnimationFrame(() => {
+    target.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  })
+}
+
 export function initNewsView(root: HTMLElement) {
   root.querySelectorAll<HTMLElement>('[data-news-card]').forEach((card) => {
     const toggle = card.querySelector<HTMLButtonElement>('[data-news-toggle]')
@@ -51,4 +78,7 @@ export function initNewsView(root: HTMLElement) {
       })
     }
   })
+
+  restoreStoryAnchor(root)
+  window.addEventListener('hashchange', () => restoreStoryAnchor(root))
 }

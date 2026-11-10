@@ -2,16 +2,16 @@
 
 export const PDF_PH = {
   cover: {
-    taglineEn: 'Wisdom · Meditation · Conscious Living',
-    taglineTe: 'జ్ఞానం · ధ్యానం · సచేతన జీవనం',
-    foundersLineEn: 'Dr. Newton & Lakshmi',
-    foundersLineTe: 'డా. న్యూటన్ & లక్ష్మి',
-    foundersSubEn: 'A Shared Vision of Conscious Living',
-    foundersSubTe: 'సచేతన జీవనం యొక్క భాగస్వామ్య దృష్టి',
+    taglineEn: 'Meditation • Self-knowledge • Expansion of Consciousness',
+    taglineTe: 'ధ్యానం • ఆత్మజ్ఞానం • చైతన్య వికాసం',
+    foundersLineEn: 'Dr. Newton & Dr. Lakshmi',
+    foundersLineTe: 'డా. న్యూటన్ & డా. లక్ష్మి',
+    foundersSubEn: '',
+    foundersSubTe: '',
     invitationEn:
-      'An invitation to live with awareness, kindness and inner peace. Through the spirit of meditation and shared learning, we celebrate the journey of discovering wisdom within and bringing compassion into everyday life.',
+      'Through meditation, an inward journey… through knowledge, the expansion of consciousness…\n\nWithin every person lies immense consciousness, love, and peace. The spiritual journey is to experience that inner wealth through meditation, spiritual knowledge, and self-understanding—and to shape life into something more meaningful and joyful.',
     invitationTe:
-      'అవగాహన, దయ, అంతర శాంతితో జీవించమని ఆహ్వానం. ధ్యానం మరియు భాగస్వామ్య అధ్యయనం ద్వారా, లోపలి జ్ఞానాన్ని కనుగొని రోజువారీ జీవితంలో కరుణను తీసుకురావడం యొక్క ప్రయాణాన్ని మేము జరుపుకుంటాము.',
+      'ధ్యానం ద్వారా అంతర్ముఖ ప్రయాణం… జ్ఞానం ద్వారా చైతన్య వికాసం…\n\nప్రతి మనిషిలోనూ అపారమైన చైతన్యం, ప్రేమ, శాంతి నిక్షిప్తమై ఉన్నాయి. ధ్యానం, ఆధ్యాత్మిక జ్ఞానం, స్వీయ అవగాహన ద్వారా ఆ అంతర్గత సంపదను అనుభవిస్తూ, జీవితాన్ని మరింత అర్థవంతంగా, ఆనందమయంగా తీర్చిదిద్దుకోవడమే ఆధ్యాత్మిక ప్రయాణం.',
     coverKickerEn: 'OCTOBER 2026 · ISSUE TEMPLATE',
     coverKickerTe: 'అక్టోబర్ 2026 · సంచిక టెంప్లేట్',
   },

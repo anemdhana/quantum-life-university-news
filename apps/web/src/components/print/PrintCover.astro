@@ -1,89 +1,111 @@
 ---
 import type { Issue, Lang, MediaDoc } from '../../lib/payload'
 import { formatCoverKicker, mediaUrl } from '../../lib/payload'
+import {
+  QLU_LOGO_SRC,
+  qluCoverTitle,
+  qluIssueStamp,
+  qluOrgName,
+} from '../../lib/printBrand'
+import PrintSheetFooter from './PrintSheetFooter.astro'
 
 interface Props {
   issue: Issue
   lang: Lang
   title: string
   mastheadHtml?: string
+  page: number
+  pages: number
 }
 
-const { issue, lang, title, mastheadHtml = '' } = Astro.props
+const { issue, lang, title, mastheadHtml = '', page, pages } = Astro.props
 
 const coverSrc = mediaUrl(issue.coverImage as MediaDoc)
 const tagline =
   (lang === 'te' ? issue.taglineTe : issue.taglineEn)?.trim() ||
-  (lang === 'te' ? 'జ్ఞానం · ధ్యానం · సచేతన జీవనం' : 'Wisdom · Meditation · Conscious Living')
+  (lang === 'te'
+    ? 'ధ్యానం • ఆత్మజ్ఞానం • చైతన్య వికాసం'
+    : 'Meditation • Self-knowledge • Expansion of Consciousness')
 const founders =
   (lang === 'te' ? issue.foundersLineTe : issue.foundersLineEn)?.trim() ||
-  (lang === 'te' ? 'డా. న్యూటన్ & లక్ష్మి' : 'Dr. Newton & Lakshmi')
-const foundersSub =
-  (lang === 'te' ? issue.foundersSubTe : issue.foundersSubEn)?.trim() ||
-  (lang === 'te' ? 'సచేతన జీవనం యొక్క భాగస్వామ్య దృష్టి' : 'A Shared Vision of Conscious Living')
+  (lang === 'te' ? 'డా. న్యూటన్ & డా. లక్ష్మి' : 'Dr. Newton & Dr. Lakshmi')
 const invitation =
   (lang === 'te' ? issue.invitationTe : issue.invitationEn)?.trim() ||
   (lang === 'te'
-    ? 'అవగాహన, దయ, అంతర శాంతితో జీవించమని ఆహ్వానం. ధ్యానం మరియు భాగస్వామ్య అధ్యయనం ద్వారా, లోపలి జ్ఞానాన్ని కనుగొని రోజువారీ జీవితంలో కరుణను తీసుకురావడం యొక్క ప్రయాణాన్ని మేము జరుపుకుంటాము.'
-    : 'An invitation to live with awareness, kindness and inner peace. Through the spirit of meditation and shared learning, we celebrate the journey of discovering wisdom within and bringing compassion into everyday life.')
+    ? 'ధ్యానం ద్వారా అంతర్ముఖ ప్రయాణం… జ్ఞానం ద్వారా చైతన్య వికాసం…\n\nప్రతి మనిషిలోనూ అపారమైన చైతన్యం, ప్రేమ, శాంతి నిక్షిప్తమై ఉన్నాయి. ధ్యానం, ఆధ్యాత్మిక జ్ఞానం, స్వీయ అవగాహన ద్వారా ఆ అంతర్గత సంపదను అనుభవిస్తూ, జీవితాన్ని మరింత అర్థవంతంగా, ఆనందమయంగా తీర్చిదిద్దుకోవడమే ఆధ్యాత్మిక ప్రయాణం.'
+    : 'Through meditation, an inward journey… through knowledge, the expansion of consciousness…\n\nWithin every person lies immense consciousness, love, and peace. The spiritual journey is to experience that inner wealth through meditation, spiritual knowledge, and self-understanding—and to shape life into something more meaningful and joyful.')
 const kicker = formatCoverKicker(
   issue.month,
   lang,
   lang === 'te' ? issue.coverKickerTe : issue.coverKickerEn,
 )
-const magLabel = lang === 'te' ? 'నెలవారీ వార్తాపత్రిక' : 'The Monthly Newsletter'
+const coverTitle = qluCoverTitle(lang)
+const org = qluOrgName(lang)
+const stamp = qluIssueStamp(issue.month, lang)
 ---
 
-<section class="print-sheet print-cover" aria-label={lang === 'te' ? 'ముఖచిత్రం' : 'Cover'}>
-  <p class="print-brand">Quantum Life University</p>
-  <h1 class="print-cover-title">{magLabel}</h1>
-  <p class="print-tagline">{tagline}</p>
-
-  {
-    coverSrc ? (
-      <figure class="print-cover-hero">
-        <img
-          src={coverSrc}
-          alt={
-            (typeof issue.coverImage === 'object' && issue.coverImage && 'alt' in issue.coverImage
-              ? issue.coverImage.alt
-              : null) || (lang === 'te' ? 'ముఖచిత్రం' : 'Cover')
-          }
-          loading="eager"
-        />
-      </figure>
-    ) : (
-      <div class="print-cover-hero print-cover-hero--empty" aria-hidden="true">
-        <span>{lang === 'te' ? 'ముఖచిత్రం జోడించండి' : 'Add cover image in admin'}</span>
+<section
+  class:list={['print-sheet', 'print-cover', lang === 'te' && 'is-te']}
+  aria-label={lang === 'te' ? 'ముఖచిత్రం' : 'Cover'}
+>
+  <header class="print-cover-mast">
+    <div class="print-cover-mast-left">
+      <img class="print-cover-logo" src={QLU_LOGO_SRC} width="56" height="56" alt="" />
+      <div class="print-cover-mast-brand">
+        <p class="print-cover-org">{org}</p>
+        <p class="print-cover-issue-line">{stamp}</p>
       </div>
-    )
-  }
+    </div>
+    <div class="print-cover-mast-right">
+      <p class="print-cover-mag">{coverTitle}</p>
+      <p class="print-cover-tagline">{tagline}</p>
+    </div>
+  </header>
 
-  <div class="print-founders">
-    <p class="print-founders-line">{founders}</p>
-    <p class="print-founders-sub">{foundersSub}</p>
+  <div class="print-sheet-body print-cover-body">
+    {
+      coverSrc ? (
+        <figure class="print-cover-hero">
+          <img
+            src={coverSrc}
+            alt={
+              (typeof issue.coverImage === 'object' && issue.coverImage && 'alt' in issue.coverImage
+                ? issue.coverImage.alt
+                : null) || (lang === 'te' ? 'ముఖచిత్రం' : 'Cover')
+            }
+            loading="eager"
+          />
+        </figure>
+      ) : (
+        <div class="print-cover-hero print-cover-hero--empty" aria-hidden="true">
+          <span>{lang === 'te' ? 'ముఖచిత్రం జోడించండి' : 'Add cover image in admin'}</span>
+        </div>
+      )
+    }
+
+    <div class="print-founders">
+      <p class="print-founders-line">{founders}</p>
+    </div>
+
+    {
+      invitation ? (
+        <div class="print-invitation">
+          {invitation.split(/\n+/).map((para) => (
+            <p>{para}</p>
+          ))}
+        </div>
+      ) : null
+    }
+
+    {
+      mastheadHtml ? (
+        <div class="print-prose print-cover-extra" set:html={mastheadHtml} />
+      ) : null
+    }
+
+    <p class="print-kicker">{kicker}</p>
+    <p class="print-issue-title">{title}</p>
   </div>
 
-  {
-    invitation ? (
-      <div class="print-invitation">
-        {invitation.split(/\n+/).map((para) => (
-          <p>{para}</p>
-        ))}
-      </div>
-    ) : null
-  }
-
-  {
-    mastheadHtml ? (
-      <div class="print-prose print-cover-extra" set:html={mastheadHtml} />
-    ) : null
-  }
-
-  <p class="print-kicker">{kicker}</p>
-  <p class="print-issue-title">{title}</p>
-  <footer class="print-sheet-foot">
-    <span>Quantum Life University</span>
-    <span>{lang === 'te' ? 'నెలవారీ వార్తాపత్రిక' : 'Monthly Newsletter'}</span>
-  </footer>
+  <PrintSheetFooter lang={lang} month={issue.month} page={page} pages={pages} compact />
 </section>

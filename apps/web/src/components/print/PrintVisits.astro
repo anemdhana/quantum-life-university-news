@@ -1,5 +1,6 @@
 ---
 import type { IssueSection, Lang } from '../../lib/payload'
+import { itemKeyAt, pickLangText, resolveStoryLink } from '../../lib/storyLink'
 import { linesToParagraphs } from '../../lib/printText'
 import StoryLink from '../StoryLink.astro'
 import PrintFreeform from './PrintFreeform.astro'
@@ -7,11 +8,12 @@ import PrintFreeform from './PrintFreeform.astro'
 interface Props {
   section: IssueSection
   lang: Lang
+  month: string
   bodyHtml: string
   emptyLine: string
 }
 
-const { section, lang, bodyHtml, emptyLine } = Astro.props
+const { section, lang, month, bodyHtml, emptyLine } = Astro.props
 const items = (section.visitItems || []).filter(
   (v) => v.date?.trim() || v.place?.trim() || (lang === 'te' ? v.noteTe : v.noteEn)?.trim(),
 )
@@ -22,16 +24,31 @@ const hasBody = Boolean(bodyHtml?.replace(/<[^>]+>/g, '').trim())
   items.length ? (
     <>
       <div class="print-visits">
-        {items.map((item) => {
+        {items.map((item, i) => {
           const note = (lang === 'te' ? item.noteTe : item.noteEn) || ''
           const head = [item.date, item.place].filter(Boolean).join(' / ')
+          const itemKey = itemKeyAt(item.id, i)
+          const link = resolveStoryLink({
+            month,
+            lang,
+            sectionKey: 'visits',
+            itemKey,
+            fullStory: pickLangText(lang, item.fullStoryTe, item.fullStoryEn),
+            storyUrl: item.storyUrl,
+            from: 'print',
+          })
           return (
-            <article class="print-row">
+            <article class="print-row" id={link.anchorId}>
               {head ? <h3 class="print-row-head">{head}</h3> : null}
               {linesToParagraphs(note).map((p) =>
                 p ? <p>{p}</p> : <p class="print-spacer" aria-hidden="true" />,
               )}
-              <StoryLink url={item.storyUrl} lang={lang} class="print-story-link" />
+              <StoryLink
+                href={link.href}
+                external={link.external}
+                lang={lang}
+                class="print-story-link"
+              />
             </article>
           )
         })}

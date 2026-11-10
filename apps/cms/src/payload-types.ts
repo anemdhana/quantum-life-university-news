@@ -220,8 +220,10 @@ export interface Issue {
               titleEn?: string | null;
               blurbTe?: string | null;
               blurbEn?: string | null;
+              fullStoryTe?: string | null;
+              fullStoryEn?: string | null;
               /**
-               * Optional. Short blurb in the newsletter; readers open the full story here.
+               * Only if the full story is off-site. Prefer “Full story” above for an in-site Read more page.
                */
               storyUrl?: string | null;
               id?: string | null;
@@ -235,8 +237,10 @@ export interface Issue {
               date?: string | null;
               insightTe?: string | null;
               insightEn?: string | null;
+              fullStoryTe?: string | null;
+              fullStoryEn?: string | null;
               /**
-               * Optional. Short blurb in the newsletter; readers open the full story here.
+               * Only if the full story is off-site. Prefer “Full story” above for an in-site Read more page.
                */
               storyUrl?: string | null;
               id?: string | null;
@@ -248,8 +252,10 @@ export interface Issue {
               location?: string | null;
               bodyTe?: string | null;
               bodyEn?: string | null;
+              fullStoryTe?: string | null;
+              fullStoryEn?: string | null;
               /**
-               * Optional. Short blurb in the newsletter; readers open the full story here.
+               * Only if the full story is off-site. Prefer “Full story” above for an in-site Read more page.
                */
               storyUrl?: string | null;
               id?: string | null;
@@ -261,8 +267,10 @@ export interface Issue {
               place?: string | null;
               noteTe?: string | null;
               noteEn?: string | null;
+              fullStoryTe?: string | null;
+              fullStoryEn?: string | null;
               /**
-               * Optional. Short blurb in the newsletter; readers open the full story here.
+               * Only if the full story is off-site. Prefer “Full story” above for an in-site Read more page.
                */
               storyUrl?: string | null;
               id?: string | null;
@@ -274,8 +282,10 @@ export interface Issue {
               titleEn?: string | null;
               bodyTe?: string | null;
               bodyEn?: string | null;
+              fullStoryTe?: string | null;
+              fullStoryEn?: string | null;
               /**
-               * Optional. Short blurb in the newsletter; readers open the full story here.
+               * Only if the full story is off-site. Prefer “Full story” above for an in-site Read more page.
                */
               storyUrl?: string | null;
               id?: string | null;
@@ -283,20 +293,26 @@ export interface Issue {
           | null;
         golokaTe?: string | null;
         golokaEn?: string | null;
+        golokaFullStoryTe?: string | null;
+        golokaFullStoryEn?: string | null;
         /**
-         * Optional. Short blurb in the newsletter; readers open the full story here.
+         * Optional off-site link. Prefer Full story text for in-site Read more.
          */
         golokaUrl?: string | null;
         sahasraraTe?: string | null;
         sahasraraEn?: string | null;
+        sahasraraFullStoryTe?: string | null;
+        sahasraraFullStoryEn?: string | null;
         /**
-         * Optional. Short blurb in the newsletter; readers open the full story here.
+         * Optional off-site link. Prefer Full story text for in-site Read more.
          */
         sahasraraUrl?: string | null;
         qluTe?: string | null;
         qluEn?: string | null;
+        qluFullStoryTe?: string | null;
+        qluFullStoryEn?: string | null;
         /**
-         * Optional. Short blurb in the newsletter; readers open the full story here.
+         * Optional off-site link. Prefer Full story text for in-site Read more.
          */
         qluUrl?: string | null;
         eventItems?:
@@ -308,8 +324,10 @@ export interface Issue {
               venueEn?: string | null;
               detailsTe?: string | null;
               detailsEn?: string | null;
+              fullStoryTe?: string | null;
+              fullStoryEn?: string | null;
               /**
-               * Optional. Short blurb in the newsletter; readers open the full story here.
+               * Only if the full story is off-site. Prefer “Full story” above for an in-site Read more page.
                */
               storyUrl?: string | null;
               id?: string | null;
@@ -562,6 +580,8 @@ export interface IssuesSelect<T extends boolean = true> {
               titleEn?: T;
               blurbTe?: T;
               blurbEn?: T;
+              fullStoryTe?: T;
+              fullStoryEn?: T;
               storyUrl?: T;
               id?: T;
             };
@@ -574,6 +594,8 @@ export interface IssuesSelect<T extends boolean = true> {
               date?: T;
               insightTe?: T;
               insightEn?: T;
+              fullStoryTe?: T;
+              fullStoryEn?: T;
               storyUrl?: T;
               id?: T;
             };
@@ -584,6 +606,8 @@ export interface IssuesSelect<T extends boolean = true> {
               location?: T;
               bodyTe?: T;
               bodyEn?: T;
+              fullStoryTe?: T;
+              fullStoryEn?: T;
               storyUrl?: T;
               id?: T;
             };
@@ -594,6 +618,8 @@ export interface IssuesSelect<T extends boolean = true> {
               place?: T;
               noteTe?: T;
               noteEn?: T;
+              fullStoryTe?: T;
+              fullStoryEn?: T;
               storyUrl?: T;
               id?: T;
             };
@@ -604,17 +630,25 @@ export interface IssuesSelect<T extends boolean = true> {
               titleEn?: T;
               bodyTe?: T;
               bodyEn?: T;
+              fullStoryTe?: T;
+              fullStoryEn?: T;
               storyUrl?: T;
               id?: T;
             };
         golokaTe?: T;
         golokaEn?: T;
+        golokaFullStoryTe?: T;
+        golokaFullStoryEn?: T;
         golokaUrl?: T;
         sahasraraTe?: T;
         sahasraraEn?: T;
+        sahasraraFullStoryTe?: T;
+        sahasraraFullStoryEn?: T;
         sahasraraUrl?: T;
         qluTe?: T;
         qluEn?: T;
+        qluFullStoryTe?: T;
+        qluFullStoryEn?: T;
         qluUrl?: T;
         eventItems?:
           | T
@@ -626,6 +660,8 @@ export interface IssuesSelect<T extends boolean = true> {
               venueEn?: T;
               detailsTe?: T;
               detailsEn?: T;
+              fullStoryTe?: T;
+              fullStoryEn?: T;
               storyUrl?: T;
               id?: T;
             };

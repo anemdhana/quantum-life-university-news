@@ -70,15 +70,41 @@ const sharedText = (name: string, label: string, placeholder?: string): Field =>
   admin: { placeholder },
 })
 
+/** Long article shown on in-site story page (newsletter keeps the short blurb). */
+const fullStoryFields = (): Field[] =>
+  langPair({
+    nameTe: 'fullStoryTe',
+    nameEn: 'fullStoryEn',
+    label: 'Full story',
+    rows: 8,
+    phTe: 'పూర్తి కథ ఇక్కడ… (న్యూస్‌లెటర్‌లో చిన్న బ్లర్బ్ మాత్రమే కనిపిస్తుంది)',
+    phEn: 'Full article here… (newsletter shows only the short blurb)',
+  })
+
 const storyUrlField = (): Field => ({
   name: 'storyUrl',
   type: 'text',
-  label: 'Full story URL',
+  label: 'External story URL (optional)',
   admin: {
     placeholder: 'https://…',
-    description: 'Optional. Short blurb in the newsletter; readers open the full story here.',
+    description:
+      'Only if the full story is off-site. Prefer “Full story” above for an in-site Read more page.',
   },
 })
+
+/** Newsletter short item: full story text + optional external URL */
+const storyLinkFields = (): Field[] => [...fullStoryFields(), storyUrlField()]
+
+const campusFullStoryFields = (prefix: string, label: string): Field[] =>
+  langPair({
+    nameTe: `${prefix}FullStoryTe`,
+    nameEn: `${prefix}FullStoryEn`,
+    label: `${label} · Full story`,
+    rows: 8,
+    phTe: 'పూర్తి కథ…',
+    phEn: 'Full article…',
+    extraCondition: keyIs('campus'),
+  })
 
 const campusUrlField = (name: string, label: string): Field => ({
   name,
@@ -86,7 +112,7 @@ const campusUrlField = (name: string, label: string): Field => ({
   label,
   admin: {
     placeholder: 'https://…',
-    description: 'Optional. Short blurb in the newsletter; readers open the full story here.',
+    description: 'Optional off-site link. Prefer Full story text for in-site Read more.',
     condition: keyIs('campus'),
   },
 })
@@ -356,7 +382,7 @@ export const Issues: CollectionConfig = {
                   phTe: PDF_PH.themes.themeBlurbTe,
                   phEn: PDF_PH.themes.themeBlurbEn,
                 }),
-                storyUrlField(),
+                ...storyLinkFields(),
               ],
             },
           ],
@@ -394,7 +420,7 @@ export const Issues: CollectionConfig = {
                   phTe: PDF_PH.classes.insightTe,
                   phEn: PDF_PH.classes.insightEn,
                 }),
-                storyUrlField(),
+                ...storyLinkFields(),
               ],
             },
           ],
@@ -424,7 +450,7 @@ export const Issues: CollectionConfig = {
                   phTe: PDF_PH.stories.bodyTe,
                   phEn: PDF_PH.stories.bodyEn,
                 }),
-                storyUrlField(),
+                ...storyLinkFields(),
               ],
             },
           ],
@@ -454,7 +480,7 @@ export const Issues: CollectionConfig = {
                   phTe: PDF_PH.visits.noteTe,
                   phEn: PDF_PH.visits.noteEn,
                 }),
-                storyUrlField(),
+                ...storyLinkFields(),
               ],
             },
           ],
@@ -490,7 +516,7 @@ export const Issues: CollectionConfig = {
                   phTe: PDF_PH.vanya.bodyTe,
                   phEn: PDF_PH.vanya.bodyEn,
                 }),
-                storyUrlField(),
+                ...storyLinkFields(),
               ],
             },
           ],
@@ -514,7 +540,8 @@ export const Issues: CollectionConfig = {
               phEn: PDF_PH.campus.golokaEn,
               extraCondition: keyIs('campus'),
             }),
-            campusUrlField('golokaUrl', 'Goloka full story URL'),
+            ...campusFullStoryFields('goloka', 'Goloka'),
+            campusUrlField('golokaUrl', 'Goloka external URL (optional)'),
             ...langPair({
               nameTe: 'sahasraraTe',
               nameEn: 'sahasraraEn',
@@ -524,7 +551,8 @@ export const Issues: CollectionConfig = {
               phEn: PDF_PH.campus.sahasraraEn,
               extraCondition: keyIs('campus'),
             }),
-            campusUrlField('sahasraraUrl', 'Sahasrara full story URL'),
+            ...campusFullStoryFields('sahasrara', 'Sahasrara'),
+            campusUrlField('sahasraraUrl', 'Sahasrara external URL (optional)'),
             ...langPair({
               nameTe: 'qluTe',
               nameEn: 'qluEn',
@@ -534,7 +562,8 @@ export const Issues: CollectionConfig = {
               phEn: PDF_PH.campus.qluEn,
               extraCondition: keyIs('campus'),
             }),
-            campusUrlField('qluUrl', 'QLU full story URL'),
+            ...campusFullStoryFields('qlu', 'QLU'),
+            campusUrlField('qluUrl', 'QLU external URL (optional)'),
           ],
         },
 
@@ -577,7 +606,7 @@ export const Issues: CollectionConfig = {
                   phTe: PDF_PH.events.detailsTe,
                   phEn: PDF_PH.events.detailsEn,
                 }),
-                storyUrlField(),
+                ...storyLinkFields(),
               ],
             },
           ],
@@ -676,3 +705,4 @@ export const Issues: CollectionConfig = {
     },
   ],
 }
+

@@ -1,0 +1,39 @@
+---
+import type { Lang } from '../../lib/payload'
+import { QLU_LOGO_SRC, qluIssueStamp, qluOrgName } from '../../lib/printBrand'
+
+interface Props {
+  lang: Lang
+  month: string
+  year?: string
+  /** Section title on the right (bold) */
+  sectionLabel?: string
+  sectionNum?: string
+  variant?: 'interior' | 'contents'
+}
+
+const { lang, month, year, sectionLabel, sectionNum, variant = 'interior' } = Astro.props
+const stamp = qluIssueStamp(month, lang, year)
+const org = qluOrgName(lang)
+---
+
+<header class:list={['print-mast', `print-mast--${variant}`, lang === 'te' && 'is-te']}>
+  <div class="print-mast-left">
+    <img class="print-mast-logo" src={QLU_LOGO_SRC} width="44" height="44" alt="" />
+    <div class="print-mast-brand-text">
+      <p class="print-mast-org">{org}</p>
+      <p class="print-mast-stamp">
+        <span class="print-mast-month">{stamp}</span>
+      </p>
+    </div>
+  </div>
+  {
+    sectionLabel || sectionNum ? (
+      <p class="print-mast-title">
+        {sectionNum ? <span class="print-mast-num">{sectionNum}</span> : null}
+        {sectionNum && sectionLabel ? <span class="print-mast-dot" aria-hidden="true">·</span> : null}
+        {sectionLabel ? <span class="print-mast-section-name">{sectionLabel}</span> : null}
+      </p>
+    ) : null
+  }
+</header>

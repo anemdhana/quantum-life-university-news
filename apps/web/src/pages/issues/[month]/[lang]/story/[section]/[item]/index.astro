@@ -1,0 +1,90 @@
+---
+export const prerender = false
+
+import BaseLayout from '../../../../../../../layouts/BaseLayout.astro'
+import { getIssue, type Lang } from '../../../../../../../lib/payload'
+import {
+  findFullStory,
+  newsletterReturnHref,
+  storyBackLabel,
+} from '../../../../../../../lib/storyLink'
+
+const { month, lang: langParam, section: sectionParam, item: itemParam } = Astro.params
+const lang = (langParam === 'te' ? 'te' : 'en') as Lang
+const sectionKey = decodeURIComponent(sectionParam || '')
+const itemKey = decodeURIComponent(itemParam || '')
+
+if (langParam !== 'te' && langParam !== 'en') {
+  return Astro.redirect(
+    `/issues/${month}/en/story/${encodeURIComponent(sectionKey)}/${encodeURIComponent(itemKey)}/`,
+  )
+}
+
+const from = Astro.url.searchParams.get('from')
+const returnView = from === 'print' || from === 'flip' ? from : 'news'
+const fromQuery = from === 'print' || from === 'flip' ? `?from=${from}` : ''
+
+let issue: Awaited<ReturnType<typeof getIssue>> = null
+let error = ''
+try {
+  issue = await getIssue(month!)
+} catch (e) {
+  error = e instanceof Error ? e.message : 'CMS error'
+}
+
+if (!error && !issue) {
+  return new Response(null, { status: 404, statusText: 'Not Found' })
+}
+
+const story = issue ? findFullStory(issue, sectionKey, itemKey, lang) : null
+if (!error && !story) {
+  return new Response(null, { status: 404, statusText: 'Not Found' })
+}
+
+const title =
+  story?.title ||
+  story?.blurb.split(/\n+/).map((l) => l.trim()).find(Boolean) ||
+  story?.fullStory.split(/\n+/).map((l) => l.trim()).find(Boolean) ||
+  (lang === 'te' ? 'ఇంకా చదవండి' : 'Full story')
+const bodyLines = (story?.fullStory || '')
+  .split(/\n+/)
+  .map((l) => l.trim())
+  .filter(Boolean)
+  .filter((line, i) => !(i === 0 && title && line === title))
+const issueTitle = issue ? (lang === 'te' ? issue.titleTe : issue.titleEn) : month!
+const backHref = newsletterReturnHref(month!, lang, sectionKey, itemKey, returnView)
+const teHref = `/issues/${month}/te/story/${encodeURIComponent(sectionKey)}/${encodeURIComponent(itemKey)}/${fromQuery}`
+const enHref = `/issues/${month}/en/story/${encodeURIComponent(sectionKey)}/${encodeURIComponent(itemKey)}/${fromQuery}`
+---
+
+<BaseLayout title={`${title} · ${issueTitle}`} lang={lang} variant="news" mainClass="story-main">
+  {
+    error ? (
+      <p class="qlu-error">{error}</p>
+    ) : story ? (
+      <article class="story-detail">
+        <p class="story-detail-kicker">
+          <a href={backHref}>{storyBackLabel(lang)}</a>
+          <span aria-hidden="true"> · </span>
+          <a href={`/issues/${month}/${lang}/?view=news`}>{issueTitle}</a>
+        </p>
+        <div class="qlu-lang" role="navigation" aria-label="Language">
+          <a class:list={{ active: lang === 'te' }} href={teHref}>
+            TE
+          </a>
+          <a class:list={{ active: lang === 'en' }} href={enHref}>
+            EN
+          </a>
+        </div>
+        {title ? <h1 class="story-detail-title">{title}</h1> : null}
+        {story.meta ? <p class="story-detail-meta">{story.meta}</p> : null}
+        <div class="story-detail-body">
+          {bodyLines.map((line) => <p>{line}</p>)}
+        </div>
+        <p class="story-detail-back">
+          <a href={backHref}>{storyBackLabel(lang)}</a>
+        </p>
+      </article>
+    ) : null
+  }
+</BaseLayout>

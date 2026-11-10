@@ -9,7 +9,14 @@ import {
   packFlowIntoCards,
   type FlowBlock,
 } from '../../lib/printText'
-import { normalizeStoryUrl, storyLinkLabel } from '../../lib/storyLink'
+import {
+  itemKeyAt,
+  pickLangText,
+  resolveStoryLink,
+  storyLinkLabel,
+} from '../../lib/storyLink'
+import PrintSheetHeader from './PrintSheetHeader.astro'
+import PrintSheetFooter from './PrintSheetFooter.astro'
 
 interface CardPage {
   section: IssueSection
@@ -21,9 +28,11 @@ interface Props {
   lang: Lang
   month: string
   year: string
+  page: number
+  pages: number
 }
 
-const { cards, lang, month, year } = Astro.props
+const { cards, lang, month, year, page, pages } = Astro.props
 const pdf = PDF_SECTION_TITLES.themes
 const sectionLabel = lang === 'te' ? pdf.te : pdf.en
 
@@ -51,15 +60,31 @@ function buildFlowBlocks(section: IssueSection, bodyHtml: string): FlowBlock[] {
     if (line.trim()) blocks.push({ kind: 'text', text: line.trim() })
   }
 
-  for (const item of section.themeItems || []) {
+  for (const [index, item] of (section.themeItems || []).entries()) {
     const title = pickLocalized(lang, item.titleTe, item.titleEn)
     const blurb = pickLocalized(lang, item.blurbTe, item.blurbEn)
     if (title) blocks.push({ kind: 'title', text: title })
     for (const line of linesToParagraphs(blurb)) {
       if (line.trim()) blocks.push({ kind: 'text', text: line.trim() })
     }
-    const href = normalizeStoryUrl(item.storyUrl)
-    if (href) blocks.push({ kind: 'link', href, label: storyLinkLabel(lang) })
+    const link = resolveStoryLink({
+      month,
+      lang,
+      sectionKey: 'themes',
+      itemKey: itemKeyAt(item.id, index),
+      fullStory: pickLangText(lang, item.fullStoryTe, item.fullStoryEn),
+      storyUrl: item.storyUrl,
+      from: 'print',
+    })
+    if (link.href) {
+      blocks.push({
+        kind: 'link',
+        href: link.href,
+        label: storyLinkLabel(lang),
+        external: link.external,
+        id: link.anchorId,
+      })
+    }
   }
 
   const bodyBlocks = htmlToFlowBlocks(bodyHtml || '')
@@ -105,68 +130,72 @@ const allCardColumns = packedStories.flat()
 {
   allCardColumns.length ? (
     <section class="print-sheet print-section print-section--theme-cards" id="print-themes-cards">
-      <header class="print-sheet-head">
-        <p class="print-sheet-brand">Quantum Life University</p>
-        <p class="print-sheet-meta">Monthly / {year}</p>
-      </header>
-      <p class="print-eyebrow">
-        {pdf.num} / {sectionLabel}
-      </p>
-      <h2 class="print-sheet-title">{sectionLabel}</h2>
+      <PrintSheetHeader
+        lang={lang}
+        month={month}
+        year={year}
+        sectionLabel={sectionLabel}
+        sectionNum={pdf.num}
+      />
 
-      <div class="print-theme-card-grid">
-        {allCardColumns.map((col) => (
-          <article class="print-theme-card">
-            {col.photo ? (
-              <figure class="print-theme-card__photo">
-                <img src={col.photo.src} alt={col.photo.alt || ''} loading="lazy" />
-              </figure>
-            ) : null}
-
-            <div class="print-theme-card__body">
-              {col.continued ? (
-                <p class="print-theme-card__continued">
-                  {lang === 'te' ? 'కొనసాగింపు…' : 'Continued…'}
-                </p>
+      <div class="print-sheet-body">
+        <div class="print-theme-card-grid">
+          {allCardColumns.map((col) => (
+            <article class="print-theme-card">
+              {col.photo ? (
+                <figure class="print-theme-card__photo">
+                  <img src={col.photo.src} alt={col.photo.alt || ''} loading="lazy" />
+                </figure>
               ) : null}
 
-              {col.blocks.length ? (
-                col.blocks.map((block) =>
-                  block.kind === 'title' ? (
-                    <h3 class="print-theme-card__title">{block.text}</h3>
-                  ) : block.kind === 'text' ? (
-                    <p class="print-theme-card__text">{block.text}</p>
-                  ) : block.kind === 'link' ? (
-                    <p class="print-theme-card__link story-link-wrap">
-                      <a
-                        class="story-link print-story-link"
-                        href={block.href}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        {block.label}
-                      </a>
-                    </p>
-                  ) : (
-                    <div class="print-theme-card__html" set:html={block.html} />
-                  ),
-                )
-              ) : (
-                <p class="print-theme-card__empty">
-                  {lang === 'te'
-                    ? 'ఫోటో కింద కంటెంట్ లేదు — హెడ్‌లైన్ లేదా బాడీ నింపండి.'
-                    : 'No text under the photo — add a headline or body on this entry.'}
-                </p>
-              )}
-            </div>
-          </article>
-        ))}
+              <div class="print-theme-card__body">
+                {col.continued ? (
+                  <p class="print-theme-card__continued">
+                    {lang === 'te' ? 'కొనసాగింపు…' : 'Continued…'}
+                  </p>
+                ) : null}
+
+                {col.blocks.length ? (
+                  col.blocks.map((block) =>
+                    block.kind === 'title' ? (
+                      <h3 class="print-theme-card__title">{block.text}</h3>
+                    ) : block.kind === 'text' ? (
+                      <p class="print-theme-card__text">{block.text}</p>
+                    ) : block.kind === 'link' ? (
+                      <p class="print-theme-card__link story-link-wrap" id={block.id}>
+                        {block.external ? (
+                          <a
+                            class="story-link print-story-link"
+                            href={block.href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            {block.label}
+                          </a>
+                        ) : (
+                          <a class="story-link print-story-link" href={block.href}>
+                            {block.label}
+                          </a>
+                        )}
+                      </p>
+                    ) : (
+                      <div class="print-theme-card__html" set:html={block.html} />
+                    ),
+                  )
+                ) : (
+                  <p class="print-theme-card__empty">
+                    {lang === 'te'
+                      ? 'ఫోటో కింద కంటెంట్ లేదు — హెడ్‌లైన్ లేదా బాడీ నింపండి.'
+                      : 'No text under the photo — add a headline or body on this entry.'}
+                  </p>
+                )}
+              </div>
+            </article>
+          ))}
+        </div>
       </div>
 
-      <footer class="print-sheet-foot">
-        <span>Quantum Life University</span>
-        <span>{month}</span>
-      </footer>
+      <PrintSheetFooter lang={lang} month={month} page={page} pages={pages} />
     </section>
   ) : null
 }

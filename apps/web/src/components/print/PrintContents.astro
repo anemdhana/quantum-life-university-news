@@ -1,14 +1,18 @@
 ---
 import type { Lang } from '../../lib/payload'
 import { PDF_CONTENTS_KEYS, PDF_SECTION_TITLES } from '../../lib/magazineSections'
+import PrintSheetHeader from './PrintSheetHeader.astro'
+import PrintSheetFooter from './PrintSheetFooter.astro'
 
 interface Props {
   lang: Lang
   month: string
   presentKeys: string[]
+  page: number
+  pages: number
 }
 
-const { lang, month, presentKeys } = Astro.props
+const { lang, month, presentKeys, page, pages } = Astro.props
 const year = month.slice(0, 4)
 const items = PDF_CONTENTS_KEYS.filter((key) => presentKeys.includes(key)).map((key) => {
   const meta = PDF_SECTION_TITLES[key]
@@ -22,39 +26,34 @@ const items = PDF_CONTENTS_KEYS.filter((key) => presentKeys.includes(key)).map((
 ---
 
 <section class="print-sheet print-contents" aria-label={lang === 'te' ? 'విషయ సూచిక' : 'Contents'}>
-  <header class="print-sheet-head">
-    <p class="print-sheet-brand">Quantum Life University</p>
-    <p class="print-sheet-meta">Monthly / {year}</p>
-  </header>
-  <p class="print-eyebrow">{lang === 'te' ? 'ఈ సంచికలో' : 'In this issue'}</p>
-  <h2 class="print-sheet-title">{lang === 'te' ? 'విషయాలు' : 'Contents'}</h2>
-  <p class="print-lede">
-    {lang === 'te' ? 'ఏడు పునరావృత సంపాదకీయ విభాగాలు' : 'Seven recurring editorial sections'}
-  </p>
-  <p class="print-template-note">
-    {
-      lang === 'te'
-        ? 'QLU · వార్తాపత్రిక టెంప్లేట్ · నమూనా కాపీని నిర్ధారిత విషయంతో భర్తీ చేయండి'
-        : 'QLU · Newsletter template · Replace sample copy with verified content'
-    }
-  </p>
-  <ol class="print-toc">
-    {
-      items.map((item) => (
-        <li>
-          <a href={`#print-${item.key}`}>
-            <span class="print-toc-num">{item.num}</span>
-            <span class="print-toc-body">
-              <strong>{item.title}</strong>
-              {item.blurb ? <span>{item.blurb}</span> : null}
-            </span>
-          </a>
-        </li>
-      ))
-    }
-  </ol>
-  <footer class="print-sheet-foot">
-    <span>Quantum Life University</span>
-    <span>{lang === 'te' ? 'నెలవారీ వార్తాపత్రిక' : 'Monthly Newsletter'}</span>
-  </footer>
+  <PrintSheetHeader
+    lang={lang}
+    month={month}
+    year={year}
+    sectionLabel={lang === 'te' ? 'విషయాలు' : 'Contents'}
+    variant="contents"
+  />
+
+  <div class="print-sheet-body">
+    <p class="print-lede">
+      {lang === 'te' ? 'ఏడు పునరావృత సంపాదకీయ విభాగాలు' : 'Seven recurring editorial sections'}
+    </p>
+    <ol class="print-toc">
+      {
+        items.map((item) => (
+          <li>
+            <a href={`#print-${item.key}-1`}>
+              <span class="print-toc-num">{item.num}</span>
+              <span class="print-toc-body">
+                <strong>{item.title}</strong>
+                {item.blurb ? <span>{item.blurb}</span> : null}
+              </span>
+            </a>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+
+  <PrintSheetFooter lang={lang} month={month} page={page} pages={pages} />
 </section>

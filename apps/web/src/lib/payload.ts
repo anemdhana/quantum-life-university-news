@@ -21,6 +21,8 @@ export type ThemeItem = {
   titleEn?: string | null
   blurbTe?: string | null
   blurbEn?: string | null
+  fullStoryTe?: string | null
+  fullStoryEn?: string | null
   storyUrl?: string | null
 }
 
@@ -32,6 +34,8 @@ export type ClassItem = {
   date?: string | null
   insightTe?: string | null
   insightEn?: string | null
+  fullStoryTe?: string | null
+  fullStoryEn?: string | null
   storyUrl?: string | null
 }
 
@@ -41,6 +45,8 @@ export type StoryItem = {
   location?: string | null
   bodyTe?: string | null
   bodyEn?: string | null
+  fullStoryTe?: string | null
+  fullStoryEn?: string | null
   storyUrl?: string | null
 }
 
@@ -50,6 +56,8 @@ export type VisitItem = {
   place?: string | null
   noteTe?: string | null
   noteEn?: string | null
+  fullStoryTe?: string | null
+  fullStoryEn?: string | null
   storyUrl?: string | null
 }
 
@@ -59,6 +67,8 @@ export type FeatureItem = {
   titleEn?: string | null
   bodyTe?: string | null
   bodyEn?: string | null
+  fullStoryTe?: string | null
+  fullStoryEn?: string | null
   storyUrl?: string | null
 }
 
@@ -71,6 +81,8 @@ export type EventItem = {
   venueEn?: string | null
   detailsTe?: string | null
   detailsEn?: string | null
+  fullStoryTe?: string | null
+  fullStoryEn?: string | null
   storyUrl?: string | null
 }
 
@@ -92,13 +104,20 @@ export type IssueSection = {
   featureItems?: FeatureItem[] | null
   golokaTe?: string | null
   golokaEn?: string | null
+  golokaFullStoryTe?: string | null
+  golokaFullStoryEn?: string | null
   golokaUrl?: string | null
   sahasraraTe?: string | null
   sahasraraEn?: string | null
+  sahasraraFullStoryTe?: string | null
+  sahasraraFullStoryEn?: string | null
   sahasraraUrl?: string | null
   qluTe?: string | null
   qluEn?: string | null
+  qluFullStoryTe?: string | null
+  qluFullStoryEn?: string | null
   qluUrl?: string | null
+
   eventItems?: EventItem[] | null
   images?: Array<{
     id?: string

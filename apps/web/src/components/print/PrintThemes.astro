@@ -1,5 +1,6 @@
 ---
 import type { IssueSection, Lang } from '../../lib/payload'
+import { itemKeyAt, pickLangText, resolveStoryLink } from '../../lib/storyLink'
 import { linesToParagraphs } from '../../lib/printText'
 import StoryLink from '../StoryLink.astro'
 import PrintFreeform from './PrintFreeform.astro'
@@ -7,11 +8,12 @@ import PrintFreeform from './PrintFreeform.astro'
 interface Props {
   section: IssueSection
   lang: Lang
+  month: string
   bodyHtml: string
   emptyLine: string
 }
 
-const { section, lang, bodyHtml, emptyLine } = Astro.props
+const { section, lang, month, bodyHtml, emptyLine } = Astro.props
 const lead = (lang === 'te' ? section.leadTe : section.leadEn)?.trim() || ''
 const items = (section.themeItems || []).filter(
   (t) => (lang === 'te' ? t.titleTe || t.blurbTe : t.titleEn || t.blurbEn)?.trim(),
@@ -41,15 +43,30 @@ const hasBody = Boolean(bodyHtml?.replace(/<[^>]+>/g, '').trim())
               const title = (lang === 'te' ? item.titleTe : item.titleEn) || ''
               const blurb = (lang === 'te' ? item.blurbTe : item.blurbEn) || ''
               const blurbLines = linesToParagraphs(blurb)
+              const itemKey = itemKeyAt(item.id, i)
+              const link = resolveStoryLink({
+                month,
+                lang,
+                sectionKey: 'themes',
+                itemKey,
+                fullStory: pickLangText(lang, item.fullStoryTe, item.fullStoryEn),
+                storyUrl: item.storyUrl,
+                from: 'print',
+              })
               return (
-                <li>
+                <li id={link.anchorId}>
                   <span class="print-item-num">{String(i + 1).padStart(2, '0')}</span>
                   <div>
                     {title ? <strong>{title}</strong> : null}
                     {blurbLines.map((p) =>
                       p ? <p>{p}</p> : <p class="print-spacer" aria-hidden="true" />,
                     )}
-                    <StoryLink url={item.storyUrl} lang={lang} class="print-story-link" />
+                    <StoryLink
+                      href={link.href}
+                      external={link.external}
+                      lang={lang}
+                      class="print-story-link"
+                    />
                   </div>
                 </li>
               )

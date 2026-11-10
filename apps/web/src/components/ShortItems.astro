@@ -6,24 +6,26 @@ import StoryLink from './StoryLink.astro'
 interface Props {
   section: IssueSection
   lang: Lang
+  month: string
+  from?: 'news' | 'print' | 'flip'
   class?: string
 }
 
-const { section, lang, class: className } = Astro.props
-const items = shortItemsForSection(section, lang)
+const { section, lang, month, from = 'news', class: className } = Astro.props
+const items = shortItemsForSection(section, lang, month, from)
 ---
 
 {
   items.length ? (
     <div class:list={['short-items', className]}>
       {items.map((item) => (
-        <article class="short-item">
+        <article class="short-item" id={item.anchorId}>
           {item.title ? <h3 class="short-item-title">{item.title}</h3> : null}
           {item.meta ? <p class="short-item-meta">{item.meta}</p> : null}
           {item.body
             ? item.body.split(/\n+/).map((line) => (line.trim() ? <p>{line.trim()}</p> : null))
             : null}
-          <StoryLink url={item.storyUrl} lang={lang} />
+          <StoryLink href={item.href} external={item.external} lang={lang} />
         </article>
       ))}
     </div>

@@ -1504,118 +1504,415 @@ body.is-print {
 
 .print-main {
   max-width: none;
-  padding: 0;
+  width: 100%;
+  padding: 0.35rem 0 1.5rem;
 }
 
 .print-desk {
-  width: min(100% - 1.25rem, 46rem);
+  width: min(100% - 1rem, 46rem);
   margin: 0 auto;
-  padding: 0.85rem 0 2.5rem;
+  padding: 0 0 1.75rem;
 }
 
 .print-toolbar {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.55rem;
+  flex-wrap: nowrap;
+  gap: 0.35rem 0.5rem;
   align-items: center;
-  justify-content: space-between;
-  margin: 0 0 1rem;
-  padding: 0.55rem 0.75rem;
-  background: #fffdf8;
-  border: 1px solid #e8dfd0;
-  border-radius: 10px;
+  justify-content: flex-end;
+  margin: 0 0 0.35rem;
+  padding: 0.15rem 0.15rem 0.2rem;
+  background: transparent;
+  border: none;
+  min-height: 0;
+  line-height: 1;
 }
 
-.print-toolbar-title {
+.print-toolbar .view-switch {
+  transform: scale(0.88);
+  transform-origin: right center;
+}
+
+.print-toolbar .qlu-lang {
   margin: 0;
-  font-size: 0.78rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: #a17b43;
-  font-weight: 600;
+  transform: scale(0.88);
+  transform-origin: right center;
 }
 
-.print-toolbar-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.45rem;
-  align-items: center;
+.print-toolbar .qlu-lang a {
+  padding: 0.2rem 0.5rem;
+  font-size: 0.72rem;
+}
+
+.print-toolbar .view-switch-btn {
+  padding: 0.22rem 0.55rem;
+  font-size: 0.68rem;
+}
+
+.print-toolbar .flip-archive {
+  margin: 0;
+  font-size: 0.72rem;
+  line-height: 1.2;
 }
 
 .print-sheet {
   position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: min(92vh, 62rem);
   background: #fffdf8;
   border: 1px solid #e8dfd0;
   border-radius: 2px;
-  padding: 1.75rem 1.5rem 3.25rem;
+  padding: 0;
   margin: 0 0 1.15rem;
   box-shadow: 0 10px 28px rgba(53, 45, 38, 0.06);
   color: #352d26;
+  overflow: visible;
 }
 
-.print-sheet-head {
+.print-sheet-body {
+  flex: 1 1 auto;
+  padding: 1.15rem 1.55rem 1.35rem;
+}
+
+/* —— Magazine page mast (brand chrome) —— */
+.print-mast {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  margin: 0 0 1.25rem;
-  padding-bottom: 0.55rem;
-  border-bottom: 1px solid #e8dfd0;
-  font-size: 0.72rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: #7c6e5d;
+  gap: 0.75rem 1.1rem;
+  padding: 0.55rem 1.35rem;
+  border: none;
+  border-bottom: 1px solid rgba(161, 123, 67, 0.28);
+  background: linear-gradient(180deg, #fffaf2 0%, #fffdf8 100%);
+  overflow: visible;
 }
 
-.print-sheet-brand {
-  margin: 0;
-  color: #a17b43;
-  font-weight: 600;
-}
-
-.print-sheet-meta {
-  margin: 0;
-}
-
-.print-sheet-foot {
-  position: absolute;
-  left: 1.5rem;
-  right: 1.5rem;
-  bottom: 1rem;
+.print-mast-left {
   display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  font-size: 0.68rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: #a17b43;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 0;
+  flex: 0 1 auto;
 }
 
-.print-brand {
-  margin: 2.5rem 0 0.5rem;
-  text-align: center;
-  font-size: 0.78rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: #a17b43;
-  font-weight: 600;
+.print-mast-logo {
+  width: 2.65rem;
+  height: 2.65rem;
+  flex-shrink: 0;
+  display: block;
+  object-fit: contain;
+  background: transparent;
+  /* Visually larger without growing mast row height */
+  transform: scale(1.28);
+  transform-origin: left center;
+  /* Clear space for scaled logo so text does not sit under it */
+  margin-right: 0.85rem;
 }
 
-.print-cover-title {
-  margin: 0 0 0.65rem;
-  text-align: center;
-  font-size: clamp(1.55rem, 4vw, 2.1rem);
-  color: #6b4a25;
-  font-weight: 700;
-  line-height: 1.2;
+.print-mast-brand-text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.12rem;
+  padding-top: 0.05rem;
 }
 
-.print-tagline {
-  margin: 0 0 2rem;
-  text-align: center;
+.print-mast-org {
+  margin: 0;
   font-size: 0.88rem;
-  letter-spacing: 0.14em;
+  font-weight: 750;
+  letter-spacing: 0.015em;
+  color: #5a3d1f;
+  line-height: 1.15;
+  white-space: nowrap;
+}
+
+.print-mast.is-te .print-mast-org {
+  font-size: 0.84rem;
+  letter-spacing: 0;
+}
+
+.print-mast-stamp {
+  margin: 0;
+  white-space: nowrap;
+}
+
+.print-mast-month {
+  font-size: 0.74rem;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  font-variant-numeric: tabular-nums;
+  color: #a17b43;
+  line-height: 1.15;
+}
+
+.print-mast-title {
+  margin: 0;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 0.3rem;
+  min-width: 0;
+  flex: 1 1 auto;
+  max-width: 55%;
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  font-size: 0.88rem;
+  font-weight: 750;
+  letter-spacing: 0.01em;
+  color: #5a3d1f;
+  line-height: 1.25;
+}
+
+.print-mast.is-te .print-mast-title {
+  font-size: 0.84rem;
+  font-weight: 750;
+  letter-spacing: 0;
+}
+
+.print-mast-dot {
+  color: #c4a574;
+  flex-shrink: 0;
+  font-weight: 700;
+}
+
+.print-mast-num {
+  color: #a17b43;
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+  font-weight: 800;
+}
+
+.print-mast-section-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+  font-weight: 750;
+}
+
+/* —— Magazine footer rail —— */
+.print-rail {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: auto;
+  padding: 0.65rem 1.55rem 0.75rem;
+  border-top: 1px solid #e0d4c2;
+  background: linear-gradient(180deg, #fffdf8 0%, #f7f0e4 100%);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: #7c6e5d;
+}
+
+.print-rail-left {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.print-rail-logo {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
+  object-fit: contain;
+  background: transparent;
+}
+
+.print-rail-org {
+  font-weight: 700;
+  color: #6b4a25;
+  letter-spacing: 0.12em;
+}
+
+.print-rail-sep {
+  opacity: 0.45;
+}
+
+.print-rail-month {
+  font-variant-numeric: tabular-nums;
+  color: #a17b43;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.print-rail-center {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.2rem;
+  font-variant-numeric: tabular-nums;
+  color: #6b4a25;
+}
+
+.print-rail-page {
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.print-rail-of {
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  color: #a17b43;
+  font-weight: 600;
+}
+
+.print-rail-right {
+  text-align: right;
+}
+
+.print-rail-site {
+  color: #a17b43;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+}
+
+.print-rail--compact .print-rail-page {
+  font-size: 0.85rem;
+}
+
+@media (max-width: 640px) {
+  .print-mast {
+    gap: 0.45rem;
+  }
+
+  .print-mast-title {
+    font-size: 0.8rem;
+  }
+
+  .print-cover-org {
+    white-space: normal;
+  }
+
+  .print-rail {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    text-align: center;
+    gap: 0.35rem;
+  }
+
+  .print-rail-left,
+  .print-rail-right {
+    justify-content: center;
+    text-align: center;
+  }
+}
+
+/* Cover mast — left brand + month, right magazine title / tagline */
+.print-cover-mast {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.85rem 1.1rem;
+  padding: 0.85rem 1.35rem;
+  border-bottom: 1px solid rgba(161, 123, 67, 0.35);
+  background:
+    radial-gradient(ellipse at 12% 0%, rgba(161, 123, 67, 0.1), transparent 50%),
+    linear-gradient(180deg, #fff9f0 0%, #fffdf8 100%);
+}
+
+.print-cover-mast-left {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+  flex: 0 1 auto;
+}
+
+.print-cover-logo {
+  width: 3.15rem;
+  height: 3.15rem;
+  display: block;
+  flex-shrink: 0;
+  object-fit: contain;
+  background: transparent;
+  transform: scale(1.22);
+  transform-origin: left center;
+  margin-right: 0.75rem;
+}
+
+.print-cover-mast-brand {
+  text-align: left;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.12rem;
+}
+
+.print-cover-org {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 750;
+  letter-spacing: 0.015em;
+  color: #5a3d1f;
+  line-height: 1.15;
+  white-space: nowrap;
+}
+
+.print-cover.is-te .print-cover-org {
+  font-size: 0.92rem;
+  letter-spacing: 0;
+}
+
+.print-cover-issue-line {
+  margin: 0;
+  font-size: 0.78rem;
+  letter-spacing: 0.05em;
+  color: #a17b43;
+  font-weight: 650;
+  white-space: nowrap;
+  line-height: 1.15;
+}
+
+.print-cover-mast-right {
+  text-align: right;
+  min-width: 0;
+  flex: 1 1 auto;
+  max-width: 55%;
+}
+
+.print-cover-mag {
+  margin: 0;
+  font-size: clamp(0.95rem, 2.2vw, 1.15rem);
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: #5a3d1f;
+  line-height: 1.25;
+}
+
+.print-cover.is-te .print-cover-mag {
+  letter-spacing: 0;
+}
+
+.print-cover-tagline {
+  margin: 0.2rem 0 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #a17b43;
+  line-height: 1.3;
+}
+
+.print-cover.is-te .print-cover-tagline {
+  letter-spacing: 0.01em;
+}
+
+.print-cover-body {
+  text-align: center;
+  padding-top: 1.15rem;
+}
+
+/* Legacy foot (kept for safety if any sheet still uses it) */
+.print-sheet-foot {
+  display: none;
 }
 
 .print-founders {
@@ -1675,11 +1972,19 @@ body.is-print {
   font-weight: 600;
 }
 
+/* Body headline — simple gold accent (editor Headline field) */
 .print-sheet-title {
-  margin: 0 0 0.75rem;
-  font-size: clamp(1.25rem, 3vw, 1.55rem);
-  color: #6b4a25;
-  line-height: 1.25;
+  position: relative;
+  margin: 0 0 1.1rem;
+  padding: 0.55rem 0.85rem 0.6rem 1rem;
+  border: none;
+  border-left: 3px solid #a17b43;
+  border-radius: 0 8px 8px 0;
+  font-size: clamp(1.02rem, 2.2vw, 1.18rem);
+  font-weight: 650;
+  color: #5a3d1f;
+  line-height: 1.4;
+  background: rgba(161, 123, 67, 0.08);
 }
 
 .print-lede {
@@ -1973,23 +2278,45 @@ body.is-print {
   color: #7c6e5d;
 }
 
-.print-cover .print-sheet-foot {
-  justify-content: center;
-  gap: 1.5rem;
-}
-
 @media print {
+  @page {
+    margin: 12mm 12mm 14mm;
+  }
+
   body.is-print {
     background: #fff;
   }
+
   .print-toolbar {
     display: none !important;
   }
+
+  .print-desk {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+  }
+
   .print-sheet {
     box-shadow: none;
     break-after: page;
+    break-inside: avoid;
     margin: 0;
     border: none;
+    min-height: auto;
+    height: auto;
+  }
+
+  .print-sheet:last-child {
+    break-after: auto;
+  }
+
+  .print-mast,
+  .print-cover-mast,
+  .print-rail {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 }
 
@@ -2071,9 +2398,47 @@ body.is-print {
   margin: 0.75rem 0 1.15rem;
 }
 
-/* Full-story external links on short newsletter items */
+/* Full-story links on short newsletter items */
 .story-link-wrap {
   margin: 0.45rem 0 0;
+}
+
+.story-main {
+  max-width: 42rem;
+  margin: 0 auto;
+  padding: 1.25rem 1.1rem 2.5rem;
+}
+
+.story-detail-kicker {
+  margin: 0 0 0.75rem;
+  font-size: 0.92rem;
+  opacity: 0.8;
+}
+
+.story-detail-title {
+  margin: 0.35rem 0 0.4rem;
+  font-size: clamp(1.45rem, 3vw, 1.9rem);
+  line-height: 1.25;
+}
+
+.story-detail-meta {
+  margin: 0 0 1rem;
+  font-size: 0.92rem;
+  opacity: 0.75;
+}
+
+.story-detail-body {
+  margin: 0.5rem 0 1.5rem;
+}
+
+.story-detail-body p {
+  margin: 0.55rem 0;
+  line-height: 1.65;
+}
+
+.story-detail-back {
+  margin: 1.5rem 0 0;
+  font-size: 0.95rem;
 }
 
 .story-link,
@@ -2096,8 +2461,23 @@ body.is-print {
   margin: 0.85rem 0 0;
 }
 
+.short-item,
+.print-theme-card__link[id],
+.print-card[id],
+.print-row[id],
+.print-campus-block[id],
+.print-theme-list > li[id] {
+  scroll-margin-top: 5rem;
+}
+
 .short-item {
   margin: 0;
+}
+
+.short-item:target,
+.short-item.is-return-target {
+  outline: 2px solid color-mix(in srgb, currentColor 35%, transparent);
+  outline-offset: 0.35rem;
 }
 
 .short-item-title {

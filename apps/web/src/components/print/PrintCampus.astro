@@ -1,5 +1,6 @@
 ---
 import type { IssueSection, Lang } from '../../lib/payload'
+import { pickLangText, resolveStoryLink } from '../../lib/storyLink'
 import { linesToParagraphs } from '../../lib/printText'
 import StoryLink from '../StoryLink.astro'
 import PrintFreeform from './PrintFreeform.astro'
@@ -7,28 +8,48 @@ import PrintFreeform from './PrintFreeform.astro'
 interface Props {
   section: IssueSection
   lang: Lang
+  month: string
   bodyHtml: string
   emptyLine: string
 }
 
-const { section, lang, bodyHtml, emptyLine } = Astro.props
+const { section, lang, month, bodyHtml, emptyLine } = Astro.props
 const blocks = [
   {
+    itemKey: 'goloka',
     label: 'Goloka',
     text: (lang === 'te' ? section.golokaTe : section.golokaEn)?.trim() || '',
+    fullStory: pickLangText(lang, section.golokaFullStoryTe, section.golokaFullStoryEn),
     url: section.golokaUrl,
   },
   {
+    itemKey: 'sahasrara',
     label: 'Sahasrara',
     text: (lang === 'te' ? section.sahasraraTe : section.sahasraraEn)?.trim() || '',
+    fullStory: pickLangText(lang, section.sahasraraFullStoryTe, section.sahasraraFullStoryEn),
     url: section.sahasraraUrl,
   },
   {
+    itemKey: 'qlu',
     label: 'QLU',
     text: (lang === 'te' ? section.qluTe : section.qluEn)?.trim() || '',
+    fullStory: pickLangText(lang, section.qluFullStoryTe, section.qluFullStoryEn),
     url: section.qluUrl,
   },
-].filter((b) => b.text || (b.url || '').trim())
+]
+  .map((b) => ({
+    ...b,
+    link: resolveStoryLink({
+      month,
+      lang,
+      sectionKey: 'campus',
+      itemKey: b.itemKey,
+      fullStory: b.fullStory,
+      storyUrl: b.url,
+      from: 'print',
+    }),
+  }))
+  .filter((b) => b.text || b.link.href)
 const hasBody = Boolean(bodyHtml?.replace(/<[^>]+>/g, '').trim())
 ---
 
@@ -37,12 +58,17 @@ const hasBody = Boolean(bodyHtml?.replace(/<[^>]+>/g, '').trim())
     <>
       <div class="print-campus">
         {blocks.map((block) => (
-          <article class="print-campus-block">
+          <article class="print-campus-block" id={block.link.anchorId}>
             <h3>{block.label}</h3>
             {linesToParagraphs(block.text).map((p) =>
               p ? <p>{p}</p> : <p class="print-spacer" aria-hidden="true" />,
             )}
-            <StoryLink url={block.url} lang={lang} class="print-story-link" />
+            <StoryLink
+              href={block.link.href}
+              external={block.link.external}
+              lang={lang}
+              class="print-story-link"
+            />
           </article>
         ))}
       </div>

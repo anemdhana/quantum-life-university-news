@@ -138,5 +138,16 @@ export function initFlipbook(root: HTMLElement) {
     { passive: true },
   )
 
+  // Return from full story: open the flip page that contains #story-…
+  const hashId = decodeURIComponent((window.location.hash || '').replace(/^#/, ''))
+  if (hashId.startsWith('story-')) {
+    const target = root.querySelector<HTMLElement>(`#${CSS.escape(hashId)}`)
+    const pageEl = target?.closest<HTMLElement>('[data-flip-page]')
+    if (pageEl) {
+      const pageIndex = pages.indexOf(pageEl)
+      if (pageIndex >= 0) index = pageIndex
+    }
+  }
+
   sync()
 }

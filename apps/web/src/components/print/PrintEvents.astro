@@ -1,5 +1,6 @@
 ---
 import type { IssueSection, Lang } from '../../lib/payload'
+import { itemKeyAt, pickLangText, resolveStoryLink } from '../../lib/storyLink'
 import { linesToParagraphs } from '../../lib/printText'
 import StoryLink from '../StoryLink.astro'
 import PrintFreeform from './PrintFreeform.astro'
@@ -7,11 +8,12 @@ import PrintFreeform from './PrintFreeform.astro'
 interface Props {
   section: IssueSection
   lang: Lang
+  month: string
   bodyHtml: string
   emptyLine: string
 }
 
-const { section, lang, bodyHtml, emptyLine } = Astro.props
+const { section, lang, month, bodyHtml, emptyLine } = Astro.props
 const items = (section.eventItems || []).filter(
   (e) =>
     e.when?.trim() ||
@@ -24,19 +26,34 @@ const hasBody = Boolean(bodyHtml?.replace(/<[^>]+>/g, '').trim())
   items.length ? (
     <>
       <div class="print-events">
-        {items.map((item) => {
+        {items.map((item, i) => {
           const title = (lang === 'te' ? item.titleTe : item.titleEn) || ''
           const venue = (lang === 'te' ? item.venueTe : item.venueEn) || ''
           const details = (lang === 'te' ? item.detailsTe : item.detailsEn) || ''
+          const itemKey = itemKeyAt(item.id, i)
+          const link = resolveStoryLink({
+            month,
+            lang,
+            sectionKey: 'upcoming',
+            itemKey,
+            fullStory: pickLangText(lang, item.fullStoryTe, item.fullStoryEn),
+            storyUrl: item.storyUrl,
+            from: 'print',
+          })
           return (
-            <article class="print-row">
+            <article class="print-row" id={link.anchorId}>
               {item.when ? <p class="print-label">{item.when}</p> : null}
               {title ? <h3>{title}</h3> : null}
               {venue ? <p class="print-meta-line">{venue}</p> : null}
               {linesToParagraphs(details).map((p) =>
                 p ? <p>{p}</p> : <p class="print-spacer" aria-hidden="true" />,
               )}
-              <StoryLink url={item.storyUrl} lang={lang} class="print-story-link" />
+              <StoryLink
+                href={link.href}
+                external={link.external}
+                lang={lang}
+                class="print-story-link"
+              />
             </article>
           )
         })}

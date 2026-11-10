@@ -1,0 +1,26 @@
+---
+import type { Lang } from '../../lib/payload'
+
+interface Props {
+  lang: Lang
+  month: string
+  page: number
+  pages: number
+  compact?: boolean
+}
+
+const { lang, page, pages, compact = false } = Astro.props
+const pageLabel =
+  lang === 'te' ? `పేజీ ${page} / ${pages}` : `Page ${page} of ${pages}`
+---
+
+<footer class:list={['print-rail', compact && 'print-rail--compact', lang === 'te' && 'is-te']}>
+  <div class="print-rail-left" aria-hidden="true"></div>
+  <div class="print-rail-center" aria-label={pageLabel}>
+    <span class="print-rail-page">{page}</span>
+    <span class="print-rail-of">/ {pages}</span>
+  </div>
+  <div class="print-rail-right">
+    <span class="print-rail-site">qluglobal.org</span>
+  </div>
+</footer>

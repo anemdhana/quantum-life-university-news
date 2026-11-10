@@ -19,7 +19,7 @@ export type FlowBlock =
   | { kind: 'title'; text: string }
   | { kind: 'html'; html: string; chars: number }
   | { kind: 'text'; text: string }
-  | { kind: 'link'; href: string; label: string }
+  | { kind: 'link'; href: string; label: string; external?: boolean; id?: string }
 
 /** Split rich HTML into block-level chunks for packing into cards. */
 export function htmlToFlowBlocks(html: string): FlowBlock[] {
