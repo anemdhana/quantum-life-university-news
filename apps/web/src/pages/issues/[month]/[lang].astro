@@ -179,6 +179,16 @@ const textPages = pages.filter(
   (p) => !p.isCover && !p.isUpcoming && !storyPages.includes(p),
 )
 
+/** Number Themes card-series headings in document order (01, 02, …). */
+const themeSeriesNums = new Map<object, number>()
+let themeSeriesCursor = 0
+for (const page of textPages) {
+  if (page.section.key === 'themes' && page.section.asCard) {
+    themeSeriesCursor += 1
+    themeSeriesNums.set(page, themeSeriesCursor)
+  }
+}
+
 const printSections = ensuredMainSections.map((s, i) => mapSectionPage(s, i))
 const printThemeCards = printSections.filter(
   (page) => page.section.key === 'themes' && Boolean(page.section.asCard),
@@ -459,13 +469,30 @@ const printSectionPages = printSectionsNormal.map(() => nextPrintPage())
 
               {textPages.map((page) => (
                 <section
-                  class="news-block"
+                  class:list={[
+                    'news-block',
+                    page.section.key === 'themes' && page.section.asCard && 'news-block--theme-series',
+                  ]}
                   id={page.section.key}
                   data-key={page.section.key}
                   data-news-item
                   data-search={`${page.heading || ''} ${page.teaser || ''}`}
                 >
-                  <h2 class="news-block-title">{page.heading || page.pageLabel}</h2>
+                  <h2
+                    class:list={[
+                      'news-block-title',
+                      page.section.key === 'themes' &&
+                        page.section.asCard &&
+                        'news-block-title--ribbon',
+                    ]}
+                  >
+                    {themeSeriesNums.has(page) ? (
+                      <span class="news-block-title__num" aria-hidden="true">
+                        {String(themeSeriesNums.get(page)).padStart(2, '0')}
+                      </span>
+                    ) : null}
+                    <span class="news-block-title__label">{page.heading || page.pageLabel}</span>
+                  </h2>
                   {page.images.length ? (
                     <div class="news-gallery news-gallery--inline">
                       {page.images.map((img) =>

@@ -121,9 +121,16 @@ const hasContent = sheets.some(
       />
 
       <div class="print-sheet-body">
-        {sheets.map((sheet) => (
+        {sheets.map((sheet, sheetIndex) => (
           <div class="print-theme-sheet">
-            {sheet.headline ? <h2 class="print-theme-sheet__title">{sheet.headline}</h2> : null}
+            {sheet.headline ? (
+              <h2 class="print-theme-sheet__title print-theme-sheet__title--ribbon">
+                <span class="print-theme-sheet__num" aria-hidden="true">
+                  {String(sheetIndex + 1).padStart(2, '0')}
+                </span>
+                <span class="print-theme-sheet__label">{sheet.headline}</span>
+              </h2>
+            ) : null}
 
             {sheet.leadHtml ? (
               <div class="print-lead print-theme-sheet__lead">
