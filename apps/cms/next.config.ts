@@ -7,6 +7,13 @@ const __filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(__filename)
 
 const nextConfig: NextConfig = {
+  // Theme Read More / bilingual lecture bodies can exceed the 1 MB default
+  // when saving an Issue with several long themeItems.
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '10mb',
+    },
+  },
   images: {
     localPatterns: [
       {
