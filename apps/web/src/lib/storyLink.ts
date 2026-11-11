@@ -344,10 +344,12 @@ export function findFullStory(
   itemKey: string,
   lang: Lang,
 ): ResolvedFullStory | null {
-  const section = (issue.sections || []).find((s) => s.key === sectionKey)
-  if (!section) return null
+  // Multiple rows can share a key (e.g. two Themes series). Search all of them.
+  const sections = (issue.sections || []).filter((s) => s.key === sectionKey)
+  if (!sections.length) return null
 
   if (sectionKey === 'campus') {
+    const section = sections[0]!
     const map: Record<
       string,
       {
@@ -383,90 +385,92 @@ export function findFullStory(
     }
   }
 
-  if (sectionKey === 'themes') {
-    const hit = matchArrayItem(section.themeItems, itemKey)
-    if (!hit) return null
-    const fullStory = pickLangText(lang, hit.item.fullStoryTe, hit.item.fullStoryEn)
-    if (!fullStory) return null
-    return {
-      title: pickLangText(lang, hit.item.titleTe, hit.item.titleEn),
-      blurb: pickLangText(lang, hit.item.blurbTe, hit.item.blurbEn),
-      fullStory,
-      sectionKey,
-      itemKey: itemKeyAt(hit.item.id, hit.index),
+  for (const section of sections) {
+    if (sectionKey === 'themes') {
+      const hit = matchArrayItem(section.themeItems, itemKey)
+      if (!hit) continue
+      const fullStory = pickLangText(lang, hit.item.fullStoryTe, hit.item.fullStoryEn)
+      if (!fullStory) continue
+      return {
+        title: pickLangText(lang, hit.item.titleTe, hit.item.titleEn),
+        blurb: pickLangText(lang, hit.item.blurbTe, hit.item.blurbEn),
+        fullStory,
+        sectionKey,
+        itemKey: itemKeyAt(hit.item.id, hit.index),
+      }
     }
-  }
 
-  if (sectionKey === 'highlight-classes') {
-    const hit = matchArrayItem(section.classItems, itemKey)
-    if (!hit) return null
-    const fullStory = pickLangText(lang, hit.item.fullStoryTe, hit.item.fullStoryEn)
-    if (!fullStory) return null
-    return {
-      title: pickLangText(lang, hit.item.titleTe, hit.item.titleEn),
-      meta: [hit.item.speaker, hit.item.date].filter(Boolean).join(' · '),
-      blurb: pickLangText(lang, hit.item.insightTe, hit.item.insightEn),
-      fullStory,
-      sectionKey,
-      itemKey: itemKeyAt(hit.item.id, hit.index),
+    if (sectionKey === 'highlight-classes') {
+      const hit = matchArrayItem(section.classItems, itemKey)
+      if (!hit) continue
+      const fullStory = pickLangText(lang, hit.item.fullStoryTe, hit.item.fullStoryEn)
+      if (!fullStory) continue
+      return {
+        title: pickLangText(lang, hit.item.titleTe, hit.item.titleEn),
+        meta: [hit.item.speaker, hit.item.date].filter(Boolean).join(' · '),
+        blurb: pickLangText(lang, hit.item.insightTe, hit.item.insightEn),
+        fullStory,
+        sectionKey,
+        itemKey: itemKeyAt(hit.item.id, hit.index),
+      }
     }
-  }
 
-  if (sectionKey === 'experiences') {
-    const hit = matchArrayItem(section.stories, itemKey)
-    if (!hit) return null
-    const fullStory = pickLangText(lang, hit.item.fullStoryTe, hit.item.fullStoryEn)
-    if (!fullStory) return null
-    return {
-      title: [hit.item.name, hit.item.location].filter(Boolean).join(' / '),
-      blurb: pickLangText(lang, hit.item.bodyTe, hit.item.bodyEn),
-      fullStory,
-      sectionKey,
-      itemKey: itemKeyAt(hit.item.id, hit.index),
+    if (sectionKey === 'experiences') {
+      const hit = matchArrayItem(section.stories, itemKey)
+      if (!hit) continue
+      const fullStory = pickLangText(lang, hit.item.fullStoryTe, hit.item.fullStoryEn)
+      if (!fullStory) continue
+      return {
+        title: [hit.item.name, hit.item.location].filter(Boolean).join(' / '),
+        blurb: pickLangText(lang, hit.item.bodyTe, hit.item.bodyEn),
+        fullStory,
+        sectionKey,
+        itemKey: itemKeyAt(hit.item.id, hit.index),
+      }
     }
-  }
 
-  if (sectionKey === 'visits') {
-    const hit = matchArrayItem(section.visitItems, itemKey)
-    if (!hit) return null
-    const fullStory = pickLangText(lang, hit.item.fullStoryTe, hit.item.fullStoryEn)
-    if (!fullStory) return null
-    return {
-      title: [hit.item.date, hit.item.place].filter(Boolean).join(' / '),
-      blurb: pickLangText(lang, hit.item.noteTe, hit.item.noteEn),
-      fullStory,
-      sectionKey,
-      itemKey: itemKeyAt(hit.item.id, hit.index),
+    if (sectionKey === 'visits') {
+      const hit = matchArrayItem(section.visitItems, itemKey)
+      if (!hit) continue
+      const fullStory = pickLangText(lang, hit.item.fullStoryTe, hit.item.fullStoryEn)
+      if (!fullStory) continue
+      return {
+        title: [hit.item.date, hit.item.place].filter(Boolean).join(' / '),
+        blurb: pickLangText(lang, hit.item.noteTe, hit.item.noteEn),
+        fullStory,
+        sectionKey,
+        itemKey: itemKeyAt(hit.item.id, hit.index),
+      }
     }
-  }
 
-  if (sectionKey === 'vanya') {
-    const hit = matchArrayItem(section.featureItems, itemKey)
-    if (!hit) return null
-    const fullStory = pickLangText(lang, hit.item.fullStoryTe, hit.item.fullStoryEn)
-    if (!fullStory) return null
-    return {
-      title: pickLangText(lang, hit.item.titleTe, hit.item.titleEn),
-      blurb: pickLangText(lang, hit.item.bodyTe, hit.item.bodyEn),
-      fullStory,
-      sectionKey,
-      itemKey: itemKeyAt(hit.item.id, hit.index),
+    if (sectionKey === 'vanya') {
+      const hit = matchArrayItem(section.featureItems, itemKey)
+      if (!hit) continue
+      const fullStory = pickLangText(lang, hit.item.fullStoryTe, hit.item.fullStoryEn)
+      if (!fullStory) continue
+      return {
+        title: pickLangText(lang, hit.item.titleTe, hit.item.titleEn),
+        blurb: pickLangText(lang, hit.item.bodyTe, hit.item.bodyEn),
+        fullStory,
+        sectionKey,
+        itemKey: itemKeyAt(hit.item.id, hit.index),
+      }
     }
-  }
 
-  if (sectionKey === 'upcoming') {
-    const hit = matchArrayItem(section.eventItems, itemKey)
-    if (!hit) return null
-    const fullStory = pickLangText(lang, hit.item.fullStoryTe, hit.item.fullStoryEn)
-    if (!fullStory) return null
-    const venue = pickLangText(lang, hit.item.venueTe, hit.item.venueEn)
-    return {
-      title: pickLangText(lang, hit.item.titleTe, hit.item.titleEn),
-      meta: [hit.item.when, venue].filter(Boolean).join(' · '),
-      blurb: pickLangText(lang, hit.item.detailsTe, hit.item.detailsEn),
-      fullStory,
-      sectionKey,
-      itemKey: itemKeyAt(hit.item.id, hit.index),
+    if (sectionKey === 'upcoming') {
+      const hit = matchArrayItem(section.eventItems, itemKey)
+      if (!hit) continue
+      const fullStory = pickLangText(lang, hit.item.fullStoryTe, hit.item.fullStoryEn)
+      if (!fullStory) continue
+      const venue = pickLangText(lang, hit.item.venueTe, hit.item.venueEn)
+      return {
+        title: pickLangText(lang, hit.item.titleTe, hit.item.titleEn),
+        meta: [hit.item.when, venue].filter(Boolean).join(' · '),
+        blurb: pickLangText(lang, hit.item.detailsTe, hit.item.detailsEn),
+        fullStory,
+        sectionKey,
+        itemKey: itemKeyAt(hit.item.id, hit.index),
+      }
     }
   }
 
