@@ -2,7 +2,7 @@
 export const prerender = false
 
 import BaseLayout from '../../../layouts/BaseLayout.astro'
-import { listReadings } from '../../../lib/payload'
+import { listReadings, mediaUrl, type MediaDoc } from '../../../lib/payload'
 
 const { series } = Astro.params
 let readings: Awaited<ReturnType<typeof listReadings>> = []
@@ -13,31 +13,116 @@ try {
   error = e instanceof Error ? e.message : 'CMS error'
 }
 
-const seriesTitle =
-  series === 'devi-navaratri' ? 'Devi Navaratrula Jnanam' : series
+const SERIES_META: Record<
+  string,
+  { title: string; titleTe: string; lede: string }
+> = {
+  'devi-navaratri': {
+    title: 'Devi Navaratrula Jnanam',
+    titleTe: 'దేవీ నవరాత్రుల జ్ఞానం',
+    lede: 'Ten days of self-knowledge readings · open a day tile.',
+  },
+}
+
+const meta = SERIES_META[series || ''] || {
+  title: series || 'Programme',
+  titleTe: '',
+  lede: 'Choose a day. Switch Te | En on each reading.',
+}
+
+const banner =
+  readings.map((r) => mediaUrl(r.cover as MediaDoc)).find(Boolean) || null
 ---
 
-<BaseLayout title={`${seriesTitle} · Jnanodayam`}>
-  <h1>{seriesTitle}</h1>
-  <p class="qlu-lede">Choose a day. Switch Te | En on each reading.</p>
-  {error ? <p class="qlu-error">{error}</p> : null}
-  <ul class="qlu-card-list">
+<BaseLayout
+  title={`${meta.title} · Jnanodayam`}
+  description={`${meta.title} — QLU Jnanodayam readings`}
+  variant="landing"
+  mainClass="home-main archive-main"
+>
+  <header class="archive-hero">
+    <div class="archive-hero__glow" aria-hidden="true" />
+    <div class="archive-hero__motif" aria-hidden="true" />
+    <div class="archive-hero__inner">
+      <div class="archive-top">
+        <a class="archive-brand" href="/" aria-label="Quantum Life University home">
+          <img class="archive-brand__mark" src="/qlu-logo.png" width="40" height="40" alt="" />
+          <span>Quantum Life University</span>
+        </a>
+        <a class="archive-back" href="/jnanodayam/">Programmes</a>
+      </div>
+      <p class="archive-kicker">Jnanodayam</p>
+      <h1 class="archive-title">{meta.title}</h1>
+      {
+        meta.titleTe ? (
+          <p class="archive-lede" lang="te">
+            {meta.titleTe}
+          </p>
+        ) : null
+      }
+      <p class="archive-lede archive-lede--follow">{meta.lede}</p>
+    </div>
+  </header>
+
+  <section class="archive-body" aria-labelledby="jnana-days-title">
+    {error ? <p class="qlu-error">{error}</p> : null}
+
+    <div class="archive-body__head">
+      <h2 id="jnana-days-title">Days</h2>
+      <p>{readings.length ? `${readings.length} published` : 'None published yet'}</p>
+    </div>
+
     {
-      readings.map((r) => (
-        <li>
-          <a href={`/jnanodayam/${series}/${r.day}/en/`}>
-            <strong>
-              Day {r.day}
-              {r.subtitleEn ? ` · ${r.subtitleEn}` : ''}
-            </strong>
-            <div class="qlu-meta">
-              <a href={`/jnanodayam/${series}/${r.day}/te/`}>తెలుగు</a>
-              {' · '}
-              <a href={`/jnanodayam/${series}/${r.day}/en/`}>English</a>
-            </div>
-          </a>
-        </li>
-      ))
+      readings.length ? (
+        <div class="jnana-day-grid">
+          {readings.map((r, i) => {
+            const dayCover = mediaUrl(r.cover as MediaDoc) || banner
+            return (
+              <article class="jnana-day" style={`--card-i: ${i}`}>
+                <a
+                  class="jnana-day__main"
+                  href={`/jnanodayam/${series}/${r.day}/en/`}
+                >
+                  <span class="jnana-day__media">
+                    {dayCover ? (
+                      <img src={dayCover} alt="" loading="lazy" />
+                    ) : (
+                      <span class="jnana-day__fallback" aria-hidden="true" />
+                    )}
+                    <span class="jnana-day__day">Day {r.day}</span>
+                  </span>
+                  <span class="jnana-day__body">
+                    <strong class="jnana-day__title">
+                      {r.subtitleEn || r.titleEn}
+                    </strong>
+                    {(r.subtitleTe || r.titleTe) && (
+                      <span class="jnana-day__title-te" lang="te">
+                        {r.subtitleTe || r.titleTe}
+                      </span>
+                    )}
+                  </span>
+                </a>
+                <div class="jnana-day__langs">
+                  <a href={`/jnanodayam/${series}/${r.day}/te/`}>తెలుగు</a>
+                  <a href={`/jnanodayam/${series}/${r.day}/en/`}>English</a>
+                </div>
+              </article>
+            )
+          })}
+        </div>
+      ) : !error ? (
+        <p class="archive-empty">No published days yet.</p>
+      ) : null
     }
-  </ul>
+  </section>
+
+  <footer class="home-foot">
+    <a href="/jnanodayam/">Jnanodayam</a>
+    <span aria-hidden="true">·</span>
+    <a href="/">Home</a>
+    <span aria-hidden="true">·</span>
+    <a href="https://qluglobal.org/" target="_blank" rel="noopener noreferrer">
+      qluglobal.org
+    </a>
+  </footer>
 </BaseLayout>

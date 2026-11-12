@@ -3,6 +3,10 @@ export const prerender = false
 
 import BaseLayout from '../../../../../../../layouts/BaseLayout.astro'
 import { mdToHtml } from '../../../../../../../lib/markdown'
+import {
+  PDF_SECTION_TITLES,
+  type SectionKey,
+} from '../../../../../../../lib/magazineSections'
 import { getIssue, type Lang } from '../../../../../../../lib/payload'
 import {
   findFullStory,
@@ -48,38 +52,179 @@ const title =
   story?.fullStory.split(/\n+/).map((l) => l.trim()).find(Boolean) ||
   (lang === 'te' ? 'ఇంకా చదవండి' : 'Full story')
 const bodyHtml = mdToHtml(story?.fullStory || '')
+const blurbText = (story?.blurb || '').trim()
+const fullText = (story?.fullStory || '').trim()
+const showBlurb = Boolean(blurbText) && blurbText !== fullText
+const blurbHtml = showBlurb ? mdToHtml(blurbText) : ''
 const issueTitle = issue ? (lang === 'te' ? issue.titleTe : issue.titleEn) : month!
 const backHref = newsletterReturnHref(month!, lang, sectionKey, itemKey, returnView)
+const newsHref = `/issues/${month}/${lang}/?view=news`
 const teHref = `/issues/${month}/te/story/${encodeURIComponent(sectionKey)}/${encodeURIComponent(itemKey)}/${fromQuery}`
 const enHref = `/issues/${month}/en/story/${encodeURIComponent(sectionKey)}/${encodeURIComponent(itemKey)}/${fromQuery}`
+
+const sectionMeta = PDF_SECTION_TITLES[sectionKey as SectionKey]
+const sectionNum = sectionMeta?.num || ''
+const sectionLabel = sectionMeta
+  ? lang === 'te'
+    ? sectionMeta.te
+    : sectionMeta.en
+  : sectionKey
+const readMoreLabel = lang === 'te' ? 'పూర్తి కథనం' : 'Full story'
+const tagline =
+  (issue && (lang === 'te' ? issue.taglineTe : issue.taglineEn)?.trim()) ||
+  (lang === 'te'
+    ? 'ధ్యానం • ఆత్మజ్ఞానం • చైతన్య వికాసం'
+    : 'Meditation • Self-knowledge • Expansion of Consciousness')
 ---
 
-<BaseLayout title={`${title} · ${issueTitle}`} lang={lang} variant="news" mainClass="story-main">
+<BaseLayout title={`${title} · ${issueTitle}`} lang={lang} variant="news" mainClass="news-main">
   {
     error ? (
       <p class="qlu-error">{error}</p>
     ) : story ? (
-      <article class="story-detail">
-        <p class="story-detail-kicker">
-          <a href={backHref}>{storyBackLabel(lang)}</a>
-          <span aria-hidden="true"> · </span>
-          <a href={`/issues/${month}/${lang}/?view=news`}>{issueTitle}</a>
-        </p>
-        <div class="qlu-lang" role="navigation" aria-label="Language">
-          <a class:list={{ active: lang === 'te' }} href={teHref}>
-            TE
+      <div class="nr nr--story" data-storyview>
+        <aside class="nr__side">
+          <a class="nr__brand" href="/">
+            <img src="/qlu-logo.png" width="32" height="32" alt="" />
+            <span>Quantum Life University</span>
           </a>
-          <a class:list={{ active: lang === 'en' }} href={enHref}>
-            EN
-          </a>
+          <nav class="nr__day-jump" aria-label={lang === 'te' ? 'నావిగేషన్' : 'Navigation'}>
+            <a href={backHref}>{storyBackLabel(lang)}</a>
+            <a href="/issues/">{lang === 'te' ? 'సంచికలు' : 'Issues'}</a>
+          </nav>
+          <p class="nr__issue-stamp">{issue?.month || month}</p>
+          <h1 class="nr__series">{issueTitle}</h1>
+          <p class="nr__series-sub">{tagline}</p>
+          <div class="nr__lang" role="navigation" aria-label="Language">
+            <a class:list={{ active: lang === 'te' }} href={teHref}>
+              TE
+            </a>
+            <a class:list={{ active: lang === 'en' }} href={enHref}>
+              EN
+            </a>
+          </div>
+          <ul class="nr__nav" aria-label={lang === 'te' ? 'విభాగం' : 'Section'}>
+            <li>
+              <a class="nr__nav-link is-active" href={newsHref} aria-current="page">
+                {sectionNum ? <span class="nr__n">{sectionNum}</span> : null}
+                <span class="nr__nav-copy">{sectionLabel}</span>
+              </a>
+            </li>
+          </ul>
+          <p class="story-side-note">{readMoreLabel}</p>
+        </aside>
+
+        <div class="nr__main">
+          <header class="nr__topbar">
+            <button
+              type="button"
+              class="nr__menu"
+              data-story-menu
+              aria-expanded="false"
+              aria-controls="story-mobile-side"
+              aria-label={lang === 'te' ? 'మెను' : 'Menu'}
+            >
+              ☰
+            </button>
+            <span class="nr__topbar-title">{title}</span>
+            <div class="nr__topbar-tools">
+              <div class="nr__lang nr__lang--bar" role="navigation" aria-label="Language">
+                <a class:list={{ active: lang === 'te' }} href={teHref}>
+                  TE
+                </a>
+                <a class:list={{ active: lang === 'en' }} href={enHref}>
+                  EN
+                </a>
+              </div>
+              <a class="nr__issues" href={backHref}>
+                {lang === 'te' ? 'తిరిగి' : 'Back'}
+              </a>
+            </div>
+          </header>
+          <div class="nr__progress" aria-hidden="true">
+            <div class="nr__progress-bar" data-story-progress />
+          </div>
+
+          <div class="nr__scroll" data-story-scroll>
+            <article class="story-reader">
+              <header class="story-reader__head">
+                <div class="story-reader__sticky">
+                  {sectionNum ? <span class="nr-chapter__num">{sectionNum}</span> : null}
+                  <p class="story-reader__section">{sectionLabel}</p>
+                </div>
+              </header>
+
+              <div class="story-reader__content">
+                {
+                  story.imageSrc ? (
+                    <figure class="story-reader__hero">
+                      <img
+                        src={story.imageSrc}
+                        alt={story.imageAlt || title || ''}
+                        loading="eager"
+                        decoding="async"
+                      />
+                    </figure>
+                  ) : null
+                }
+
+                <div class="story-reader__copy">
+                  <p class="story-reader__kicker">{readMoreLabel}</p>
+                  {title ? <h1 class="story-reader__title">{title}</h1> : null}
+                  {story.meta ? <p class="story-reader__meta">{story.meta}</p> : null}
+                  {
+                    blurbHtml ? (
+                      <div class="story-reader__lede nr-prose" set:html={blurbHtml} />
+                    ) : null
+                  }
+                  {
+                    bodyHtml ? (
+                      <div class="story-reader__body nr-prose" set:html={bodyHtml} />
+                    ) : null
+                  }
+                  <p class="story-reader__back">
+                    <a href={backHref}>{storyBackLabel(lang)}</a>
+                  </p>
+                </div>
+              </div>
+            </article>
+
+            <footer class="nr__foot">
+              <p>© {new Date().getFullYear()} Quantum Life University</p>
+              <p>
+                <a href={backHref}>{storyBackLabel(lang)}</a>
+                {' · '}
+                <a href="/issues/">{lang === 'te' ? 'అన్ని సంచికలు' : 'All issues'}</a>
+              </p>
+            </footer>
+          </div>
         </div>
-        {title ? <h1 class="story-detail-title">{title}</h1> : null}
-        {story.meta ? <p class="story-detail-meta">{story.meta}</p> : null}
-        {bodyHtml ? <div class="story-detail-body md-prose" set:html={bodyHtml} /> : null}
-        <p class="story-detail-back">
-          <a href={backHref}>{storyBackLabel(lang)}</a>
-        </p>
-      </article>
+
+        <div class="nr__mobile-side" id="story-mobile-side" data-story-mobile-side>
+          <nav class="nr__day-jump" aria-label={lang === 'te' ? 'నావిగేషన్' : 'Navigation'}>
+            <a href={backHref}>{storyBackLabel(lang)}</a>
+            <a href="/issues/">{lang === 'te' ? 'సంచికలు' : 'Issues'}</a>
+          </nav>
+          <ul class="nr__nav" aria-label={lang === 'te' ? 'విభాగం' : 'Section'}>
+            <li>
+              <a class="nr__nav-link is-active" href={newsHref} aria-current="page">
+                {sectionNum ? <span class="nr__n">{sectionNum}</span> : null}
+                <span class="nr__nav-copy">{sectionLabel}</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
     ) : null
   }
 </BaseLayout>
+
+<script>
+  import { initStoryView } from '../../../../../../../scripts/storyview'
+
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll<HTMLElement>('[data-storyview]').forEach((el) => {
+      initStoryView(el)
+    })
+  })
+</script>

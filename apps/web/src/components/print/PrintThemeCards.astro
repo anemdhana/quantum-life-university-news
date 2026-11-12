@@ -53,6 +53,8 @@ type ThemeCard = {
   external: boolean
   anchorId: string
   label: string
+  imageSrc: string | null
+  imageAlt: string
 }
 
 type ThemeSheet = {
@@ -78,6 +80,13 @@ const sheets: ThemeSheet[] = cards.map(({ section, bodyHtml }) => {
         storyUrl: item.storyUrl,
         from: 'print',
       })
+      const imageSrc = mediaUrl(item.image as MediaDoc | number | string | null | undefined)
+      const imageAlt =
+        (typeof item.image === 'object' && item.image && 'alt' in item.image
+          ? item.image.alt
+          : '') ||
+        title ||
+        ''
       return {
         id: item.id,
         title,
@@ -86,6 +95,8 @@ const sheets: ThemeSheet[] = cards.map(({ section, bodyHtml }) => {
         external: link.external,
         anchorId: link.anchorId,
         label: storyLinkLabel(lang),
+        imageSrc,
+        imageAlt,
       }
     })
     .filter(Boolean) as ThemeCard[]
@@ -149,6 +160,11 @@ const hasContent = sheets.some(
               <div class="print-theme-card-grid" data-card-masonry data-masonry-min="192">
                 {sheet.items.map((item) => (
                   <article class="print-theme-card" id={item.anchorId}>
+                    {item.imageSrc ? (
+                      <figure class="print-theme-card__media">
+                        <img src={item.imageSrc} alt={item.imageAlt || ''} loading="lazy" />
+                      </figure>
+                    ) : null}
                     <div class="print-theme-card__body">
                       {item.title ? <h3 class="print-theme-card__title">{item.title}</h3> : null}
                       {item.blurbHtml ? (

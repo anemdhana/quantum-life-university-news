@@ -2,7 +2,7 @@
  * Seed magazine folder packs + Devi Navaratri Jnanodayam readings.
  *
  * Magazine packs live in content/magazine/YYYY-MM/ (Te/En txt + images).
- * Sample 2026-10 uses public copy inspired by qluglobal.org / programs.qluglobal.org
+ * Sample 2026-11 is the default magazine pack under content/magazine/.
  * (see that pack's issue.json → sources). Re-run after editing folder packs.
  *
  * Usage (from apps/cms, with Postgres up and .env set):

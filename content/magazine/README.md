@@ -14,4 +14,4 @@ python scripts\seed_magazine_from_folder.py --month 2026-11 --section themes
 python scripts\seed_magazine_from_folder.py --month 2026-11 --section visits --section campus
 ```
 
-`_template/` = blank structure. `2026-10/` = sample seeded issue.
+`_template/` = blank structure. `2026-11/` = sample seeded issue.

@@ -220,6 +220,10 @@ export interface Issue {
               titleEn?: string | null;
               blurbTe?: string | null;
               blurbEn?: string | null;
+              /**
+               * Optional still / frame for this theme entry (shown on Print cards and short lists).
+               */
+              image?: (number | null) | Media;
               fullStoryTe?: string | null;
               fullStoryEn?: string | null;
               /**
@@ -580,6 +584,7 @@ export interface IssuesSelect<T extends boolean = true> {
               titleEn?: T;
               blurbTe?: T;
               blurbEn?: T;
+              image?: T;
               fullStoryTe?: T;
               fullStoryEn?: T;
               storyUrl?: T;

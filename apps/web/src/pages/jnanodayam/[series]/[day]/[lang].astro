@@ -2,6 +2,7 @@
 export const prerender = false
 
 import BaseLayout from '../../../../layouts/BaseLayout.astro'
+import { htmlToChapters } from '../../../../lib/chapters'
 import { getReading, listReadings, type Lang } from '../../../../lib/payload'
 
 const { series, day: dayParam, lang: langParam } = Astro.params
@@ -28,6 +29,18 @@ if (!error && !reading) {
   return new Response(null, { status: 404 })
 }
 
+const SERIES_META: Record<string, { title: string; titleTe: string }> = {
+  'devi-navaratri': {
+    title: 'Devi Navaratrula Jnanam',
+    titleTe: 'దేవీ నవరాత్రుల జ్ఞానం',
+  },
+}
+
+const seriesMeta = SERIES_META[series || ''] || {
+  title: series || 'Programme',
+  titleTe: '',
+}
+
 const title = reading
   ? lang === 'te'
     ? reading.titleTe
@@ -44,53 +57,165 @@ const body = reading
     : reading.bodyHtmlEn
   : ''
 
+const chapters = htmlToChapters(body)
 const prev = all.find((r) => r.day === day - 1)
 const next = all.find((r) => r.day === day + 1)
+const totalMinutes = chapters.reduce((sum, c) => sum + c.minutes, 0)
+const chaptersJson = JSON.stringify(chapters).replace(/</g, '\\u003c')
 ---
 
-<BaseLayout title={`${title} · Jnanodayam`} lang={lang}>
+<BaseLayout
+  title={`${title} · Jnanodayam`}
+  description={subtitle || title}
+  lang={lang}
+  variant="landing"
+  mainClass="jnana-reader-main"
+>
   {
     error ? (
-      <p class="qlu-error">{error}</p>
+      <p class="qlu-error" style="padding: 1.5rem">
+        {error}
+      </p>
     ) : reading ? (
-      <>
-        <p class="qlu-kicker">
-          <a href={`/jnanodayam/${series}/`}>Programme</a> · Day {reading.day}
-        </p>
-        <h1>{title}</h1>
-        {subtitle ? <p class="qlu-lede">{subtitle}</p> : null}
-        <div class="qlu-lang" role="navigation" aria-label="Language">
-          <a
-            class:list={{ active: lang === 'te' }}
-            href={`/jnanodayam/${series}/${day}/te/`}
-          >
-            TE
+      <div class="jnana-r" data-jnana-reader>
+        <script type="application/json" data-jnana-chapters set:html={chaptersJson} />
+        <aside class="jnana-r__side">
+          <a class="jnana-r__brand" href="/">
+            <img src="/qlu-logo.png" width="28" height="28" alt="" />
+            <span>Quantum Life University</span>
           </a>
-          <a
-            class:list={{ active: lang === 'en' }}
-            href={`/jnanodayam/${series}/${day}/en/`}
-          >
-            EN
-          </a>
-        </div>
-        {body ? <article class="qlu-prose" set:html={body} /> : null}
-        <nav class="qlu-day-nav" aria-label="Day navigation">
-          <span>
+          <nav class="jnana-r__day-jump" aria-label="Day navigation">
+            <a href={`/jnanodayam/${series}/`}>Days</a>
             {prev ? (
-              <a href={`/jnanodayam/${series}/${prev.day}/${lang}/`}>← Day {prev.day}</a>
-            ) : (
-              <span class="qlu-meta">←</span>
-            )}
-          </span>
-          <span>
+              <a href={`/jnanodayam/${series}/${prev.day}/${lang}/`}>← {prev.day}</a>
+            ) : null}
             {next ? (
-              <a href={`/jnanodayam/${series}/${next.day}/${lang}/`}>Day {next.day} →</a>
+              <a href={`/jnanodayam/${series}/${next.day}/${lang}/`}>{next.day} →</a>
+            ) : null}
+          </nav>
+          <h1 class="jnana-r__series">{seriesMeta.title}</h1>
+          {seriesMeta.titleTe ? (
+            <p class="jnana-r__series-te" lang="te">
+              {seriesMeta.titleTe}
+            </p>
+          ) : null}
+          <p class="jnana-r__sub">
+            Day {reading.day}
+            {subtitle ? ` · ${subtitle}` : ''}
+            {totalMinutes ? ` · ~${totalMinutes} min` : ''}
+          </p>
+          <ul class="jnana-r__nav" data-jnana-nav aria-label="Sections" />
+        </aside>
+
+        <div class="jnana-r__main">
+          <header class="jnana-r__bar">
+            <div class="jnana-r__bar-left">
+              <button
+                type="button"
+                class="jnana-r__icon-btn jnana-r__menu"
+                data-jnana-menu
+                aria-expanded="false"
+                aria-controls="jnana-mobile-side"
+                aria-label="Sections"
+              >
+                ☰
+              </button>
+              <span class="jnana-r__heading" data-jnana-heading>
+                {chapters[0]?.title || title}
+              </span>
+            </div>
+            <div class="jnana-r__tools">
+              <div class="jnana-r__lang" role="navigation" aria-label="Language">
+                <a
+                  class:list={{ 'is-active': lang === 'te' }}
+                  href={`/jnanodayam/${series}/${day}/te/`}
+                >
+                  TE
+                </a>
+                <a
+                  class:list={{ 'is-active': lang === 'en' }}
+                  href={`/jnanodayam/${series}/${day}/en/`}
+                >
+                  EN
+                </a>
+              </div>
+              <span class="jnana-r__time" data-jnana-time />
+              <button
+                type="button"
+                class="jnana-r__icon-btn"
+                data-jnana-font
+                title="Toggle text size"
+              >
+                A±
+              </button>
+            </div>
+          </header>
+
+          <div class="jnana-r__progress-track" aria-hidden="true">
+            <div class="jnana-r__progress" data-jnana-progress />
+          </div>
+
+          <div class="jnana-r__reader">
+            <div class="jnana-r__spread">
+              <div class="jnana-r__columns" data-jnana-columns />
+            </div>
+            <footer class="jnana-r__bottom">
+              <button type="button" data-jnana-prev>
+                ← Previous
+              </button>
+              <span data-jnana-position />
+              <button type="button" data-jnana-next>
+                Next →
+              </button>
+            </footer>
+          </div>
+
+          {
+            next ? (
+              <a
+                class="jnana-r__end-link"
+                data-jnana-end-link
+                href={`/jnanodayam/${series}/${next.day}/${lang}/`}
+              >
+                Continue to Day {next.day}
+              </a>
             ) : (
-              <span class="qlu-meta">→</span>
-            )}
-          </span>
-        </nav>
-      </>
+              <a
+                class="jnana-r__end-link"
+                data-jnana-end-link
+                href={`/jnanodayam/${series}/`}
+              >
+                Back to day list
+              </a>
+            )
+          }
+        </div>
+
+        <div
+          class="jnana-r__mobile-side"
+          id="jnana-mobile-side"
+          data-jnana-mobile-side
+        >
+          <nav class="jnana-r__day-jump" aria-label="Day navigation">
+            <a href={`/jnanodayam/${series}/`}>Days</a>
+            {prev ? (
+              <a href={`/jnanodayam/${series}/${prev.day}/${lang}/`}>← {prev.day}</a>
+            ) : null}
+            {next ? (
+              <a href={`/jnanodayam/${series}/${next.day}/${lang}/`}>{next.day} →</a>
+            ) : null}
+          </nav>
+          <ul class="jnana-r__nav" data-jnana-mobile-nav aria-label="Sections" />
+        </div>
+      </div>
     ) : null
   }
 </BaseLayout>
+
+<script>
+  import { initJnanaReader } from '../../../../scripts/jnanaReader'
+
+  document.querySelectorAll<HTMLElement>('[data-jnana-reader]').forEach((el) => {
+    initJnanaReader(el)
+  })
+</script>

@@ -1,6 +1,6 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro'
-import { listIssues } from '../../lib/payload'
+import { listIssues, mediaUrl, type MediaDoc } from '../../lib/payload'
 
 let issues: Awaited<ReturnType<typeof listIssues>> = []
 let error = ''
@@ -9,24 +9,141 @@ try {
 } catch (e) {
   error = e instanceof Error ? e.message : 'CMS error'
 }
+
+const MONTH_EN = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+]
+
+function monthLabel(ym: string) {
+  const [y, m] = ym.split('-')
+  const idx = Number(m) - 1
+  if (!y || Number.isNaN(idx) || idx < 0 || idx > 11) return ym
+  return `${MONTH_EN[idx]} ${y}`
+}
+
+const featured = issues[0] || null
+const rest = issues.slice(1)
 ---
 
-<BaseLayout title="Magazine issues · QLU">
-  <h1>Monthly magazine</h1>
-  <p class="qlu-lede">Parallel Telugu and English editions per month.</p>
-  {error ? <p class="qlu-error">{error}</p> : null}
-  <ul class="qlu-card-list">
+<BaseLayout
+  title="Newsletter issues · Quantum Life University"
+  description="QLU monthly newsletter archive — Telugu & English"
+  variant="landing"
+  mainClass="home-main archive-main"
+>
+  <header class="archive-hero">
+    <div class="archive-hero__glow" aria-hidden="true" />
+    <div class="archive-hero__motif" aria-hidden="true" />
+    <div class="archive-hero__inner">
+      <div class="archive-top">
+        <a class="archive-brand" href="/" aria-label="Quantum Life University home">
+          <img class="archive-brand__mark" src="/qlu-logo.png" width="40" height="40" alt="" />
+          <span>Quantum Life University</span>
+        </a>
+        <a class="archive-back" href="/">Home</a>
+      </div>
+      <h1 class="archive-title">Newsletter</h1>
+      <p class="archive-lede">
+        Monthly magazine · Telugu &amp; English. Open an issue to read the news view.
+      </p>
+    </div>
+  </header>
+
+  <section class="archive-body" aria-labelledby="archive-list-title">
+    {error ? <p class="qlu-error">{error}</p> : null}
+
+    <div class="archive-body__head">
+      <h2 id="archive-list-title">Issues</h2>
+      <p>{issues.length ? `${issues.length} published` : 'None published yet'}</p>
+    </div>
+
     {
-      issues.map((issue) => (
-        <li>
-          <a href={`/issues/${issue.month}/en/`}>
-            <strong>{issue.titleEn}</strong>
-            <div class="qlu-meta">
-              {issue.month} · <span lang="te">{issue.titleTe}</span>
-            </div>
-          </a>
-        </li>
-      ))
+      featured ? (
+        <a
+          class="archive-feature"
+          href={`/issues/${featured.month}/te/`}
+        >
+          <span class="archive-feature__media">
+            {mediaUrl(featured.coverImage as MediaDoc) ? (
+              <img
+                src={mediaUrl(featured.coverImage as MediaDoc)!}
+                alt=""
+                loading="eager"
+              />
+            ) : (
+              <span class="archive-feature__fallback" aria-hidden="true" />
+            )}
+            <span class="archive-feature__shade" aria-hidden="true" />
+          </span>
+          <span class="archive-feature__copy">
+            <span class="archive-feature__kicker">Latest · {featured.month}</span>
+            <span class="archive-feature__month">{monthLabel(featured.month)}</span>
+            <span class="archive-feature__title">{featured.titleEn}</span>
+            <span class="archive-feature__title-te" lang="te">
+              {featured.titleTe}
+            </span>
+            <span class="archive-feature__cta">Open news view →</span>
+          </span>
+        </a>
+      ) : !error ? (
+        <p class="archive-empty">No published issues yet.</p>
+      ) : null
     }
-  </ul>
+
+    {
+      rest.length ? (
+        <div class="archive-grid">
+          {rest.map((issue, i) => {
+            const cover = mediaUrl(issue.coverImage as MediaDoc)
+            return (
+              <a
+                class="archive-card"
+                href={`/issues/${issue.month}/te/`}
+                style={`--card-i: ${i}`}
+              >
+                <span class="archive-card__media">
+                  {cover ? (
+                    <img src={cover} alt="" loading="lazy" />
+                  ) : (
+                    <span class="archive-card__fallback" aria-hidden="true" />
+                  )}
+                </span>
+                <span class="archive-card__body">
+                  <span class="archive-card__month">{monthLabel(issue.month)}</span>
+                  <strong class="archive-card__title">{issue.titleEn}</strong>
+                  <span class="archive-card__title-te" lang="te">
+                    {issue.titleTe}
+                  </span>
+                </span>
+              </a>
+            )
+          })}
+        </div>
+      ) : null
+    }
+
+    <aside class="archive-soon" aria-label="Coming soon">
+      <p class="archive-soon__label">Archive grows here</p>
+      <p class="archive-soon__hint">New monthly issues will appear as tiles when published.</p>
+    </aside>
+  </section>
+
+  <footer class="home-foot">
+    <a href="/">Home</a>
+    <span aria-hidden="true">·</span>
+    <a href="https://qluglobal.org/" target="_blank" rel="noopener noreferrer">
+      qluglobal.org
+    </a>
+  </footer>
 </BaseLayout>

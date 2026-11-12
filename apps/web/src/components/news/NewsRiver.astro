@@ -1,0 +1,234 @@
+---
+import type { Issue, IssueSection, Lang, MediaDoc } from '../../lib/payload'
+import { mediaUrl } from '../../lib/payload'
+import { EMPTY_SECTION, PDF_SECTION_TITLES } from '../../lib/magazineSections'
+import ShortItems from '../ShortItems.astro'
+
+type Chapter = {
+  id: string
+  key: string
+  num: string
+  /** Full print-style section title (7 editorial headings) */
+  sectionTitle: string
+  /** Optional issue-specific headline when different from sectionTitle */
+  heading: string
+  blurb: string
+  bodyHtml: string
+  emptyBody: boolean
+  hasShortItems: boolean
+  images: { src: string; caption?: string | null; alt: string }[]
+  section: IssueSection
+}
+
+interface Props {
+  issue: Issue
+  lang: Lang
+  title: string
+  mastheadHtml: string
+  chapters: Chapter[]
+  toc: { id: string; num: string; label: string }[]
+  newsHrefTe: string
+  newsHrefEn: string
+}
+
+const { issue, lang, title, mastheadHtml, chapters, toc, newsHrefTe, newsHrefEn } = Astro.props
+
+const coverSrc = mediaUrl(issue.coverImage as MediaDoc)
+const tagline =
+  (lang === 'te' ? issue.taglineTe : issue.taglineEn)?.trim() ||
+  (lang === 'te'
+    ? 'ధ్యానం • ఆత్మజ్ఞానం • చైతన్య వికాసం'
+    : 'Meditation • Self-knowledge • Expansion of Consciousness')
+const monthLabel = issue.month
+const coverLabel = lang === 'te' ? 'ముఖచిత్రం' : 'Cover'
+---
+
+<div class="nr" data-newsview>
+  <aside class="nr__side">
+    <a class="nr__brand" href="/">
+      <img src="/qlu-logo.png" width="32" height="32" alt="" />
+      <span>Quantum Life University</span>
+    </a>
+    <nav class="nr__day-jump" aria-label={lang === 'te' ? 'నావిగేషన్' : 'Navigation'}>
+      <a href="/issues/">{lang === 'te' ? 'సంచికలు' : 'Issues'}</a>
+    </nav>
+    <p class="nr__issue-stamp">{monthLabel}</p>
+    <h1 class="nr__series">{title}</h1>
+    <p class="nr__series-sub">{tagline}</p>
+    <div class="nr__lang" role="navigation" aria-label="Language">
+      <a class:list={{ active: lang === 'te' }} href={newsHrefTe}>TE</a>
+      <a class:list={{ active: lang === 'en' }} href={newsHrefEn}>EN</a>
+    </div>
+    <ul class="nr__nav" data-news-toc aria-label={lang === 'te' ? 'విభాగాలు' : 'Sections'}>
+      {
+        toc.map((item) => (
+          <li>
+            <button type="button" data-news-toc-link data-target={item.id}>
+              <span class="nr__n">{item.num}</span>
+              <span class="nr__nav-copy">{item.label}</span>
+            </button>
+          </li>
+        ))
+      }
+    </ul>
+  </aside>
+
+  <div class="nr__main">
+    <header class="nr__topbar">
+      <button
+        type="button"
+        class="nr__menu"
+        data-news-menu
+        aria-expanded="false"
+        aria-controls="nr-mobile-side"
+        aria-label={lang === 'te' ? 'విభాగాలు' : 'Sections'}
+      >
+        ☰
+      </button>
+      <span class="nr__topbar-title" data-news-heading>{coverLabel}</span>
+      <div class="nr__topbar-tools">
+        <div class="nr__lang nr__lang--bar" role="navigation" aria-label="Language">
+          <a class:list={{ active: lang === 'te' }} href={newsHrefTe}>TE</a>
+          <a class:list={{ active: lang === 'en' }} href={newsHrefEn}>EN</a>
+        </div>
+        <a class="nr__issues" href="/issues/">
+          {lang === 'te' ? 'సంచికలు' : 'Issues'}
+        </a>
+      </div>
+    </header>
+    <div class="nr__progress" aria-hidden="true">
+      <div class="nr__progress-bar" data-news-progress />
+    </div>
+
+    <div class="nr__scroll">
+      <section class="nr__cover" id="nr-cover" data-news-section data-news-label={coverLabel}>
+        <div class="nr__cover-media">
+          {
+            coverSrc ? (
+              <img src={coverSrc} alt="" loading="eager" decoding="async" />
+            ) : (
+              <div class="nr__cover-fallback" />
+            )
+          }
+          <div class="nr__cover-shade" />
+        </div>
+        <div class="nr__cover-copy">
+          <p class="nr__kicker">{lang === 'te' ? 'నెలవారీ పత్రిక' : 'Monthly newsletter'}</p>
+          <h2 class="nr__cover-title">{title}</h2>
+          <p class="nr__cover-tag">{tagline}</p>
+          {
+            mastheadHtml ? (
+              <div class="nr__cover-lede nr-prose" set:html={mastheadHtml} />
+            ) : null
+          }
+          {
+            toc.length > 1 ? (
+              <a class="nr__begin" href={`#${toc[1]!.id}`}>
+                {lang === 'te' ? 'చదవడం ప్రారంభించండి →' : 'Begin reading →'}
+              </a>
+            ) : null
+          }
+        </div>
+      </section>
+
+      <div class="nr__river">
+        {
+          chapters.map((ch, i) => {
+            const lead = ch.images[0] || null
+            const rest = ch.images.slice(1)
+            const themeCards = ch.key === 'themes' && Boolean(ch.section.asCard)
+            const lineTitle = ch.heading || ch.sectionTitle
+            const isEmpty = ch.emptyBody && !ch.hasShortItems && ch.images.length === 0
+            const emptyLine = lang === 'te' ? EMPTY_SECTION.te : EMPTY_SECTION.en
+            return (
+              <article
+                class:list={['nr-chapter', i % 2 === 1 && 'nr-chapter--alt']}
+                id={ch.id}
+                data-news-section
+                data-news-label={lineTitle}
+              >
+                <header class="nr-chapter__head">
+                  <div class="nr-chapter__sticky">
+                    <span class="nr-chapter__num">{ch.num}</span>
+                    <h2 class="nr-chapter__title">{lineTitle}</h2>
+                  </div>
+                </header>
+
+                <div class="nr-chapter__content">
+                  {lead ? (
+                    <figure class="nr-chapter__hero">
+                      <img src={lead.src} alt={lead.alt || ''} loading="lazy" />
+                      {lead.caption ? <figcaption>{lead.caption}</figcaption> : null}
+                    </figure>
+                  ) : null}
+
+                  <div class="nr-chapter__body">
+                    {isEmpty ? <p class="nr-empty">{emptyLine}</p> : null}
+
+                    {!ch.emptyBody ? <div class="nr-prose" set:html={ch.bodyHtml} /> : null}
+
+                    {ch.hasShortItems ? (
+                      <div
+                        class:list={[
+                          'nr-chapter__items',
+                          themeCards && 'nr-chapter__items--themes',
+                        ]}
+                      >
+                        <ShortItems
+                          section={ch.section}
+                          lang={lang}
+                          month={issue.month}
+                          from="news"
+                        />
+                      </div>
+                    ) : null}
+
+                    {rest.length ? (
+                      <div class="nr-gallery">
+                        {rest.map((img) => (
+                          <figure>
+                            <img src={img.src} alt={img.alt || ''} loading="lazy" />
+                            {img.caption ? <figcaption>{img.caption}</figcaption> : null}
+                          </figure>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+              </article>
+            )
+          })
+        }
+      </div>
+
+      <footer class="nr__foot">
+        <p>© {new Date().getFullYear()} Quantum Life University</p>
+        <p>
+          <a href="/issues/">{lang === 'te' ? 'అన్ని సంచికలు' : 'All issues'}</a>
+          {' · '}
+          <a href="https://qluglobal.org/" target="_blank" rel="noopener noreferrer">
+            qluglobal.org
+          </a>
+        </p>
+      </footer>
+    </div>
+  </div>
+
+  <div class="nr__mobile-side" id="nr-mobile-side" data-news-mobile-side>
+    <nav class="nr__day-jump" aria-label={lang === 'te' ? 'నావిగేషన్' : 'Navigation'}>
+      <a href="/issues/">{lang === 'te' ? 'సంచికలు' : 'Issues'}</a>
+    </nav>
+    <ul class="nr__nav" data-news-mobile-nav aria-label={lang === 'te' ? 'విభాగాలు' : 'Sections'}>
+      {
+        toc.map((item) => (
+          <li>
+            <button type="button" data-news-toc-link data-target={item.id}>
+              <span class="nr__n">{item.num}</span>
+              <span class="nr__nav-copy">{item.label}</span>
+            </button>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</div>

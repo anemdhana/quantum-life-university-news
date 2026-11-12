@@ -1,7 +1,7 @@
-import type { Issue, IssueSection, Lang } from './payload'
+import { mediaUrl, type Issue, type IssueSection, type Lang, type MediaDoc } from './payload'
 
 export function storyLinkLabel(lang: Lang): string {
-  return lang === 'te' ? 'ఇంకా చదవండి' : 'Read full story'
+  return lang === 'te' ? 'ఇంకా చదవండి →' : 'Read more →'
 }
 
 export function storyBackLabel(lang: Lang): string {
@@ -52,7 +52,7 @@ export function newsletterReturnHref(
     view === 'print'
       ? `/issues/${month}/${lang}/?view=print`
       : view === 'flip'
-        ? `/issues/${month}/${lang}/`
+        ? `/issues/${month}/${lang}/?view=flip`
         : `/issues/${month}/${lang}/?view=news`
   return `${base}#${storyAnchorId(sectionKey, itemKey)}`
 }
@@ -94,6 +94,8 @@ export type ShortListItem = {
   href: string | null
   external: boolean
   fullStory: string
+  imageSrc?: string | null
+  imageAlt?: string | null
 }
 
 type Linkable = {
@@ -101,6 +103,7 @@ type Linkable = {
   storyUrl?: string | null
   fullStoryTe?: string | null
   fullStoryEn?: string | null
+  image?: MediaDoc | number | string | null
 }
 
 function toShortItem(opts: {
@@ -126,6 +129,13 @@ function toShortItem(opts: {
     from: opts.from,
   })
   if (!opts.title && !opts.body && !opts.meta && !link.href) return null
+  const imageSrc = mediaUrl(opts.item.image)
+  const imageAlt =
+    (typeof opts.item.image === 'object' && opts.item.image && 'alt' in opts.item.image
+      ? opts.item.image.alt
+      : '') ||
+    opts.title ||
+    ''
   return {
     title: opts.title,
     body: opts.body,
@@ -136,6 +146,8 @@ function toShortItem(opts: {
     href: link.href,
     external: link.external,
     fullStory,
+    imageSrc,
+    imageAlt,
   }
 }
 
@@ -320,6 +332,8 @@ export type ResolvedFullStory = {
   fullStory: string
   sectionKey: string
   itemKey: string
+  imageSrc?: string | null
+  imageAlt?: string | null
 }
 
 function matchArrayItem<T extends { id?: string }>(
@@ -391,12 +405,22 @@ export function findFullStory(
       if (!hit) continue
       const fullStory = pickLangText(lang, hit.item.fullStoryTe, hit.item.fullStoryEn)
       if (!fullStory) continue
+      const title = pickLangText(lang, hit.item.titleTe, hit.item.titleEn)
+      const imageSrc = mediaUrl(hit.item.image)
+      const imageAlt =
+        (typeof hit.item.image === 'object' && hit.item.image && 'alt' in hit.item.image
+          ? hit.item.image.alt
+          : '') ||
+        title ||
+        ''
       return {
-        title: pickLangText(lang, hit.item.titleTe, hit.item.titleEn),
+        title,
         blurb: pickLangText(lang, hit.item.blurbTe, hit.item.blurbEn),
         fullStory,
         sectionKey,
         itemKey: itemKeyAt(hit.item.id, hit.index),
+        imageSrc,
+        imageAlt,
       }
     }
 

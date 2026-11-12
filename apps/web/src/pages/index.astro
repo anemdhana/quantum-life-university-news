@@ -1,6 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro'
-import { listIssues, listReadings } from '../lib/payload'
+import { listIssues, listReadings, mediaUrl, type MediaDoc } from '../lib/payload'
 
 let issues: Awaited<ReturnType<typeof listIssues>> = []
 let readings: Awaited<ReturnType<typeof listReadings>> = []
@@ -13,60 +13,195 @@ try {
 }
 
 const latest = issues[0]
+const latestHref = latest ? `/issues/${latest.month}/te/` : '/issues/'
+
+const issueCovers = issues.slice(0, 4).map((issue) => ({
+  month: issue.month,
+  titleTe: issue.titleTe,
+  titleEn: issue.titleEn,
+  href: `/issues/${issue.month}/te/`,
+  cover: mediaUrl(issue.coverImage as MediaDoc),
+}))
+
+const tiles = [
+  {
+    key: 'newsletter',
+    href: '/issues/',
+    kicker: 'Monthly',
+    title: 'Newsletter',
+    titleTe: 'నెలవారీ పత్రిక',
+    body: 'Campus magazine · themes, classes, experiences — Telugu & English.',
+    cta: latest ? `Open ${latest.month}` : 'All issues',
+    featured: true,
+    live: true,
+  },
+  {
+    key: 'jnanodayam',
+    href: '/jnanodayam/',
+    kicker: 'Reading series',
+    title: 'Jnanodayam',
+    titleTe: 'జ్ఞానోదయం',
+    body:
+      readings.length > 0
+        ? `Devi Navaratri programme · ${readings.length} days published.`
+        : 'Self-knowledge readings from the morning discourses.',
+    cta: 'Open programmes',
+    featured: false,
+    live: true,
+  },
+  {
+    key: 'campus',
+    href: '#',
+    kicker: 'Soon',
+    title: 'Campus notes',
+    titleTe: 'క్యాంపస్ నోట్స్',
+    body: 'Short updates from Goloka, Sahasrara, and QLU life.',
+    cta: 'Coming soon',
+    featured: false,
+    live: false,
+  },
+  {
+    key: 'programs',
+    href: 'https://qluglobal.org/',
+    kicker: 'QLU Global',
+    title: 'Programs',
+    titleTe: 'కార్యక్రమాలు',
+    body: 'Courses, retreats, and the wider Quantum Life University path.',
+    cta: 'Visit qluglobal.org',
+    featured: false,
+    live: true,
+    external: true,
+  },
+]
 ---
 
-<BaseLayout title="QLU News · Jnanodayam & Magazine">
-  <h1>Self-knowledge reading & monthly magazine</h1>
-  <p class="qlu-lede">
-    Telugu + English. Full Devi Navaratri readings (Jnanodayam) and monthly campus magazine issues.
-  </p>
+<BaseLayout
+  title="Quantum Life University · News & Readings"
+  description="Quantum Life University — monthly newsletter and Jnanodayam readings"
+  variant="landing"
+  mainClass="home-main"
+>
+  <section class="home-hero" aria-label="Welcome">
+    <div class="home-hero__media" aria-hidden="true">
+      <img
+        class="home-hero__photo"
+        src="/newton-birthday.jpg"
+        alt=""
+        width="1200"
+        height="1600"
+        decoding="async"
+      />
+    </div>
+    <div class="home-hero__shade" aria-hidden="true" />
+    <div class="home-hero__glow" aria-hidden="true" />
+    <div class="home-hero__motif" aria-hidden="true" />
+
+    <div class="home-hero__copy">
+      <p class="home-hero__brand">
+        <img class="home-hero__mark" src="/qlu-logo.png" width="56" height="56" alt="" />
+        <span>Quantum Life University</span>
+      </p>
+      <h1 class="home-hero__title">Awakening wisdom within</h1>
+      <p class="home-hero__lede">
+        Monthly newsletter and Jnanodayam readings — Telugu &amp; English, from the campus to your
+        quiet hour.
+      </p>
+      <div class="home-hero__actions">
+        <a class="home-btn home-btn--primary" href="/issues/">Newsletter issues</a>
+        <a class="home-btn home-btn--ghost" href={latestHref}>
+          Latest · {latest?.month || 'archive'}
+        </a>
+      </div>
+    </div>
+  </section>
 
   {
     error ? (
-      <p class="qlu-error">
+      <p class="qlu-error home-error">
         CMS offline or empty. Start Postgres + Payload, then run <code>npm run seed</code>. ({error})
       </p>
     ) : null
   }
 
-  <div class="qlu-home-grid">
-    <section class="qlu-home-panel">
-      <h2>Jnanodayam</h2>
-      <p class="qlu-meta">Devi Navaratrula Jnanam · {readings.length} days</p>
-      <p>
-        <a href="/jnanodayam/devi-navaratri/">Open programme</a>
-        {
-          readings[0] ? (
-            <>
-              {' '}
-              · <a href={`/jnanodayam/devi-navaratri/${readings[0].day}/en/`}>Day 1 · En</a> ·{' '}
-              <a href={`/jnanodayam/devi-navaratri/${readings[0].day}/te/`}>రోజు 1 · Te</a>
-            </>
-          ) : null
-        }
-      </p>
-    </section>
-    <section class="qlu-home-panel">
-      <h2>Magazine</h2>
+  <section class="home-explore" aria-labelledby="home-explore-title">
+    <div class="home-explore__head">
+      <h2 id="home-explore-title">Explore</h2>
+      <p>Pick a path — more tiles will open here as content grows.</p>
+    </div>
+
+    <div class="home-tiles">
       {
-        latest ? (
-          <p>
-            Latest:{' '}
-            <a href={`/issues/${latest.month}/en/`}>{latest.titleEn}</a>
-            {' · '}
-            <a href={`/issues/${latest.month}/te/`}>{latest.titleTe}</a>
-            <br />
-            <span class="qlu-meta">
-              <a href={`/issues/${latest.month}/en/?view=news`}>News view</a>
-              {' · '}
-              <a href={`/issues/${latest.month}/en/`}>Flipbook</a>
-            </span>
-          </p>
-        ) : (
-          <p class="qlu-meta">No published issues yet.</p>
+        tiles.map((tile, i) =>
+          tile.live ? (
+            <a
+              class:list={['home-tile', tile.featured && 'home-tile--feature']}
+              href={tile.href}
+              style={`--tile-i: ${i}`}
+              {...(tile.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+            >
+              <span class="home-tile__kicker">{tile.kicker}</span>
+              <span class="home-tile__title">{tile.title}</span>
+              <span class="home-tile__title-te" lang="te">
+                {tile.titleTe}
+              </span>
+              <span class="home-tile__body">{tile.body}</span>
+              <span class="home-tile__cta">{tile.cta}</span>
+            </a>
+          ) : (
+            <div
+              class="home-tile home-tile--soon"
+              style={`--tile-i: ${i}`}
+              aria-disabled="true"
+            >
+              <span class="home-tile__kicker">{tile.kicker}</span>
+              <span class="home-tile__title">{tile.title}</span>
+              <span class="home-tile__title-te" lang="te">
+                {tile.titleTe}
+              </span>
+              <span class="home-tile__body">{tile.body}</span>
+              <span class="home-tile__cta">{tile.cta}</span>
+            </div>
+          ),
         )
       }
-      <p><a href="/issues/">All issues</a></p>
-    </section>
-  </div>
+    </div>
+  </section>
+
+  {
+    issueCovers.length ? (
+      <section class="home-issues" aria-labelledby="home-issues-title">
+        <div class="home-explore__head">
+          <h2 id="home-issues-title">Recent issues</h2>
+          <p>
+            <a href="/issues/">View archive</a>
+          </p>
+        </div>
+        <div class="home-issue-row">
+          {issueCovers.map((issue, i) => (
+            <a class="home-issue-chip" href={issue.href} style={`--chip-i: ${i}`}>
+              <span class="home-issue-chip__media">
+                {issue.cover ? (
+                  <img src={issue.cover} alt="" loading="lazy" />
+                ) : (
+                  <span class="home-issue-chip__fallback" aria-hidden="true" />
+                )}
+              </span>
+              <span class="home-issue-chip__meta">
+                <span class="home-issue-chip__month">{issue.month}</span>
+                <span class="home-issue-chip__title">{issue.titleEn || issue.titleTe}</span>
+              </span>
+            </a>
+          ))}
+        </div>
+      </section>
+    ) : null
+  }
+
+  <footer class="home-foot">
+    <a href="https://qluglobal.org/" target="_blank" rel="noopener noreferrer">
+      qluglobal.org
+    </a>
+    <span aria-hidden="true">·</span>
+    <span>Quantum Life University</span>
+  </footer>
 </BaseLayout>

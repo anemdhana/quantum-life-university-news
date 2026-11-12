@@ -23,6 +23,7 @@ export type ThemeItem = {
   blurbEn?: string | null
   fullStoryTe?: string | null
   fullStoryEn?: string | null
+  image?: MediaDoc | number | string | null
   storyUrl?: string | null
 }
 

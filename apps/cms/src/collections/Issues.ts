@@ -399,6 +399,16 @@ export const Issues: CollectionConfig = {
                   phTe: 'మార్క్‌డౌన్ సపోర్ట్: **బొద్దు**, జాబితాలు, పేరాలు…',
                   phEn: 'Markdown supported: **bold**, lists, paragraphs…',
                 }),
+                {
+                  name: 'image',
+                  type: 'upload',
+                  relationTo: 'media',
+                  label: 'Theme card image',
+                  admin: {
+                    description:
+                      'Optional still / frame for this theme entry (shown on Print cards and short lists).',
+                  },
+                },
                 ...storyLinkFields(),
               ],
             },

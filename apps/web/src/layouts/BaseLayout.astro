@@ -6,8 +6,8 @@ interface Props {
   lang?: 'te' | 'en'
   description?: string
   mainClass?: string
-  /** Compact chrome for flip-reader, news feed, or print sheets */
-  variant?: 'default' | 'reader' | 'news' | 'print'
+  /** Compact chrome for flip-reader, news feed, print sheets, or marketing landing */
+  variant?: 'default' | 'reader' | 'news' | 'print' | 'landing'
 }
 
 const {
@@ -21,7 +21,8 @@ const path = Astro.url.pathname
 const isReader = variant === 'reader'
 const isNews = variant === 'news'
 const isPrint = variant === 'print'
-const bareChrome = isReader || isNews || isPrint
+const isLanding = variant === 'landing'
+const bareChrome = isReader || isNews || isPrint || isLanding
 ---
 
 <!doctype html>
@@ -39,6 +40,7 @@ const bareChrome = isReader || isNews || isPrint
       isReader && 'is-reader',
       isNews && 'is-news',
       isPrint && 'is-print',
+      isLanding && 'is-landing',
     ]}
   >
     <div
@@ -47,10 +49,11 @@ const bareChrome = isReader || isNews || isPrint
         isReader && 'qlu-site--reader',
         isNews && 'qlu-site--news',
         isPrint && 'qlu-site--print',
+        isLanding && 'qlu-site--landing',
       ]}
     >
       {
-        isReader ? (
+        isLanding ? null : isReader ? (
           <header class="reader-chrome">
             <a class="reader-chrome-brand" href="/">QLU</a>
             <nav class="reader-chrome-nav" aria-label="Primary">
@@ -79,7 +82,14 @@ const bareChrome = isReader || isNews || isPrint
           </header>
         )
       }
-      <main class:list={['qlu-main', !bareChrome && 'wide', mainClass]}>
+      <main
+        class:list={[
+          'qlu-main',
+          !bareChrome && 'wide',
+          isLanding && 'qlu-main--landing',
+          mainClass,
+        ]}
+      >
         <slot />
       </main>
       {!bareChrome ? <footer class="qlu-footer">Quantum Life University</footer> : null}

@@ -1,16 +1,116 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro'
+import { listReadings, mediaUrl, type MediaDoc } from '../../lib/payload'
+
+let readings: Awaited<ReturnType<typeof listReadings>> = []
+let error = ''
+try {
+  readings = await listReadings('devi-navaratri')
+} catch (e) {
+  error = e instanceof Error ? e.message : 'CMS error'
+}
+
+const cover =
+  readings.map((r) => mediaUrl(r.cover as MediaDoc)).find(Boolean) || null
+
+const programmes = [
+  {
+    key: 'devi-navaratri',
+    href: '/jnanodayam/devi-navaratri/',
+    kicker: 'Reading series',
+    title: 'Devi Navaratrula Jnanam',
+    titleTe: 'దేవీ నవరాత్రుల జ్ఞానం',
+    body:
+      readings.length > 0
+        ? `${readings.length} days · Telugu & English`
+        : 'Self-knowledge readings from the morning discourses.',
+    cta: 'Open days →',
+    live: true,
+    cover,
+  },
+]
 ---
 
-<BaseLayout title="Jnanodayam · QLU">
-  <h1>Jnanodayam</h1>
-  <p class="qlu-lede">Self-knowledge reading programmes in Telugu and English.</p>
-  <ul class="qlu-card-list">
-    <li>
-      <a href="/jnanodayam/devi-navaratri/">
-        <strong>Devi Navaratrula Jnanam</strong>
-        <div class="qlu-meta">10 days · Te + En</div>
-      </a>
-    </li>
-  </ul>
+<BaseLayout
+  title="Jnanodayam · Quantum Life University"
+  description="QLU Jnanodayam reading programmes — Telugu & English"
+  variant="landing"
+  mainClass="home-main archive-main"
+>
+  <header class="archive-hero">
+    <div class="archive-hero__glow" aria-hidden="true" />
+    <div class="archive-hero__motif" aria-hidden="true" />
+    <div class="archive-hero__inner">
+      <div class="archive-top">
+        <a class="archive-brand" href="/" aria-label="Quantum Life University home">
+          <img class="archive-brand__mark" src="/qlu-logo.png" width="40" height="40" alt="" />
+          <span>Quantum Life University</span>
+        </a>
+        <a class="archive-back" href="/">Home</a>
+      </div>
+      <h1 class="archive-title">Jnanodayam</h1>
+      <p class="archive-lede" lang="te">జ్ఞానోదయం</p>
+      <p class="archive-lede archive-lede--follow">
+        Self-knowledge reading programmes · Telugu &amp; English.
+      </p>
+    </div>
+  </header>
+
+  <section class="archive-body" aria-labelledby="jnana-list-title">
+    {error ? <p class="qlu-error">{error}</p> : null}
+
+    <div class="archive-body__head">
+      <h2 id="jnana-list-title">Programmes</h2>
+      <p>{programmes.filter((p) => p.live).length} available</p>
+    </div>
+
+    <div class="jnana-tiles">
+      {
+        programmes.map((prog, i) =>
+          prog.live ? (
+            <a
+              class="jnana-tile jnana-tile--feature"
+              href={prog.href}
+              style={`--tile-i: ${i}`}
+            >
+              <span class="jnana-tile__media">
+                {prog.cover ? (
+                  <img src={prog.cover} alt="" loading="eager" />
+                ) : (
+                  <span class="jnana-tile__fallback" aria-hidden="true" />
+                )}
+                <span class="jnana-tile__shade" aria-hidden="true" />
+              </span>
+              <span class="jnana-tile__copy">
+                <span class="jnana-tile__kicker">{prog.kicker}</span>
+                <span class="jnana-tile__title">{prog.title}</span>
+                <span class="jnana-tile__title-te" lang="te">
+                  {prog.titleTe}
+                </span>
+                <span class="jnana-tile__body">{prog.body}</span>
+                <span class="jnana-tile__cta">{prog.cta}</span>
+              </span>
+            </a>
+          ) : null,
+        )
+      }
+    </div>
+
+    <aside class="archive-soon" aria-label="Coming soon">
+      <p class="archive-soon__label">More programmes</p>
+      <p class="archive-soon__hint">
+        New Jnanodayam series will appear as tiles here when published.
+      </p>
+    </aside>
+  </section>
+
+  <footer class="home-foot">
+    <a href="/">Home</a>
+    <span aria-hidden="true">·</span>
+    <a href="/issues/">Newsletter</a>
+    <span aria-hidden="true">·</span>
+    <a href="https://qluglobal.org/" target="_blank" rel="noopener noreferrer">
+      qluglobal.org
+    </a>
+  </footer>
 </BaseLayout>

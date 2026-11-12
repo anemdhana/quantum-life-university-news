@@ -20,6 +20,8 @@ interface Props {
   month: string
   year: string
   entryIndex?: number
+  /** Stable anchor id; defaults to print-{key}-{entryIndex+1} */
+  sheetId?: string
   page: number
   pages: number
 }
@@ -33,7 +35,7 @@ const num = pdf?.num || ''
 /** Skip body title when it only repeats the masthead section label */
 const showBodyTitle = Boolean(headline && headline !== sectionLabel)
 const emptyLine = lang === 'te' ? EMPTY_SECTION.te : EMPTY_SECTION.en
-const sheetId = `print-${section.key}-${entryIndex + 1}`
+const sheetId = Astro.props.sheetId || `print-${section.key}-${entryIndex + 1}`
 const images =
   section.images
     ?.map((row) => {

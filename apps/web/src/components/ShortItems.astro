@@ -14,6 +14,8 @@ interface Props {
 
 const { section, lang, month, from = 'news', class: className } = Astro.props
 const asCards = section.key === 'themes' && Boolean(section.asCard)
+/** News reader: horizontal image+copy cards; print/flip keep masonry cards. */
+const asRows = asCards && from === 'news'
 const items = shortItemsForSection(section, lang, month, from).map((item) => ({
   ...item,
   bodyHtml: mdToHtml(item.body),
@@ -23,17 +25,36 @@ const items = shortItemsForSection(section, lang, month, from).map((item) => ({
 {
   items.length ? (
     <div
-      class:list={[asCards ? 'short-items short-items--cards' : 'short-items', className]}
-      {...(asCards ? { 'data-card-masonry': true, 'data-masonry-min': '240' } : {})}
+      class:list={[
+        'short-items',
+        asRows && 'short-items--rows',
+        asCards && !asRows && 'short-items--cards',
+        className,
+      ]}
+      {...(asCards && !asRows ? { 'data-card-masonry': true, 'data-masonry-min': '240' } : {})}
     >
       {items.map((item) => (
-        <article class:list={['short-item', asCards && 'short-item--card']} id={item.anchorId}>
-          {item.title ? <h3 class="short-item-title">{item.title}</h3> : null}
-          {item.meta ? <p class="short-item-meta">{item.meta}</p> : null}
-          {item.bodyHtml ? (
-            <div class="short-item-body md-prose" set:html={item.bodyHtml} />
+        <article
+          class:list={[
+            'short-item',
+            asRows && 'short-item--row',
+            asCards && !asRows && 'short-item--card',
+          ]}
+          id={item.anchorId}
+        >
+          {item.imageSrc ? (
+            <figure class="short-item-media">
+              <img src={item.imageSrc} alt={item.imageAlt || ''} loading="lazy" />
+            </figure>
           ) : null}
-          <StoryLink href={item.href} external={item.external} lang={lang} />
+          <div class="short-item-copy">
+            {item.title ? <h3 class="short-item-title">{item.title}</h3> : null}
+            {item.meta ? <p class="short-item-meta">{item.meta}</p> : null}
+            {item.bodyHtml ? (
+              <div class="short-item-body md-prose" set:html={item.bodyHtml} />
+            ) : null}
+            <StoryLink href={item.href} external={item.external} lang={lang} />
+          </div>
         </article>
       ))}
     </div>

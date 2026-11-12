@@ -10,9 +10,11 @@ interface Props {
   presentKeys: string[]
   page: number
   pages: number
+  /** When theme items render as a cards sheet, contents should jump there. */
+  themeCardsHref?: string
 }
 
-const { lang, month, presentKeys, page, pages } = Astro.props
+const { lang, month, presentKeys, page, pages, themeCardsHref } = Astro.props
 const year = month.slice(0, 4)
 const items = PDF_CONTENTS_KEYS.filter((key) => presentKeys.includes(key)).map((key) => {
   const meta = PDF_SECTION_TITLES[key]
@@ -21,11 +23,16 @@ const items = PDF_CONTENTS_KEYS.filter((key) => presentKeys.includes(key)).map((
     num: meta.num,
     title: lang === 'te' ? meta.te : meta.en,
     blurb: lang === 'te' ? meta.blurbTe : meta.blurbEn,
+    href: key === 'themes' && themeCardsHref ? themeCardsHref : `#print-${key}-1`,
   }
 })
 ---
 
-<section class="print-sheet print-contents" aria-label={lang === 'te' ? 'విషయ సూచిక' : 'Contents'}>
+<section
+  id="print-contents"
+  class="print-sheet print-contents"
+  aria-label={lang === 'te' ? 'విషయ సూచిక' : 'Contents'}
+>
   <PrintSheetHeader
     lang={lang}
     month={month}
@@ -42,7 +49,7 @@ const items = PDF_CONTENTS_KEYS.filter((key) => presentKeys.includes(key)).map((
       {
         items.map((item) => (
           <li>
-            <a href={`#print-${item.key}-1`}>
+            <a href={item.href}>
               <span class="print-toc-num">{item.num}</span>
               <span class="print-toc-body">
                 <strong>{item.title}</strong>

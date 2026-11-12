@@ -59,7 +59,7 @@ Restart Astro after changing `astro.config.mjs` (or re-run `dev.cmd`).
 
 ```powershell
 npm run seed -w @qlu/cms
-npm run seed -w @qlu/cms -- --month 2026-10
+npm run seed -w @qlu/cms -- --month 2026-11
 npm run seed -w @qlu/cms -- --skip-jnanodayam
 npm run seed -w @qlu/cms -- --skip-magazine
 ```
