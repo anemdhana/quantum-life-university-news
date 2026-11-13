@@ -30,13 +30,14 @@ Readers  →  Astro site (flipbook magazine, Jnanodayam pages)
 |------------|------|
 | `issues` | Monthly magazine (`YYYY-MM`), Te/En titles, sections, images |
 | `jnanodayam-readings` | Series + day readings (e.g. Devi Navaratri) |
+| `ganesha-stories` | Stories (admin: **Stories**) — label + cover + Markdown |
 | `media` | Photos / uploads |
 | `users` | Editor logins |
 
 **Things to remember:**
 
 - **Admin** = `http://localhost:3000/admin` — Lexical rich text, image align/size, publish checkbox.
-- **API** = `http://localhost:3000/api/issues`, `/api/jnanodayam-readings`, etc.
+- **API** = `http://localhost:3000/api/issues`, `/api/jnanodayam-readings`, `/api/ganesha-stories`, etc.
 - Content lives in **Postgres**, not in git. Folder packs under `content/` are for **seed/import**, then you edit in admin.
 - Only **published** docs are public; logged-in editors can see drafts.
 
@@ -52,8 +53,9 @@ Readers  →  Astro site (flipbook magazine, Jnanodayam pages)
 
 | Route | Experience |
 |-------|------------|
-| `/` | Home — latest issue + Jnanodayam entry |
+| `/` | Home — Newsletter, story tiles, Jnanodayam |
 | `/issues/…` | Magazine archive + **landscape flipbook** reader |
+| `/stories/…` | Stories and deeper understandings Te/En |
 | `/jnanodayam/…` | Programme hub + day readings Te/En |
 
 **SSR (server-side render):** Magazine/Jnanodayam dynamic URLs fetch Payload **on each request**, so a publish in admin shows up on refresh — no full static rebuild required for v1.

@@ -166,6 +166,28 @@ export type Reading = {
   published?: boolean
 }
 
+export type GaneshaStory = {
+  id: number | string
+  slug: string
+  sortOrder: number
+  /** Theme tag for search/filter (e.g. Sri Ganesha Tattva) — not a site section. */
+  label?: string | null
+  titleTe: string
+  titleEn: string
+  taglineTe?: string | null
+  taglineEn?: string | null
+  bodyMarkdownTe?: string | null
+  bodyMarkdownEn?: string | null
+  jnanodayamDay?: number | null
+  speaker?: string | null
+  videoUrl?: string | null
+  cover?: MediaDoc | number | string | null
+  published?: boolean
+}
+
+/** Public story docs (collection slug remains ganesha-stories). */
+export type Story = GaneshaStory
+
 type ListResponse<T> = {
   docs: T[]
   totalDocs: number
@@ -219,6 +241,31 @@ export async function getReading(series: string, day: number): Promise<Reading |
     `/api/jnanodayam-readings?limit=1&depth=1&where[and][0][series][equals]=${encodeURIComponent(series)}&where[and][1][day][equals]=${day}&where[and][2][published][equals]=true`,
   )
   return data.docs[0] || null
+}
+
+export async function listStories(label?: string): Promise<Story[]> {
+  const q = label?.trim()
+    ? `/api/ganesha-stories?limit=50&sort=sortOrder&depth=1&where[and][0][published][equals]=true&where[and][1][label][equals]=${encodeURIComponent(label.trim())}`
+    : '/api/ganesha-stories?limit=50&sort=sortOrder&depth=1&where[published][equals]=true'
+  const data = await apiGet<ListResponse<Story>>(q)
+  return data.docs
+}
+
+/** @deprecated Prefer listStories */
+export async function listGaneshaStories(): Promise<GaneshaStory[]> {
+  return listStories()
+}
+
+export async function getStory(slug: string): Promise<Story | null> {
+  const data = await apiGet<ListResponse<Story>>(
+    `/api/ganesha-stories?limit=1&depth=1&where[and][0][slug][equals]=${encodeURIComponent(slug)}&where[and][1][published][equals]=true`,
+  )
+  return data.docs[0] || null
+}
+
+/** @deprecated Prefer getStory */
+export async function getGaneshaStory(slug: string): Promise<GaneshaStory | null> {
+  return getStory(slug)
 }
 
 export function pickLang<T extends Record<string, unknown>>(

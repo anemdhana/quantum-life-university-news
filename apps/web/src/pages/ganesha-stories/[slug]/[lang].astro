@@ -1,0 +1,7 @@
+---
+export const prerender = false
+
+const { slug, lang: langParam } = Astro.params
+const lang = langParam === 'en' ? 'en' : 'te'
+return Astro.redirect(`/stories/${slug}/${lang}/`)
+---

@@ -5,6 +5,7 @@ import { buildConfig } from 'payload'
 import { fileURLToPath } from 'url'
 import sharp from 'sharp'
 
+import { GaneshaStories } from './collections/GaneshaStories'
 import { Issues } from './collections/Issues'
 import { JnanodayamReadings } from './collections/JnanodayamReadings'
 import { Media } from './collections/Media'
@@ -43,7 +44,7 @@ export default buildConfig({
       titleSuffix: ' · QLU News',
     },
   },
-  collections: [Users, Media, Issues, JnanodayamReadings],
+  collections: [Users, Media, Issues, JnanodayamReadings, GaneshaStories],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {

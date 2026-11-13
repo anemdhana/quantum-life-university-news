@@ -45,6 +45,20 @@ HTML files are the QLU day readers; the seed script extracts `const chapters=[�
 npm run seed -w @qlu/cms -- --skip-magazine
 ```
 
+## Stories and deeper understandings
+
+```
+content/ganesha-stories/
+  QLU_Ganesha_Puranic_Stories_Publication_Illustrated_Telugu.md
+  images/*.png
+```
+
+Import into Payload **Stories** (`ganesha-stories` collection). Each doc gets a **Label** (e.g. `Sri Ganesha Tattva`) for search/filter — not a separate site section:
+
+```powershell
+python ..\qlu-newsletter-tools\scripts\import_ganesha_stories.py --folder .\content\ganesha-stories
+```
+
 ## Editing after seed
 
 Prefer **Payload admin** for copy tweaks. Re-running seed **overwrites** matching issues/days from disk.
@@ -72,6 +86,9 @@ Public magazine pages support **two layouts** (switcher on the issue page):
 | Path | Content |
 |------|---------|
 | `/` | Home |
+| `/` `#home-stories` | Story tiles under “Stories and deeper understandings” |
+| `/stories/` | All stories |
+| `/stories/{slug}/{te\|en}/` | Story page |
 | `/jnanodayam/` | Programme index |
 | `/jnanodayam/devi-navaratri/` | Day list |
 | `/jnanodayam/devi-navaratri/{day}/{te\|en}/` | Reading |

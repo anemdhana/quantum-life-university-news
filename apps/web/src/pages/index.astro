@@ -1,13 +1,24 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro'
-import { listIssues, listReadings, mediaUrl, type MediaDoc } from '../lib/payload'
+import {
+  listIssues,
+  listReadings,
+  listStories,
+  mediaUrl,
+  type MediaDoc,
+} from '../lib/payload'
 
 let issues: Awaited<ReturnType<typeof listIssues>> = []
 let readings: Awaited<ReturnType<typeof listReadings>> = []
+let stories: Awaited<ReturnType<typeof listStories>> = []
 let error = ''
 
 try {
-  ;[issues, readings] = await Promise.all([listIssues(), listReadings()])
+  ;[issues, readings, stories] = await Promise.all([
+    listIssues(),
+    listReadings(),
+    listStories(),
+  ])
 } catch (e) {
   error = e instanceof Error ? e.message : 'Could not reach Payload CMS'
 }
@@ -77,7 +88,7 @@ const tiles = [
 
 <BaseLayout
   title="Quantum Life University · News & Readings"
-  description="Quantum Life University — monthly newsletter and Jnanodayam readings"
+  description="Quantum Life University — monthly newsletter, stories, and Jnanodayam readings"
   variant="landing"
   mainClass="home-main"
 >
@@ -103,8 +114,8 @@ const tiles = [
       </p>
       <h1 class="home-hero__title">Awakening wisdom within</h1>
       <p class="home-hero__lede">
-        Monthly newsletter and Jnanodayam readings — Telugu &amp; English, from the campus to your
-        quiet hour.
+        Monthly newsletter, stories, and Jnanodayam readings — Telugu &amp; English, from the campus
+        to your quiet hour.
       </p>
       <div class="home-hero__actions">
         <a class="home-btn home-btn--primary" href="/issues/">Newsletter issues</a>
@@ -166,6 +177,48 @@ const tiles = [
       }
     </div>
   </section>
+
+  {
+    stories.length ? (
+      <section class="home-stories" id="home-stories" aria-labelledby="home-stories-title">
+        <div class="home-explore__head">
+          <h2 id="home-stories-title">Stories and deeper understandings</h2>
+          <p>
+            <a href="/stories/">View all</a>
+          </p>
+        </div>
+        <div class="gs-grid home-stories__grid">
+          {stories.map((story, i) => {
+            const cover = mediaUrl(story.cover as MediaDoc)
+            return (
+              <a class="gs-card" href={`/stories/${story.slug}/te/`} style={`--tile-i: ${i}`}>
+                <span class="gs-card__media">
+                  {cover ? (
+                    <img src={cover} alt="" loading={i < 2 ? 'eager' : 'lazy'} />
+                  ) : (
+                    <span class="gs-card__fallback" aria-hidden="true" />
+                  )}
+                  <span class="gs-card__shade" aria-hidden="true" />
+                </span>
+                <span class="gs-card__copy">
+                  <span class="gs-card__kicker">{story.label || 'Story'}</span>
+                  <span class="gs-card__title" lang="te">
+                    {story.titleTe}
+                  </span>
+                  <span class="gs-card__title-en">{story.titleEn}</span>
+                  {story.taglineTe ? (
+                    <span class="gs-card__tagline" lang="te">
+                      {story.taglineTe}
+                    </span>
+                  ) : null}
+                </span>
+              </a>
+            )
+          })}
+        </div>
+      </section>
+    ) : null
+  }
 
   {
     issueCovers.length ? (

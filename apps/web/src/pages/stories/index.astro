@@ -1,0 +1,102 @@
+---
+export const prerender = false
+
+import BaseLayout from '../../layouts/BaseLayout.astro'
+import { listStories, mediaUrl, type MediaDoc } from '../../lib/payload'
+
+let stories: Awaited<ReturnType<typeof listStories>> = []
+let error = ''
+try {
+  stories = await listStories()
+} catch (e) {
+  error = e instanceof Error ? e.message : 'CMS error'
+}
+---
+
+<BaseLayout
+  title="Stories and deeper understandings · Quantum Life University"
+  description="Puranic stories and deeper spiritual understandings — Telugu & English"
+  variant="landing"
+  mainClass="home-main archive-main"
+>
+  <header class="archive-hero">
+    <div class="archive-hero__glow" aria-hidden="true" />
+    <div class="archive-hero__motif" aria-hidden="true" />
+    <div class="archive-hero__inner">
+      <div class="archive-top">
+        <a class="archive-brand" href="/" aria-label="Quantum Life University home">
+          <img class="archive-brand__mark" src="/qlu-logo.png" width="40" height="40" alt="" />
+          <span>Quantum Life University</span>
+        </a>
+        <a class="archive-back" href="/">Home</a>
+      </div>
+      <h1 class="archive-title">Stories and deeper understandings</h1>
+      <p class="archive-lede" lang="te">కథలు మరియు లోతైన అవగాహనలు</p>
+      <p class="archive-lede archive-lede--follow">
+        Illustrated spiritual stories — mirrors for the inner life · Telugu &amp; English.
+      </p>
+    </div>
+  </header>
+
+  <section class="archive-body" aria-labelledby="stories-list-title">
+    {error ? <p class="qlu-error">{error}</p> : null}
+
+    <div class="archive-body__head">
+      <h2 id="stories-list-title">All stories</h2>
+      <p>{stories.length} published</p>
+    </div>
+
+    <div class="gs-grid">
+      {
+        stories.map((story, i) => {
+          const cover = mediaUrl(story.cover as MediaDoc)
+          return (
+            <a class="gs-card" href={`/stories/${story.slug}/te/`} style={`--tile-i: ${i}`}>
+              <span class="gs-card__media">
+                {cover ? (
+                  <img src={cover} alt="" loading={i < 2 ? 'eager' : 'lazy'} />
+                ) : (
+                  <span class="gs-card__fallback" aria-hidden="true" />
+                )}
+                <span class="gs-card__shade" aria-hidden="true" />
+              </span>
+              <span class="gs-card__copy">
+                <span class="gs-card__kicker">{story.label || 'Story'}</span>
+                <span class="gs-card__title" lang="te">
+                  {story.titleTe}
+                </span>
+                <span class="gs-card__title-en">{story.titleEn}</span>
+                {story.taglineTe ? (
+                  <span class="gs-card__tagline" lang="te">
+                    {story.taglineTe}
+                  </span>
+                ) : null}
+                <span class="gs-card__langs">
+                  <span>TE</span>
+                  <span>EN</span>
+                </span>
+              </span>
+            </a>
+          )
+        })
+      }
+    </div>
+
+    {
+      !error && stories.length === 0 ? (
+        <aside class="archive-soon" aria-label="Empty">
+          <p class="archive-soon__label">No stories yet</p>
+          <p class="archive-soon__hint">Publish stories in Payload admin (Stories group).</p>
+        </aside>
+      ) : null
+    }
+  </section>
+
+  <footer class="home-foot">
+    <a href="/">Home</a>
+    <span aria-hidden="true">·</span>
+    <a href="/issues/">Newsletter</a>
+    <span aria-hidden="true">·</span>
+    <a href="/jnanodayam/">Jnanodayam</a>
+  </footer>
+</BaseLayout>

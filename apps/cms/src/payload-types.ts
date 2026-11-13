@@ -71,6 +71,7 @@ export interface Config {
     media: Media;
     issues: Issue;
     'jnanodayam-readings': JnanodayamReading;
+    'ganesha-stories': GaneshaStory;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -82,6 +83,7 @@ export interface Config {
     media: MediaSelect<false> | MediaSelect<true>;
     issues: IssuesSelect<false> | IssuesSelect<true>;
     'jnanodayam-readings': JnanodayamReadingsSelect<false> | JnanodayamReadingsSelect<true>;
+    'ganesha-stories': GaneshaStoriesSelect<false> | GaneshaStoriesSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -420,6 +422,38 @@ export interface JnanodayamReading {
   createdAt: string;
 }
 /**
+ * Stories and deeper understandings — use Label to tag themes (e.g. Sri Ganesha Tattva).
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ganesha-stories".
+ */
+export interface GaneshaStory {
+  id: number;
+  editLang?: ('en' | 'te') | null;
+  /**
+   * Theme tag for search/filter later (not a site section). e.g. Sri Ganesha Tattva
+   */
+  label?: string | null;
+  /**
+   * URL slug, e.g. vakratunda-matsarasura
+   */
+  slug: string;
+  sortOrder: number;
+  published?: boolean | null;
+  cover?: (number | null) | Media;
+  jnanodayamDay?: number | null;
+  speaker?: string | null;
+  videoUrl?: string | null;
+  titleTe: string;
+  titleEn: string;
+  taglineTe?: string | null;
+  taglineEn?: string | null;
+  bodyMarkdownTe?: string | null;
+  bodyMarkdownEn?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
@@ -458,6 +492,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'jnanodayam-readings';
         value: number | JnanodayamReading;
+      } | null)
+    | ({
+        relationTo: 'ganesha-stories';
+        value: number | GaneshaStory;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -702,6 +740,29 @@ export interface JnanodayamReadingsSelect<T extends boolean = true> {
   subtitleEn?: T;
   bodyHtmlTe?: T;
   bodyHtmlEn?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ganesha-stories_select".
+ */
+export interface GaneshaStoriesSelect<T extends boolean = true> {
+  editLang?: T;
+  label?: T;
+  slug?: T;
+  sortOrder?: T;
+  published?: T;
+  cover?: T;
+  jnanodayamDay?: T;
+  speaker?: T;
+  videoUrl?: T;
+  titleTe?: T;
+  titleEn?: T;
+  taglineTe?: T;
+  taglineEn?: T;
+  bodyMarkdownTe?: T;
+  bodyMarkdownEn?: T;
   updatedAt?: T;
   createdAt?: T;
 }

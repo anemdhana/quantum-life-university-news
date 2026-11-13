@@ -1,0 +1,140 @@
+---
+export const prerender = false
+
+import BaseLayout from '../../../layouts/BaseLayout.astro'
+import { mdToHtml } from '../../../lib/markdown'
+import { getStory, listStories, mediaUrl, type Lang, type MediaDoc } from '../../../lib/payload'
+
+const { slug, lang: langParam } = Astro.params
+const lang = (langParam === 'en' ? 'en' : 'te') as Lang
+
+if (langParam !== 'te' && langParam !== 'en') {
+  return Astro.redirect(`/stories/${slug}/te/`)
+}
+
+let story: Awaited<ReturnType<typeof getStory>> = null
+let all: Awaited<ReturnType<typeof listStories>> = []
+let error = ''
+try {
+  ;[story, all] = await Promise.all([getStory(slug!), listStories()])
+} catch (e) {
+  error = e instanceof Error ? e.message : 'CMS error'
+}
+
+if (!error && !story) {
+  return new Response(null, { status: 404 })
+}
+
+const title = story && (lang === 'te' ? story.titleTe : story.titleEn || story.titleTe)
+const tagline =
+  story &&
+  (lang === 'te' ? story.taglineTe || story.taglineEn : story.taglineEn || story.taglineTe)
+const bodyMd =
+  story &&
+  (lang === 'te'
+    ? story.bodyMarkdownTe || story.bodyMarkdownEn
+    : story.bodyMarkdownEn || story.bodyMarkdownTe)
+const bodyHtml = mdToHtml(bodyMd || '')
+const cover = story ? mediaUrl(story.cover as MediaDoc) : null
+
+const idx = all.findIndex((s) => s.slug === story?.slug)
+const prev = idx > 0 ? all[idx - 1] : null
+const next = idx >= 0 && idx < all.length - 1 ? all[idx + 1] : null
+---
+
+<BaseLayout
+  title={`${title || 'Story'} · Stories`}
+  description={tagline || title || 'Stories and deeper understandings'}
+  lang={lang}
+  variant="landing"
+  mainClass="gs-story-main"
+>
+  {
+    error ? (
+      <p class="qlu-error" style="padding: 1.5rem">
+        {error}
+      </p>
+    ) : story ? (
+      <article class="gs-story" data-lang={lang}>
+        <header class="gs-story__hero">
+          {cover ? (
+            <div class="gs-story__art">
+              <img src={cover} alt="" width="960" height="720" decoding="async" />
+            </div>
+          ) : null}
+          <div class="gs-story__intro">
+            <nav class="gs-story__crumb" aria-label="Breadcrumb">
+              <a href="/">Home</a>
+              <span aria-hidden="true">/</span>
+              <a href="/stories/">Stories</a>
+            </nav>
+            <div class="gs-story__lang" role="navigation" aria-label="Language">
+              <a
+                class:list={{ 'is-active': lang === 'te' }}
+                href={`/stories/${story.slug}/te/`}
+              >
+                TE
+              </a>
+              <a
+                class:list={{ 'is-active': lang === 'en' }}
+                href={`/stories/${story.slug}/en/`}
+              >
+                EN
+              </a>
+            </div>
+            {
+              story.label || story.jnanodayamDay ? (
+                <p class="gs-story__meta">
+                  {story.label || 'Story'}
+                  {story.jnanodayamDay ? ` · Day ${story.jnanodayamDay}` : ''}
+                  {story.speaker ? ` · ${story.speaker}` : ''}
+                </p>
+              ) : null
+            }
+            <h1 class="gs-story__title" lang={lang}>
+              {title}
+            </h1>
+            {tagline ? (
+              <p class="gs-story__tagline" lang={lang}>
+                {tagline}
+              </p>
+            ) : null}
+            {
+              story.videoUrl ? (
+                <p class="gs-story__video">
+                  <a href={story.videoUrl} target="_blank" rel="noopener noreferrer">
+                    Watch source talk →
+                  </a>
+                </p>
+              ) : null
+            }
+          </div>
+        </header>
+
+        <div class="gs-story__body" lang={lang} set:html={bodyHtml} />
+
+        <nav class="gs-story__pager" aria-label="Story navigation">
+          {
+            prev ? (
+              <a href={`/stories/${prev.slug}/${lang}/`}>
+                ← {lang === 'te' ? prev.titleTe : prev.titleEn || prev.titleTe}
+              </a>
+            ) : (
+              <span />
+            )
+          }
+          <a href="/#home-stories">All stories</a>
+          {
+            next ? (
+              <a href={`/stories/${next.slug}/${lang}/`}>
+                {lang === 'te' ? next.titleTe : next.titleEn || next.titleTe} →
+              </a>
+            ) : (
+              <span />
+            )
+          }
+        </nav>
+      </article>
+    ) : null
+  }
+</BaseLayout>

@@ -58,6 +58,7 @@ const bareChrome = isReader || isNews || isPrint || isLanding
             <a class="reader-chrome-brand" href="/">QLU</a>
             <nav class="reader-chrome-nav" aria-label="Primary">
               <a href="/issues/">Magazine</a>
+              <a href="/#home-stories">Stories</a>
               <a href="/jnanodayam/">Jnanodayam</a>
             </nav>
           </header>
@@ -68,6 +69,12 @@ const bareChrome = isReader || isNews || isPrint || isLanding
             <nav class="qlu-nav" aria-label="Primary">
               <a href="/" aria-current={path === '/' ? 'page' : undefined}>
                 Home
+              </a>
+              <a
+                href="/stories/"
+                aria-current={path.startsWith('/stories') ? 'page' : undefined}
+              >
+                Stories
               </a>
               <a
                 href="/jnanodayam/"
