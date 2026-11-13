@@ -10,6 +10,11 @@ export const JnanodayamReadings: CollectionConfig = {
     useAsTitle: 'titleEn',
     defaultColumns: ['series', 'day', 'titleEn', 'published', 'updatedAt'],
     group: 'Jnanodayam',
+    components: {
+      edit: {
+        beforeDocumentControls: ['/components/admin/IssueDocMetaControls#IssueDocMetaControls'],
+      },
+    },
   },
   access: {
     read: ({ req: { user } }) => {
@@ -19,13 +24,25 @@ export const JnanodayamReadings: CollectionConfig = {
   },
   fields: [
     {
+      name: 'editLang',
+      type: 'select',
+      label: 'Editing language',
+      defaultValue: 'en',
+      options: [
+        { label: 'English', value: 'en' },
+        { label: 'తెలుగు (Telugu)', value: 'te' },
+      ],
+      admin: {
+        // Form state; visible UI is IssueDocMetaControls in the doc-controls meta row.
+        position: 'sidebar',
+      },
+    },
+    {
       name: 'series',
       type: 'select',
       required: true,
       defaultValue: 'devi-navaratri',
-      options: [
-        { label: 'Devi Navaratrula Jnanam', value: 'devi-navaratri' },
-      ],
+      options: [{ label: 'Devi Navaratrula Jnanam', value: 'devi-navaratri' }],
       admin: { position: 'sidebar' },
     },
     {
@@ -43,26 +60,45 @@ export const JnanodayamReadings: CollectionConfig = {
       admin: { position: 'sidebar' },
     },
     {
-      name: 'subtitleTe',
-      type: 'text',
-      label: 'Day subtitle (Telugu)',
+      name: 'cover',
+      type: 'upload',
+      relationTo: 'media',
+      admin: { position: 'sidebar' },
     },
     {
-      name: 'subtitleEn',
-      type: 'text',
-      label: 'Day subtitle (English)',
+      name: 'chapterEditor',
+      type: 'ui',
+      admin: {
+        components: {
+          Field: '/components/admin/ReadingChapterEditor#ReadingChapterEditor',
+        },
+      },
     },
     {
       name: 'titleTe',
       type: 'text',
       required: true,
       label: 'Title (Telugu)',
+      admin: { hidden: true },
     },
     {
       name: 'titleEn',
       type: 'text',
       required: true,
       label: 'Title (English)',
+      admin: { hidden: true },
+    },
+    {
+      name: 'subtitleTe',
+      type: 'text',
+      label: 'Day subtitle (Telugu)',
+      admin: { hidden: true },
+    },
+    {
+      name: 'subtitleEn',
+      type: 'text',
+      label: 'Day subtitle (English)',
+      admin: { hidden: true },
     },
     {
       name: 'bodyHtmlTe',
@@ -70,8 +106,8 @@ export const JnanodayamReadings: CollectionConfig = {
       label: 'Body HTML (Telugu)',
       maxLength: 1_000_000,
       admin: {
-        description: 'Trusted HTML from seed/import (h2 + paragraphs).',
-        rows: 12,
+        // Edited via ReadingChapterEditor (same h2/p chapters as Astro).
+        hidden: true,
       },
     },
     {
@@ -79,16 +115,7 @@ export const JnanodayamReadings: CollectionConfig = {
       type: 'textarea',
       label: 'Body HTML (English)',
       maxLength: 1_000_000,
-      admin: {
-        description: 'Trusted HTML from seed/import (h2 + paragraphs).',
-        rows: 12,
-      },
-    },
-    {
-      name: 'cover',
-      type: 'upload',
-      relationTo: 'media',
-      admin: { position: 'sidebar' },
+      admin: { hidden: true },
     },
   ],
   timestamps: true,

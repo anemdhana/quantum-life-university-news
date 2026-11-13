@@ -405,22 +405,17 @@ export interface Issue {
  */
 export interface JnanodayamReading {
   id: number;
+  editLang?: ('en' | 'te') | null;
   series: 'devi-navaratri';
   day: number;
   published?: boolean | null;
-  subtitleTe?: string | null;
-  subtitleEn?: string | null;
+  cover?: (number | null) | Media;
   titleTe: string;
   titleEn: string;
-  /**
-   * Trusted HTML from seed/import (h2 + paragraphs).
-   */
+  subtitleTe?: string | null;
+  subtitleEn?: string | null;
   bodyHtmlTe?: string | null;
-  /**
-   * Trusted HTML from seed/import (h2 + paragraphs).
-   */
   bodyHtmlEn?: string | null;
-  cover?: (number | null) | Media;
   updatedAt: string;
   createdAt: string;
 }
@@ -696,16 +691,17 @@ export interface IssuesSelect<T extends boolean = true> {
  * via the `definition` "jnanodayam-readings_select".
  */
 export interface JnanodayamReadingsSelect<T extends boolean = true> {
+  editLang?: T;
   series?: T;
   day?: T;
   published?: T;
-  subtitleTe?: T;
-  subtitleEn?: T;
+  cover?: T;
   titleTe?: T;
   titleEn?: T;
+  subtitleTe?: T;
+  subtitleEn?: T;
   bodyHtmlTe?: T;
   bodyHtmlEn?: T;
-  cover?: T;
   updatedAt?: T;
   createdAt?: T;
 }
