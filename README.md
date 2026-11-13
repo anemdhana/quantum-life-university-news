@@ -10,7 +10,7 @@ Headless **Jnanodayam reader** + **monthly magazine** for Quantum Life Universit
 
 WordPress sibling (classic PHP): [`qlu-monthly-newsletter`](../qlu-monthly-newsletter). Same content model and soft-paper look; this repo is the headless path described in that project’s `docs/CMS-ALTERNATIVE.md`.
 
-Docs: [docs/README.md](./docs/README.md) · [Crash course](./docs/CRASH-COURSE.md) · [Local setup](./docs/LOCAL.md) · [Content & seed](./docs/CONTENT.md) · [Architecture](./docs/ARCHITECTURE.md) · [Hosting](./docs/newsletter_website_hosting_recommendation.md)
+Docs: [docs/README.md](./docs/README.md) · [Crash course](./docs/CRASH-COURSE.md) · [Local setup](./docs/LOCAL.md) · [Content & seed](./docs/CONTENT.md) · [Architecture](./docs/ARCHITECTURE.md) · [Hosting](./docs/newsletter_website_hosting_recommendation.md) · [Azure VM + Flexible Server](./docs/AZURE-VM-FLEXIBLE-SERVER.md)
 
 ---
 

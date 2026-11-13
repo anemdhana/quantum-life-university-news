@@ -77,3 +77,5 @@ Local mirror of this idea: root `docker-compose.yml` (Postgres) + `apps/cms` + `
 
 **Start with Hostinger KVM 1 + Docker Compose (Payload + Astro SSR + PostgreSQL + Caddy).**  
 Upgrade to **KVM 2** when needed. Keep media on the VPS disk; add object storage (R2/S3) only if you outgrow the disk or need multi-server media.
+
+**Azure alternative:** small Linux VM + **Azure Database for PostgreSQL Flexible Server** (no Docker required) — see [AZURE-VM-FLEXIBLE-SERVER.md](./AZURE-VM-FLEXIBLE-SERVER.md).
