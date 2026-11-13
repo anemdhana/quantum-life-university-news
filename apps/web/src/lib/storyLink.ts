@@ -48,13 +48,15 @@ export function newsletterReturnHref(
   itemKey: string,
   view: 'news' | 'print' | 'flip' = 'news',
 ): string {
-  const base =
-    view === 'print'
-      ? `/issues/${month}/${lang}/?view=print`
-      : view === 'flip'
-        ? `/issues/${month}/${lang}/?view=flip`
-        : `/issues/${month}/${lang}/?view=news`
-  return `${base}#${storyAnchorId(sectionKey, itemKey)}`
+  const anchor = storyAnchorId(sectionKey, itemKey)
+  if (view === 'print') {
+    return `/issues/${month}/${lang}/?view=print#${anchor}`
+  }
+  if (view === 'flip') {
+    return `/issues/${month}/${lang}/?view=flip#${anchor}`
+  }
+  // News: reopen the in-page drawer on return
+  return `/issues/${month}/${lang}/?view=news&story=${encodeURIComponent(anchor)}#${anchor}`
 }
 
 export type ResolvedStoryLink = {

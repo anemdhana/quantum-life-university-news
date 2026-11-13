@@ -1,54 +1,59 @@
-/** News river reader: left-nav scroll-spy + progress + mobile drawer. */
+/** News river reader: chrome select, scroll-spy, progress, story drawer. */
 
 function chapterIdForEl(el: HTMLElement | null): string | null {
   const section = el?.closest<HTMLElement>('[data-news-section]')
   return section?.id || null
 }
 
+function storyParamFromUrl(): string | null {
+  const params = new URLSearchParams(window.location.search)
+  const raw = (params.get('story') || '').trim()
+  return raw || null
+}
+
+function urlWithStory(storyId: string | null): string {
+  const url = new URL(window.location.href)
+  if (storyId) url.searchParams.set('story', storyId)
+  else url.searchParams.delete('story')
+  return `${url.pathname}${url.search}${url.hash}`
+}
+
 export function initNewsView(root: HTMLElement) {
   const scroller = root.querySelector<HTMLElement>('.nr__scroll')
-  const tocRoots = [
-    root.querySelector<HTMLElement>('[data-news-toc]'),
-    root.querySelector<HTMLElement>('[data-news-mobile-nav]'),
-  ].filter(Boolean) as HTMLElement[]
-  const links = [...root.querySelectorAll<HTMLElement>('[data-news-toc-link]')]
+  const selects = [...root.querySelectorAll<HTMLSelectElement>('[data-news-section-select]')]
   const progress = root.querySelector<HTMLElement>('[data-news-progress]')
   const heading = root.querySelector<HTMLElement>('[data-news-heading]')
-  const menuBtn = root.querySelector<HTMLButtonElement>('[data-news-menu]')
-  const mobileSide = root.querySelector<HTMLElement>('[data-news-mobile-side]')
+  const drawer = root.querySelector<HTMLElement>('[data-story-drawer]')
+  const drawerMount = root.querySelector<HTMLElement>('[data-story-drawer-mount]')
+  const drawerHeading = root.querySelector<HTMLElement>('#nr-drawer-heading')
+  if (drawerHeading && !drawerHeading.dataset.default) {
+    drawerHeading.dataset.default = drawerHeading.textContent || ''
+  }
 
-  const sections = links
-    .map((link) => {
-      const id = link.getAttribute('data-target') || ''
-      const el = id ? root.querySelector<HTMLElement>(`#${CSS.escape(id)}`) : null
-      return el ? { id, el, link } : null
-    })
-    .filter(Boolean) as { id: string; el: HTMLElement; link: HTMLElement }[]
+  const sectionEls = [...root.querySelectorAll<HTMLElement>('[data-news-section]')]
+  const uniqueSections = sectionEls
+    .filter((el) => el.id)
+    .map((el) => ({
+      id: el.id,
+      el,
+      label: el.dataset.newsLabel || el.querySelector('h2')?.textContent || el.id,
+    }))
 
-  // Deduplicate by section id (desktop + mobile nav share targets)
-  const uniqueSections = [...new Map(sections.map((s) => [s.id, s])).values()]
+  let drawerOpenId: string | null = null
+  let lastFocus: HTMLElement | null = null
+  let skipPush = false
 
   const setActive = (id: string) => {
     const match = uniqueSections.find((s) => s.id === id)
     if (!match) return
-    links.forEach((link) => {
-      const active = link.getAttribute('data-target') === id
-      link.classList.toggle('is-active', active)
-      if (active) link.setAttribute('aria-current', 'true')
-      else link.removeAttribute('aria-current')
+
+    selects.forEach((sel) => {
+      if (sel.value !== id) sel.value = id
     })
+
     if (heading) {
-      heading.textContent =
-        match.el.dataset.newsLabel || match.el.querySelector('h2')?.textContent || ''
+      heading.textContent = match.label
     }
-    tocRoots.forEach((nav) => {
-      const activeBtn = [...nav.querySelectorAll<HTMLElement>('[data-news-toc-link]')].find(
-        (el) => el.getAttribute('data-target') === id,
-      )
-      if (!activeBtn) return
-      const top = activeBtn.offsetTop - nav.clientHeight / 2 + activeBtn.clientHeight / 2
-      nav.scrollTo({ top: Math.max(0, top), behavior: 'smooth' })
-    })
   }
 
   const scrollToId = (id: string) => {
@@ -60,8 +65,69 @@ export function initNewsView(root: HTMLElement) {
     })
     history.replaceState(null, '', `#${id}`)
     setActive(id)
-    mobileSide?.classList.remove('is-open')
-    menuBtn?.setAttribute('aria-expanded', 'false')
+  }
+
+  const closeDrawer = (opts?: { history?: boolean }) => {
+    if (!drawer || !drawerMount) return
+    const wasOpen = drawer.classList.contains('is-open')
+    drawer.classList.remove('is-open')
+    drawer.setAttribute('aria-hidden', 'true')
+    root.classList.remove('nr--drawer-open')
+    drawerMount.replaceChildren()
+    drawerOpenId = null
+
+    if (wasOpen && opts?.history !== false && !skipPush) {
+      const url = urlWithStory(null)
+      history.pushState({ storyDrawer: null }, '', url)
+    }
+    skipPush = false
+
+    // Restore focus without scrolling the newsletter underneath
+    lastFocus?.focus?.({ preventScroll: true })
+    lastFocus = null
+  }
+
+  const openDrawer = (storyId: string, opts?: { history?: boolean; focus?: HTMLElement | null }) => {
+    if (!drawer || !drawerMount) return
+    const source = root.querySelector<HTMLElement>(
+      `[data-story-source="${storyId.replace(/"/g, '')}"]`,
+    )
+    if (!source) return
+
+    const titleEl = source.querySelector('.story-reader__title')
+    if (drawerHeading) {
+      drawerHeading.textContent =
+        titleEl?.textContent?.trim() || drawerHeading.dataset.default || ''
+    }
+
+    drawerMount.replaceChildren()
+    const clone = source.firstElementChild?.cloneNode(true)
+    if (clone) drawerMount.appendChild(clone)
+
+    lastFocus = opts?.focus || (document.activeElement as HTMLElement | null)
+    drawerOpenId = storyId
+    drawer.classList.add('is-open')
+    drawer.setAttribute('aria-hidden', 'false')
+    root.classList.add('nr--drawer-open')
+
+    const backBtn = drawer.querySelector<HTMLButtonElement>('.nr-drawer__back')
+    requestAnimationFrame(() => backBtn?.focus({ preventScroll: true }))
+
+    const card = root.querySelector<HTMLElement>(`#${CSS.escape(storyId)}`)
+    const chapterId = chapterIdForEl(card)
+    if (chapterId) setActive(chapterId)
+
+    if (opts?.history !== false) {
+      const url = urlWithStory(storyId)
+      if (storyParamFromUrl() !== storyId) {
+        history.pushState({ storyDrawer: storyId }, '', url)
+      } else {
+        history.replaceState({ storyDrawer: storyId }, '', url)
+      }
+    }
+
+    const scrollPane = drawer.querySelector<HTMLElement>('.nr-drawer__scroll')
+    if (scrollPane) scrollPane.scrollTop = 0
   }
 
   const restoreStoryAnchor = () => {
@@ -73,12 +139,10 @@ export function initNewsView(root: HTMLElement) {
     const chapterId = chapterIdForEl(target)
     const top = Math.max(0, target.offsetTop - 24)
 
-    // Highlight the chapter that owns this story card immediately.
     if (chapterId) setActive(chapterId)
 
     requestAnimationFrame(() => {
       scroller.scrollTo({ top, behavior: 'smooth' })
-      // Re-assert after layout/scroll settle (observer can briefly fight).
       if (chapterId) {
         window.setTimeout(() => setActive(chapterId), 320)
       }
@@ -86,10 +150,9 @@ export function initNewsView(root: HTMLElement) {
     return true
   }
 
-  links.forEach((link) => {
-    link.addEventListener('click', (e) => {
-      e.preventDefault()
-      const id = link.getAttribute('data-target')
+  selects.forEach((sel) => {
+    sel.addEventListener('change', () => {
+      const id = sel.value
       if (id) scrollToId(id)
     })
   })
@@ -103,9 +166,42 @@ export function initNewsView(root: HTMLElement) {
     })
   })
 
-  menuBtn?.addEventListener('click', () => {
-    const open = mobileSide?.classList.toggle('is-open')
-    menuBtn.setAttribute('aria-expanded', open ? 'true' : 'false')
+  root.addEventListener('click', (e) => {
+    const target = e.target as HTMLElement | null
+    const closeEl = target?.closest<HTMLElement>('[data-story-drawer-close]')
+    if (closeEl && drawer?.contains(closeEl)) {
+      e.preventDefault()
+      closeDrawer()
+      return
+    }
+
+    const openLink = target?.closest<HTMLAnchorElement>('a[data-story-drawer-open]')
+    if (!openLink || !root.contains(openLink)) return
+    if (e.defaultPrevented) return
+    if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return
+
+    const storyId = openLink.getAttribute('data-story-drawer-open')
+    if (!storyId) return
+    e.preventDefault()
+    openDrawer(storyId, { focus: openLink })
+  })
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return
+    if (!drawer?.classList.contains('is-open')) return
+    e.preventDefault()
+    closeDrawer()
+  })
+
+  window.addEventListener('popstate', () => {
+    const id = storyParamFromUrl()
+    skipPush = true
+    if (id && root.querySelector(`[data-story-source="${id.replace(/"/g, '')}"]`)) {
+      openDrawer(id, { history: false })
+    } else if (drawer?.classList.contains('is-open')) {
+      closeDrawer({ history: false })
+    }
+    skipPush = false
   })
 
   let suppressObserverUntil = 0
@@ -150,7 +246,13 @@ export function initNewsView(root: HTMLElement) {
   onScrollProgress()
 
   const hash = decodeURIComponent((window.location.hash || '').replace(/^#/, ''))
-  if (hash.startsWith('story-')) {
+  const storyQ = storyParamFromUrl()
+
+  if (storyQ && root.querySelector(`[data-story-source="${storyQ.replace(/"/g, '')}"]`)) {
+    suppressObserverUntil = Date.now() + 500
+    restoreStoryAnchor()
+    requestAnimationFrame(() => openDrawer(storyQ, { history: false }))
+  } else if (hash.startsWith('story-')) {
     suppressObserverUntil = Date.now() + 500
     if (!restoreStoryAnchor() && uniqueSections[0]) setActive(uniqueSections[0].id)
   } else if (hash && uniqueSections.some((s) => s.id === hash)) {

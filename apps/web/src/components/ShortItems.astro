@@ -1,6 +1,7 @@
 ---
 import type { IssueSection, Lang } from '../lib/payload'
 import { mdToHtml } from '../lib/markdown'
+import { PDF_SECTION_TITLES, isSectionKey } from '../lib/magazineSections'
 import { shortItemsForSection } from '../lib/storyLink'
 import StoryLink from './StoryLink.astro'
 
@@ -16,10 +17,26 @@ const { section, lang, month, from = 'news', class: className } = Astro.props
 const asCards = section.key === 'themes' && Boolean(section.asCard)
 /** News reader: horizontal image+copy cards; print/flip keep masonry cards. */
 const asRows = asCards && from === 'news'
-const items = shortItemsForSection(section, lang, month, from).map((item) => ({
-  ...item,
-  bodyHtml: mdToHtml(item.body),
-}))
+const sectionMeta = isSectionKey(section.key) ? PDF_SECTION_TITLES[section.key] : null
+const sectionLabel = sectionMeta
+  ? lang === 'te'
+    ? sectionMeta.te
+    : sectionMeta.en
+  : section.key
+const sectionNum = sectionMeta?.num || ''
+const readMoreLabel = lang === 'te' ? 'పూర్తి కథనం' : 'Full story'
+const items = shortItemsForSection(section, lang, month, from).map((item) => {
+  const fullText = (item.fullStory || '').trim()
+  const blurbText = (item.body || '').trim()
+  const showBlurb = Boolean(blurbText) && blurbText !== fullText
+  return {
+    ...item,
+    bodyHtml: mdToHtml(item.body),
+    fullStoryHtml: fullText ? mdToHtml(fullText) : '',
+    blurbHtml: showBlurb ? mdToHtml(blurbText) : '',
+    useDrawer: from === 'news' && Boolean(fullText) && !item.external && Boolean(item.href),
+  }
+})
 ---
 
 {
@@ -53,8 +70,47 @@ const items = shortItemsForSection(section, lang, month, from).map((item) => ({
             {item.bodyHtml ? (
               <div class="short-item-body md-prose" set:html={item.bodyHtml} />
             ) : null}
-            <StoryLink href={item.href} external={item.external} lang={lang} />
+            <StoryLink
+              href={item.href}
+              external={item.external}
+              lang={lang}
+              drawerId={item.useDrawer ? item.anchorId : null}
+            />
           </div>
+          {item.useDrawer ? (
+            <div hidden data-story-source={item.anchorId}>
+              <article class="story-reader story-reader--drawer">
+                <div class="story-reader__content">
+                  {item.imageSrc ? (
+                    <figure class="story-reader__hero">
+                      <img
+                        src={item.imageSrc}
+                        alt={item.imageAlt || item.title || ''}
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    </figure>
+                  ) : null}
+                  <div class="story-reader__copy">
+                    <p class="story-reader__kicker">
+                      {sectionNum ? `${sectionNum} · ` : ''}
+                      {sectionLabel}
+                      {' · '}
+                      {readMoreLabel}
+                    </p>
+                    {item.title ? <h1 class="story-reader__title">{item.title}</h1> : null}
+                    {item.meta ? <p class="story-reader__meta">{item.meta}</p> : null}
+                    {item.blurbHtml ? (
+                      <div class="story-reader__lede nr-prose" set:html={item.blurbHtml} />
+                    ) : null}
+                    {item.fullStoryHtml ? (
+                      <div class="story-reader__body nr-prose" set:html={item.fullStoryHtml} />
+                    ) : null}
+                  </div>
+                </div>
+              </article>
+            </div>
+          ) : null}
         </article>
       ))}
     </div>

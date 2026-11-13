@@ -7,9 +7,11 @@ interface Props {
   external?: boolean
   lang: Lang
   class?: string
+  /** When set, news view opens this story in the side drawer instead of navigating. */
+  drawerId?: string | null
 }
 
-const { href, external = false, lang, class: className } = Astro.props
+const { href, external = false, lang, class: className, drawerId } = Astro.props
 ---
 
 {
@@ -20,7 +22,11 @@ const { href, external = false, lang, class: className } = Astro.props
           {storyLinkLabel(lang)}
         </a>
       ) : (
-        <a class="story-link" href={href}>
+        <a
+          class="story-link"
+          href={href}
+          {...(drawerId ? { 'data-story-drawer-open': drawerId } : {})}
+        >
           {storyLinkLabel(lang)}
         </a>
       )}

@@ -1,16 +1,15 @@
 ---
 import type { Issue, IssueSection, Lang, MediaDoc } from '../../lib/payload'
 import { mediaUrl } from '../../lib/payload'
-import { EMPTY_SECTION, PDF_SECTION_TITLES } from '../../lib/magazineSections'
+import { EMPTY_SECTION } from '../../lib/magazineSections'
+import { qluIssueStamp } from '../../lib/printBrand'
 import ShortItems from '../ShortItems.astro'
 
 type Chapter = {
   id: string
   key: string
   num: string
-  /** Full print-style section title (7 editorial headings) */
   sectionTitle: string
-  /** Optional issue-specific headline when different from sectionTitle */
   heading: string
   blurb: string
   bodyHtml: string
@@ -29,9 +28,22 @@ interface Props {
   toc: { id: string; num: string; label: string }[]
   newsHrefTe: string
   newsHrefEn: string
+  flipHref: string
+  printHref: string
 }
 
-const { issue, lang, title, mastheadHtml, chapters, toc, newsHrefTe, newsHrefEn } = Astro.props
+const {
+  issue,
+  lang,
+  title,
+  mastheadHtml,
+  chapters,
+  toc,
+  newsHrefTe,
+  newsHrefEn,
+  flipHref,
+  printHref,
+} = Astro.props
 
 const coverSrc = mediaUrl(issue.coverImage as MediaDoc)
 const tagline =
@@ -39,63 +51,70 @@ const tagline =
   (lang === 'te'
     ? 'ధ్యానం • ఆత్మజ్ఞానం • చైతన్య వికాసం'
     : 'Meditation • Self-knowledge • Expansion of Consciousness')
-const monthLabel = issue.month
+const monthLabel = qluIssueStamp(issue.month, lang)
 const coverLabel = lang === 'te' ? 'ముఖచిత్రం' : 'Cover'
+const sectionSelectLabel = lang === 'te' ? 'విభాగం' : 'Section'
+const viewingLabel = lang === 'te' ? 'చూస్తున్నది' : 'Viewing'
+const emptyLine = lang === 'te' ? EMPTY_SECTION.te : EMPTY_SECTION.en
+const newsHref = lang === 'te' ? newsHrefTe : newsHrefEn
+const drawerCloseLabel = lang === 'te' ? 'మూసివేయి' : 'Close'
+const drawerBackLabel = lang === 'te' ? '← తిరిగి' : '← Back'
+const drawerTitle = lang === 'te' ? 'పూర్తి కథనం' : 'Full story'
 ---
 
 <div class="nr" data-newsview>
-  <aside class="nr__side">
-    <a class="nr__brand" href="/">
-      <img src="/qlu-logo.png" width="32" height="32" alt="" />
-      <span>Quantum Life University</span>
-    </a>
-    <nav class="nr__day-jump" aria-label={lang === 'te' ? 'నావిగేషన్' : 'Navigation'}>
-      <a href="/issues/">{lang === 'te' ? 'సంచికలు' : 'Issues'}</a>
-    </nav>
-    <p class="nr__issue-stamp">{monthLabel}</p>
-    <h1 class="nr__series">{title}</h1>
-    <p class="nr__series-sub">{tagline}</p>
-    <div class="nr__lang" role="navigation" aria-label="Language">
-      <a class:list={{ active: lang === 'te' }} href={newsHrefTe}>TE</a>
-      <a class:list={{ active: lang === 'en' }} href={newsHrefEn}>EN</a>
+  <header class="nr__chrome">
+    <div class="nr__chrome-left">
+      <a class="nr__chrome-brand" href="/">
+        <img src="/qlu-logo.png" width="28" height="28" alt="" />
+        <span class="nr__chrome-brand-text">QLU</span>
+      </a>
+      <div class="nr__chrome-issue">
+        <span class="nr__chrome-month">{monthLabel}</span>
+        <span class="nr__chrome-dot" aria-hidden="true">·</span>
+        <span class="nr__chrome-title">{title}</span>
+      </div>
     </div>
-    <ul class="nr__nav" data-news-toc aria-label={lang === 'te' ? 'విభాగాలు' : 'Sections'}>
-      {
-        toc.map((item) => (
-          <li>
-            <button type="button" data-news-toc-link data-target={item.id}>
-              <span class="nr__n">{item.num}</span>
-              <span class="nr__nav-copy">{item.label}</span>
-            </button>
-          </li>
-        ))
-      }
-    </ul>
-  </aside>
+
+    <div class="nr__chrome-center">
+      <span class="nr__chrome-viewing-label">{viewingLabel}</span>
+      <span class="nr__chrome-viewing" data-news-heading>{coverLabel}</span>
+      <label class="visually-hidden" for="nr-section-select-chrome">{sectionSelectLabel}</label>
+      <select
+        id="nr-section-select-chrome"
+        class="nr__chrome-select"
+        data-news-section-select
+        aria-label={lang === 'te' ? 'విభాగం ఎంచుకోండి' : 'Choose section'}
+      >
+        {
+          toc.map((item) => (
+            <option value={item.id}>
+              {item.num}. {item.label}
+            </option>
+          ))
+        }
+      </select>
+    </div>
+
+    <div class="nr__chrome-right">
+      <div class="nr__lang nr__lang--bar" role="navigation" aria-label="Language">
+        <a class:list={{ active: lang === 'te' }} href={newsHrefTe}>TE</a>
+        <a class:list={{ active: lang === 'en' }} href={newsHrefEn}>EN</a>
+      </div>
+      <nav class="nr__chrome-views" aria-label={lang === 'te' ? 'లేఅవుట్' : 'Layout'}>
+        <a class="is-active" href={newsHref} aria-current="page">
+          {lang === 'te' ? 'న్యూస్' : 'News'}
+        </a>
+        <a href={flipHref}>{lang === 'te' ? 'ఫ్లిప్' : 'Flip'}</a>
+        <a href={printHref}>{lang === 'te' ? 'ప్రింట్' : 'Print'}</a>
+      </nav>
+      <a class="nr__issues" href="/issues/">
+        {lang === 'te' ? 'సంచికలు' : 'Issues'}
+      </a>
+    </div>
+  </header>
 
   <div class="nr__main">
-    <header class="nr__topbar">
-      <button
-        type="button"
-        class="nr__menu"
-        data-news-menu
-        aria-expanded="false"
-        aria-controls="nr-mobile-side"
-        aria-label={lang === 'te' ? 'విభాగాలు' : 'Sections'}
-      >
-        ☰
-      </button>
-      <span class="nr__topbar-title" data-news-heading>{coverLabel}</span>
-      <div class="nr__topbar-tools">
-        <div class="nr__lang nr__lang--bar" role="navigation" aria-label="Language">
-          <a class:list={{ active: lang === 'te' }} href={newsHrefTe}>TE</a>
-          <a class:list={{ active: lang === 'en' }} href={newsHrefEn}>EN</a>
-        </div>
-        <a class="nr__issues" href="/issues/">
-          {lang === 'te' ? 'సంచికలు' : 'Issues'}
-        </a>
-      </div>
-    </header>
     <div class="nr__progress" aria-hidden="true">
       <div class="nr__progress-bar" data-news-progress />
     </div>
@@ -114,6 +133,7 @@ const coverLabel = lang === 'te' ? 'ముఖచిత్రం' : 'Cover'
         </div>
         <div class="nr__cover-copy">
           <p class="nr__kicker">{lang === 'te' ? 'నెలవారీ పత్రిక' : 'Monthly newsletter'}</p>
+          <p class="nr__cover-month">{monthLabel}</p>
           <h2 class="nr__cover-title">{title}</h2>
           <p class="nr__cover-tag">{tagline}</p>
           {
@@ -139,7 +159,6 @@ const coverLabel = lang === 'te' ? 'ముఖచిత్రం' : 'Cover'
             const themeCards = ch.key === 'themes' && Boolean(ch.section.asCard)
             const lineTitle = ch.heading || ch.sectionTitle
             const isEmpty = ch.emptyBody && !ch.hasShortItems && ch.images.length === 0
-            const emptyLine = lang === 'te' ? EMPTY_SECTION.te : EMPTY_SECTION.en
             return (
               <article
                 class:list={['nr-chapter', i % 2 === 1 && 'nr-chapter--alt']}
@@ -214,21 +233,35 @@ const coverLabel = lang === 'te' ? 'ముఖచిత్రం' : 'Cover'
     </div>
   </div>
 
-  <div class="nr__mobile-side" id="nr-mobile-side" data-news-mobile-side>
-    <nav class="nr__day-jump" aria-label={lang === 'te' ? 'నావిగేషన్' : 'Navigation'}>
-      <a href="/issues/">{lang === 'te' ? 'సంచికలు' : 'Issues'}</a>
-    </nav>
-    <ul class="nr__nav" data-news-mobile-nav aria-label={lang === 'te' ? 'విభాగాలు' : 'Sections'}>
-      {
-        toc.map((item) => (
-          <li>
-            <button type="button" data-news-toc-link data-target={item.id}>
-              <span class="nr__n">{item.num}</span>
-              <span class="nr__nav-copy">{item.label}</span>
-            </button>
-          </li>
-        ))
-      }
-    </ul>
+  <div class="nr-drawer" data-story-drawer aria-hidden="true">
+    <button
+      type="button"
+      class="nr-drawer__scrim"
+      data-story-drawer-close
+      tabindex="-1"
+      aria-label={drawerCloseLabel}
+    />
+    <aside
+      class="nr-drawer__panel"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="nr-drawer-heading"
+    >
+      <header class="nr-drawer__bar">
+        <button type="button" class="nr-drawer__back" data-story-drawer-close>
+          {drawerBackLabel}
+        </button>
+        <span class="nr-drawer__heading" id="nr-drawer-heading">{drawerTitle}</span>
+        <button
+          type="button"
+          class="nr-drawer__x"
+          data-story-drawer-close
+          aria-label={drawerCloseLabel}
+        >
+          ×
+        </button>
+      </header>
+      <div class="nr-drawer__scroll" data-story-drawer-mount></div>
+    </aside>
   </div>
 </div>
