@@ -15,6 +15,11 @@ export type MediaDoc = {
 export type ImageAlign = 'left' | 'center' | 'right' | 'full'
 export type ImageSize = 'sm' | 'md' | 'lg' | 'full'
 
+export type ThemeItemImage = {
+  id?: string
+  image?: MediaDoc | number | string | null
+}
+
 export type ThemeItem = {
   id?: string
   titleTe?: string | null
@@ -24,6 +29,7 @@ export type ThemeItem = {
   fullStoryTe?: string | null
   fullStoryEn?: string | null
   image?: MediaDoc | number | string | null
+  images?: ThemeItemImage[] | null
   storyUrl?: string | null
 }
 

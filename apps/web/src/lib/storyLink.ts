@@ -98,6 +98,7 @@ export type ShortListItem = {
   fullStory: string
   imageSrc?: string | null
   imageAlt?: string | null
+  imageSrcs?: { src: string; alt: string }[]
 }
 
 type Linkable = {
@@ -106,6 +107,39 @@ type Linkable = {
   fullStoryTe?: string | null
   fullStoryEn?: string | null
   image?: MediaDoc | number | string | null
+  images?: { id?: string; image?: MediaDoc | number | string | null }[] | null
+}
+
+/** Primary + gallery stills for a theme (or other) item. */
+export function collectItemImages(
+  item: Linkable,
+  fallbackAlt = '',
+): { imageSrc: string | null; imageAlt: string; imageSrcs: { src: string; alt: string }[] } {
+  const seen = new Set<string>()
+  const imageSrcs: { src: string; alt: string }[] = []
+
+  const push = (media: MediaDoc | number | string | null | undefined) => {
+    const src = mediaUrl(media)
+    if (!src || seen.has(src)) return
+    seen.add(src)
+    const alt =
+      (typeof media === 'object' && media && 'alt' in media ? media.alt : '') ||
+      fallbackAlt ||
+      ''
+    imageSrcs.push({ src, alt: alt || '' })
+  }
+
+  push(item.image)
+  for (const row of item.images || []) {
+    push(row?.image)
+  }
+
+  const primary = imageSrcs[0]
+  return {
+    imageSrc: primary?.src || null,
+    imageAlt: primary?.alt || fallbackAlt || '',
+    imageSrcs,
+  }
 }
 
 function toShortItem(opts: {
@@ -131,13 +165,7 @@ function toShortItem(opts: {
     from: opts.from,
   })
   if (!opts.title && !opts.body && !opts.meta && !link.href) return null
-  const imageSrc = mediaUrl(opts.item.image)
-  const imageAlt =
-    (typeof opts.item.image === 'object' && opts.item.image && 'alt' in opts.item.image
-      ? opts.item.image.alt
-      : '') ||
-    opts.title ||
-    ''
+  const { imageSrc, imageAlt, imageSrcs } = collectItemImages(opts.item, opts.title)
   return {
     title: opts.title,
     body: opts.body,
@@ -150,6 +178,7 @@ function toShortItem(opts: {
     fullStory,
     imageSrc,
     imageAlt,
+    imageSrcs,
   }
 }
 
@@ -336,6 +365,7 @@ export type ResolvedFullStory = {
   itemKey: string
   imageSrc?: string | null
   imageAlt?: string | null
+  imageSrcs?: { src: string; alt: string }[]
 }
 
 function matchArrayItem<T extends { id?: string }>(
@@ -408,13 +438,7 @@ export function findFullStory(
       const fullStory = pickLangText(lang, hit.item.fullStoryTe, hit.item.fullStoryEn)
       if (!fullStory) continue
       const title = pickLangText(lang, hit.item.titleTe, hit.item.titleEn)
-      const imageSrc = mediaUrl(hit.item.image)
-      const imageAlt =
-        (typeof hit.item.image === 'object' && hit.item.image && 'alt' in hit.item.image
-          ? hit.item.image.alt
-          : '') ||
-        title ||
-        ''
+      const { imageSrc, imageAlt, imageSrcs } = collectItemImages(hit.item, title)
       return {
         title,
         blurb: pickLangText(lang, hit.item.blurbTe, hit.item.blurbEn),
@@ -423,6 +447,7 @@ export function findFullStory(
         itemKey: itemKeyAt(hit.item.id, hit.index),
         imageSrc,
         imageAlt,
+        imageSrcs,
       }
     }
 

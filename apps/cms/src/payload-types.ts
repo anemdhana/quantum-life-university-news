@@ -223,9 +223,18 @@ export interface Issue {
               blurbTe?: string | null;
               blurbEn?: string | null;
               /**
-               * Optional still / frame for this theme entry (shown on Print cards and short lists).
+               * Primary still / frame for this theme entry (cards & short lists). Prefer the first gallery image when set via import.
                */
               image?: (number | null) | Media;
+              /**
+               * Optional extra frames for this theme (drawer / reader). All matching Drive stills can be imported here.
+               */
+              images?:
+                | {
+                    image: number | Media;
+                    id?: string | null;
+                  }[]
+                | null;
               fullStoryTe?: string | null;
               fullStoryEn?: string | null;
               /**
@@ -618,6 +627,12 @@ export interface IssuesSelect<T extends boolean = true> {
               blurbTe?: T;
               blurbEn?: T;
               image?: T;
+              images?:
+                | T
+                | {
+                    image?: T;
+                    id?: T;
+                  };
               fullStoryTe?: T;
               fullStoryEn?: T;
               storyUrl?: T;

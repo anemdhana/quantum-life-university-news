@@ -406,8 +406,28 @@ export const Issues: CollectionConfig = {
                   label: 'Theme card image',
                   admin: {
                     description:
-                      'Optional still / frame for this theme entry (shown on Print cards and short lists).',
+                      'Primary still / frame for this theme entry (cards & short lists). Prefer the first gallery image when set via import.',
                   },
+                },
+                {
+                  name: 'images',
+                  type: 'array',
+                  label: 'Theme image gallery',
+                  labels: { singular: 'Image', plural: 'Images' },
+                  admin: {
+                    description:
+                      'Optional extra frames for this theme (drawer / reader). All matching Drive stills can be imported here.',
+                    initCollapsed: true,
+                  },
+                  fields: [
+                    {
+                      name: 'image',
+                      type: 'upload',
+                      relationTo: 'media',
+                      required: true,
+                      label: 'Image',
+                    },
+                  ],
                 },
                 ...storyLinkFields(),
               ],

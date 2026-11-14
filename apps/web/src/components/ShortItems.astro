@@ -81,15 +81,30 @@ const items = shortItemsForSection(section, lang, month, from).map((item) => {
             <div hidden data-story-source={item.anchorId}>
               <article class="story-reader story-reader--drawer">
                 <div class="story-reader__content">
-                  {item.imageSrc ? (
-                    <figure class="story-reader__hero">
-                      <img
-                        src={item.imageSrc}
-                        alt={item.imageAlt || item.title || ''}
-                        loading="lazy"
-                        decoding="async"
-                      />
-                    </figure>
+                  {(item.imageSrcs?.length ? item.imageSrcs : item.imageSrc
+                    ? [{ src: item.imageSrc, alt: item.imageAlt || '' }]
+                    : []
+                  ).length ? (
+                    <div
+                      class:list={[
+                        'story-reader__gallery',
+                        (item.imageSrcs?.length || 0) > 1 && 'story-reader__gallery--multi',
+                      ]}
+                    >
+                      {(item.imageSrcs?.length
+                        ? item.imageSrcs
+                        : [{ src: item.imageSrc!, alt: item.imageAlt || '' }]
+                      ).map((img, i) => (
+                        <figure class:list={['story-reader__hero', i > 0 && 'story-reader__hero--extra']}>
+                          <img
+                            src={img.src}
+                            alt={img.alt || item.title || ''}
+                            loading={i === 0 ? 'lazy' : 'lazy'}
+                            decoding="async"
+                          />
+                        </figure>
+                      ))}
+                    </div>
                   ) : null}
                   <div class="story-reader__copy">
                     <p class="story-reader__kicker">

@@ -123,16 +123,34 @@ const chromeTitle = [sectionNum, sectionLabel].filter(Boolean).join(' · ') || r
             <article class="story-reader">
               <div class="story-reader__content">
                 {
-                  story.imageSrc ? (
-                    <figure class="story-reader__hero">
-                      <img
-                        src={story.imageSrc}
-                        alt={story.imageAlt || title || ''}
-                        loading="eager"
-                        decoding="async"
-                      />
-                    </figure>
-                  ) : null
+                  (() => {
+                    const gallery =
+                      story.imageSrcs?.length
+                        ? story.imageSrcs
+                        : story.imageSrc
+                          ? [{ src: story.imageSrc, alt: story.imageAlt || '' }]
+                          : []
+                    if (!gallery.length) return null
+                    return (
+                      <div
+                        class:list={[
+                          'story-reader__gallery',
+                          gallery.length > 1 && 'story-reader__gallery--multi',
+                        ]}
+                      >
+                        {gallery.map((img, i) => (
+                          <figure class:list={['story-reader__hero', i > 0 && 'story-reader__hero--extra']}>
+                            <img
+                              src={img.src}
+                              alt={img.alt || title || ''}
+                              loading={i === 0 ? 'eager' : 'lazy'}
+                              decoding="async"
+                            />
+                          </figure>
+                        ))}
+                      </div>
+                    )
+                  })()
                 }
 
                 <div class="story-reader__copy">

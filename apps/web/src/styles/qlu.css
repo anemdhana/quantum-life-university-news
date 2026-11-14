@@ -2113,12 +2113,17 @@ body.lang-te .nr-drawer__heading {
   padding-bottom: calc(1.5rem + env(safe-area-inset-bottom));
 }
 
+.nr-drawer .story-reader__gallery,
 .nr-drawer .story-reader__hero,
 .nr-drawer .story-reader__copy {
   width: calc(100% - 2 * clamp(1rem, 4vw, 1.5rem));
   max-width: none;
   margin-left: clamp(1rem, 4vw, 1.5rem);
   margin-right: clamp(1rem, 4vw, 1.5rem);
+}
+
+.nr-drawer .story-reader__gallery {
+  margin-bottom: 1.1rem;
 }
 
 .nr-drawer .story-reader__title {
@@ -3209,6 +3214,15 @@ body.is-print {
   margin-right: auto;
 }
 
+.story-reader__gallery {
+  margin: 0 0 1.35rem;
+}
+
+.story-reader__gallery--multi {
+  display: grid;
+  gap: 0.65rem;
+}
+
 .story-reader__hero {
   margin-top: 0;
   margin-bottom: 1.35rem;
@@ -3217,11 +3231,19 @@ body.is-print {
   background: #ddd4c6;
 }
 
+.story-reader__gallery .story-reader__hero {
+  margin-bottom: 0;
+}
+
 .story-reader__hero img {
   display: block;
   width: 100%;
   aspect-ratio: 16 / 9;
   object-fit: cover;
+}
+
+.story-reader__gallery--multi .story-reader__hero--extra img {
+  aspect-ratio: 16 / 10;
 }
 
 .story-reader__kicker {
