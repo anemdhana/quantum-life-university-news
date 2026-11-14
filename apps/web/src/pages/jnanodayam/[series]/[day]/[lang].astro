@@ -34,12 +34,19 @@ const SERIES_META: Record<string, { title: string; titleTe: string }> = {
     title: 'Devi Navaratrula Jnanam',
     titleTe: 'దేవీ నవరాత్రుల జ్ఞానం',
   },
+  daily: {
+    title: 'Jnanodayam',
+    titleTe: 'జ్ఞానోదయం',
+  },
 }
 
 const seriesMeta = SERIES_META[series || ''] || {
   title: series || 'Programme',
   titleTe: '',
 }
+/** Daily classes live on the hub — no intermediate series list. */
+const listHref = series === 'daily' ? '/jnanodayam/' : `/jnanodayam/${series}/`
+const listLabel = series === 'daily' ? 'Highlight classes' : 'Days'
 
 const title = reading
   ? lang === 'te'
@@ -85,7 +92,7 @@ const chaptersJson = JSON.stringify(chapters).replace(/</g, '\\u003c')
             <span>Quantum Life University</span>
           </a>
           <nav class="jnana-r__day-jump" aria-label="Day navigation">
-            <a href={`/jnanodayam/${series}/`}>Days</a>
+            <a href={listHref}>{listLabel}</a>
             {prev ? (
               <a href={`/jnanodayam/${series}/${prev.day}/${lang}/`}>← {prev.day}</a>
             ) : null}
@@ -183,9 +190,9 @@ const chaptersJson = JSON.stringify(chapters).replace(/</g, '\\u003c')
               <a
                 class="jnana-r__end-link"
                 data-jnana-end-link
-                href={`/jnanodayam/${series}/`}
+                href={listHref}
               >
-                Back to day list
+                {series === 'daily' ? 'Back to Jnanodayam' : 'Back to day list'}
               </a>
             )
           }
@@ -197,7 +204,7 @@ const chaptersJson = JSON.stringify(chapters).replace(/</g, '\\u003c')
           data-jnana-mobile-side
         >
           <nav class="jnana-r__day-jump" aria-label="Day navigation">
-            <a href={`/jnanodayam/${series}/`}>Days</a>
+            <a href={listHref}>{listLabel}</a>
             {prev ? (
               <a href={`/jnanodayam/${series}/${prev.day}/${lang}/`}>← {prev.day}</a>
             ) : null}

@@ -42,7 +42,10 @@ export const JnanodayamReadings: CollectionConfig = {
       type: 'select',
       required: true,
       defaultValue: 'devi-navaratri',
-      options: [{ label: 'Devi Navaratrula Jnanam', value: 'devi-navaratri' }],
+      options: [
+        { label: 'Devi Navaratrula Jnanam', value: 'devi-navaratri' },
+        { label: 'Highlight classes', value: 'daily' },
+      ],
       admin: { position: 'sidebar' },
     },
     {
@@ -50,8 +53,11 @@ export const JnanodayamReadings: CollectionConfig = {
       type: 'number',
       required: true,
       min: 1,
-      max: 31,
-      admin: { position: 'sidebar' },
+      max: 9999,
+      admin: {
+        position: 'sidebar',
+        description: 'Devi Navaratri uses 1–10; daily classes use the Jnanodayam day number (e.g. 592).',
+      },
     },
     {
       name: 'published',

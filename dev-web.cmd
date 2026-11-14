@@ -2,9 +2,13 @@
 setlocal EnableExtensions EnableDelayedExpansion
 
 REM ============================================================
-REM  QLU News - Start Astro only (no CMS / admin)
-REM  Clone of dev-remote.cmd, but only opens the site on :4321.
-REM  Expects CMS already running (local or remote) at PUBLIC_PAYLOAD_URL.
+REM  QLU News - Start CMS API + Astro site (no admin UI)
+REM  Like dev-remote.cmd, but:
+REM    - starts Payload on :3000 for REST (needed by Astro)
+REM    - starts Astro on :4321
+REM    - opens only the site in the browser (NOT /admin)
+REM
+REM  Requires repo-root .env with DATABASE_URL (remote Postgres).
 REM
 REM  Double-click, or from repo root:
 REM    .\dev-web.cmd
@@ -12,22 +16,38 @@ REM ============================================================
 
 cd /d "%~dp0"
 
+set "CMS_URL=http://localhost:3000"
 set "WEB_URL=http://localhost:4321"
-set "PUBLIC_PAYLOAD_URL="
+set "DATABASE_URL="
 
 echo.
 echo  ========================================
-echo   QLU News  (Astro only)
-echo   Starting site on :4321 ...
+echo   QLU News  (CMS API + Astro)
+echo   Admin UI will NOT open
 echo  ========================================
 echo.
 
-echo Stopping any existing QLU Web windows and port 4321...
+echo Stopping any existing QLU CMS / Web windows and ports 3000 / 4321...
+taskkill /FI "WINDOWTITLE eq QLU CMS*" /T /F >nul 2>&1
 taskkill /FI "WINDOWTITLE eq QLU Web*" /T /F >nul 2>&1
+call :kill_port 3000
 call :kill_port 4321
+
+if not exist "apps\cms" (
+  echo [ERROR] apps\cms folder not found.
+  pause
+  exit /b 1
+)
 
 if not exist "apps\web" (
   echo [ERROR] apps\web folder not found.
+  pause
+  exit /b 1
+)
+
+if not exist ".env" (
+  echo [ERROR] .env not found in repo root.
+  echo         Copy .env.example to .env and set DATABASE_URL to your remote Postgres URI.
   pause
   exit /b 1
 )
@@ -40,29 +60,51 @@ if not exist "apps\web\.env" (
   )
 )
 
-REM --- Optional: load PUBLIC_* from root .env ---
-if exist ".env" (
-  echo [1/2] Loading PUBLIC_PAYLOAD_URL / PUBLIC_WEB_URL from root .env ...
-  for /f "usebackq eol=# tokens=1,* delims==" %%A in (".env") do (
-    if /I "%%A"=="PUBLIC_PAYLOAD_URL" set "PUBLIC_PAYLOAD_URL=%%B"
-    if /I "%%A"=="PUBLIC_WEB_URL" set "PUBLIC_WEB_URL=%%B"
-  )
-  if defined PUBLIC_PAYLOAD_URL (
-    if "!PUBLIC_PAYLOAD_URL:~0,1!"=="""" set "PUBLIC_PAYLOAD_URL=!PUBLIC_PAYLOAD_URL:~1!"
-    if "!PUBLIC_PAYLOAD_URL:~-1!"=="""" set "PUBLIC_PAYLOAD_URL=!PUBLIC_PAYLOAD_URL:~0,-1!"
-  )
-  if defined PUBLIC_WEB_URL (
-    if "!PUBLIC_WEB_URL:~0,1!"=="""" set "PUBLIC_WEB_URL=!PUBLIC_WEB_URL:~1!"
-    if "!PUBLIC_WEB_URL:~-1!"=="""" set "PUBLIC_WEB_URL=!PUBLIC_WEB_URL:~0,-1!"
-    set "WEB_URL=!PUBLIC_WEB_URL!"
-  )
-) else (
-  echo [1/2] No root .env — using apps\web\.env defaults.
+REM --- Load DATABASE_URL (and optional secrets) from root .env ---
+echo [1/3] Loading remote DATABASE_URL from .env ...
+for /f "usebackq eol=# tokens=1,* delims==" %%A in (".env") do (
+  if /I "%%A"=="DATABASE_URL" set "DATABASE_URL=%%B"
+  if /I "%%A"=="PAYLOAD_SECRET" set "PAYLOAD_SECRET=%%B"
+  if /I "%%A"=="PAYLOAD_PUBLIC_SERVER_URL" set "PAYLOAD_PUBLIC_SERVER_URL=%%B"
+  if /I "%%A"=="PUBLIC_WEB_URL" set "PUBLIC_WEB_URL=%%B"
+  if /I "%%A"=="PUBLIC_PAYLOAD_URL" set "PUBLIC_PAYLOAD_URL=%%B"
 )
 
-if not defined PUBLIC_PAYLOAD_URL set "PUBLIC_PAYLOAD_URL=http://localhost:3000"
+REM Trim surrounding quotes if present
+if defined DATABASE_URL (
+  if "!DATABASE_URL:~0,1!"=="""" set "DATABASE_URL=!DATABASE_URL:~1!"
+  if "!DATABASE_URL:~-1!"=="""" set "DATABASE_URL=!DATABASE_URL:~0,-1!"
+)
+if defined PUBLIC_WEB_URL (
+  if "!PUBLIC_WEB_URL:~0,1!"=="""" set "PUBLIC_WEB_URL=!PUBLIC_WEB_URL:~1!"
+  if "!PUBLIC_WEB_URL:~-1!"=="""" set "PUBLIC_WEB_URL=!PUBLIC_WEB_URL:~0,-1!"
+  set "WEB_URL=!PUBLIC_WEB_URL!"
+)
+if defined PUBLIC_PAYLOAD_URL (
+  if "!PUBLIC_PAYLOAD_URL:~0,1!"=="""" set "PUBLIC_PAYLOAD_URL=!PUBLIC_PAYLOAD_URL:~1!"
+  if "!PUBLIC_PAYLOAD_URL:~-1!"=="""" set "PUBLIC_PAYLOAD_URL=!PUBLIC_PAYLOAD_URL:~0,-1!"
+  set "CMS_URL=!PUBLIC_PAYLOAD_URL!"
+)
+
+if not defined DATABASE_URL (
+  echo [ERROR] DATABASE_URL missing in root .env
+  echo         Example: DATABASE_URL=postgres://user:pass@host/db?sslmode=require
+  pause
+  exit /b 1
+)
+
+echo !DATABASE_URL! | findstr /I /C:"127.0.0.1:5433" /C:"localhost:5433" >nul
+if not errorlevel 1 (
+  echo [WARN] DATABASE_URL looks like local Docker Postgres ^(5433^).
+  echo        For remote DB use Neon/Supabase/etc. URI. Continuing anyway...
+) else (
+  echo       Remote DATABASE_URL loaded.
+)
+
+if not defined PAYLOAD_SECRET set "PAYLOAD_SECRET=change-me-to-a-long-random-string"
+if not defined PAYLOAD_PUBLIC_SERVER_URL set "PAYLOAD_PUBLIC_SERVER_URL=http://localhost:3000"
 if not defined PUBLIC_WEB_URL set "PUBLIC_WEB_URL=http://localhost:4321"
-if not defined WEB_URL set "WEB_URL=http://localhost:4321"
+if not defined PUBLIC_PAYLOAD_URL set "PUBLIC_PAYLOAD_URL=http://localhost:3000"
 
 if not exist "node_modules\" (
   echo.
@@ -75,15 +117,29 @@ if not exist "node_modules\" (
   )
 )
 
-set "PUBLIC_PAYLOAD_URL=!PUBLIC_PAYLOAD_URL!"
-set "PUBLIC_WEB_URL=!PUBLIC_WEB_URL!"
+echo [2/3] Skipping local Docker Postgres  ^(using remote DATABASE_URL^).
 
-echo [2/2] Opening Astro site (:4321)...
-echo       CMS is not started by this script — pointing at !PUBLIC_PAYLOAD_URL!
+REM Export for child windows
+set "DATABASE_URL=!DATABASE_URL!"
+set "PAYLOAD_SECRET=!PAYLOAD_SECRET!"
+set "PAYLOAD_PUBLIC_SERVER_URL=!PAYLOAD_PUBLIC_SERVER_URL!"
+set "PUBLIC_WEB_URL=!PUBLIC_WEB_URL!"
+set "PUBLIC_PAYLOAD_URL=!PUBLIC_PAYLOAD_URL!"
+set "NODE_TLS_REJECT_UNAUTHORIZED=0"
+
+echo [3/3] Starting CMS API (:3000) + Astro (:4321)...
+echo       Browser will open the site only — not /admin.
+start "QLU CMS (remote)" cmd /k "cd /d ""%~dp0"" && echo CMS API against remote Postgres ^(no admin UI opened^)... && echo DATABASE_URL is set from root .env && set NODE_TLS_REJECT_UNAUTHORIZED=0 && npm run dev:cms"
 start "QLU Web" cmd /k "cd /d ""%~dp0"" && npm run dev:web"
 
 echo.
-echo Waiting for Astro, then opening browser...
+echo Waiting for CMS API, then Astro...
+call :wait_port 3000 90
+if errorlevel 1 (
+  echo Timed out waiting for CMS on :3000 — Astro REST calls may fail until CMS is up.
+) else (
+  echo       CMS API ready on :3000
+)
 call :wait_port 4321 90
 if errorlevel 1 (
   echo Timed out waiting for Astro on :4321 — open %WEB_URL% yourself.
@@ -92,10 +148,11 @@ if errorlevel 1 (
 )
 
 echo.
-echo  CMS API  : !PUBLIC_PAYLOAD_URL!  ^(must already be running^)
+echo  Postgres : remote  (DATABASE_URL from root .env)
+echo  CMS API  : %CMS_URL%   ^(running; admin UI not opened^)
 echo  Site     : %WEB_URL%
 echo.
-echo  Close the "QLU Web" window to stop Astro.
+echo  Close the "QLU CMS" and "QLU Web" windows to stop the servers.
 echo.
 pause
 endlocal

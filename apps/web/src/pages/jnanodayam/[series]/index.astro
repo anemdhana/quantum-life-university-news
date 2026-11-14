@@ -5,6 +5,12 @@ import BaseLayout from '../../../layouts/BaseLayout.astro'
 import { listReadings, mediaUrl, type MediaDoc } from '../../../lib/payload'
 
 const { series } = Astro.params
+
+// Daily classes are listed on /jnanodayam/ — no intermediate series page.
+if (series === 'daily') {
+  return Astro.redirect('/jnanodayam/')
+}
+
 let readings: Awaited<ReturnType<typeof listReadings>> = []
 let error = ''
 try {
@@ -21,6 +27,11 @@ const SERIES_META: Record<
     title: 'Devi Navaratrula Jnanam',
     titleTe: 'దేవీ నవరాత్రుల జ్ఞానం',
     lede: 'Ten days of self-knowledge readings · open a day tile.',
+  },
+  daily: {
+    title: 'Jnanodayam',
+    titleTe: 'జ్ఞానోదయం',
+    lede: 'Daily class readings · open a day tile.',
   },
 }
 

@@ -139,10 +139,17 @@ export function initJnanaReader(root: HTMLElement) {
   }
 
   function measure() {
-    const { gap, stride } = layoutMetrics()
+    const { gap, width, stride } = layoutMetrics()
     pageStride = stride
-    const total = Math.max(stride, columns.scrollWidth)
-    spreadCount = Math.max(1, Math.ceil((total + gap) / stride - 0.001))
+    const scrollW = columns.scrollWidth
+    // If content fits the viewport, it is one spread. Do NOT pad scrollWidth up to
+    // `stride` then add `gap` again — that falsely yields Spread 1/2 and makes the
+    // first Next click a no-op (double-click to leave the section).
+    if (scrollW <= width + 1) {
+      spreadCount = 1
+    } else {
+      spreadCount = Math.max(1, Math.ceil((scrollW + gap) / stride - 0.01))
+    }
 
     if (spreadIndex >= 9990) spreadIndex = spreadCount - 1
     spreadIndex = Math.min(Math.max(0, spreadIndex), spreadCount - 1)

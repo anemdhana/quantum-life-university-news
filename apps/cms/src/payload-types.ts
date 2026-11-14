@@ -417,7 +417,10 @@ export interface Issue {
 export interface JnanodayamReading {
   id: number;
   editLang?: ('en' | 'te') | null;
-  series: 'devi-navaratri';
+  series: 'devi-navaratri' | 'daily';
+  /**
+   * Devi Navaratri uses 1–10; daily classes use the Jnanodayam day number (e.g. 592).
+   */
   day: number;
   published?: boolean | null;
   cover?: (number | null) | Media;
