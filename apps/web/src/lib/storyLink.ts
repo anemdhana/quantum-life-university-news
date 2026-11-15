@@ -12,6 +12,8 @@ export function normalizeStoryUrl(url?: string | null): string | null {
   const trimmed = (url || '').trim()
   if (!trimmed) return null
   if (/^https?:\/\//i.test(trimmed)) return trimmed
+  // Same-origin paths (e.g. /jnanodayam/devi-navaratri/) — keep relative
+  if (trimmed.startsWith('/')) return trimmed
   return `https://${trimmed}`
 }
 
@@ -21,6 +23,24 @@ export function pickLangText(
   en?: string | null,
 ): string {
   return ((lang === 'te' ? te : en) || '').trim()
+}
+
+/** Card badge: "Day N" / "రోజు N", or series label from date (e.g. "10 Days" → "10 రోజులు"). */
+export function classCardBadge(
+  lang: Lang,
+  jnanodayamDay?: number | null,
+  date?: string | null,
+): string {
+  if (typeof jnanodayamDay === 'number' && jnanodayamDay > 0) {
+    return lang === 'te' ? `రోజు ${jnanodayamDay}` : `Day ${jnanodayamDay}`
+  }
+  const raw = (date || '').trim()
+  if (!raw) return ''
+  if (lang === 'te') {
+    const m = raw.match(/^(\d+)\s*Days?$/i)
+    if (m) return `${m[1]} రోజులు`
+  }
+  return raw
 }
 
 export function itemKeyAt(id: string | null | undefined, index: number): string {
@@ -90,6 +110,8 @@ export type ShortListItem = {
   title: string
   body: string
   meta?: string
+  /** e.g. "Day 574" — Featured Classes card badge */
+  dayLabel?: string
   itemKey: string
   sectionKey: string
   anchorId: string
@@ -151,6 +173,7 @@ function toShortItem(opts: {
   title: string
   body: string
   meta?: string
+  dayLabel?: string
   from?: 'news' | 'print' | 'flip'
 }): ShortListItem | null {
   const itemKey = itemKeyAt(opts.item.id, opts.index)
@@ -170,6 +193,7 @@ function toShortItem(opts: {
     title: opts.title,
     body: opts.body,
     meta: opts.meta,
+    dayLabel: opts.dayLabel,
     itemKey,
     sectionKey: opts.sectionKey,
     anchorId: link.anchorId,
@@ -210,8 +234,14 @@ export function shortItemsForSection(
 
   if (key === 'highlight-classes') {
     return (section.classItems || [])
-      .map((item, index) =>
-        toShortItem({
+      .map((item, index) => {
+        const dayLabel = classCardBadge(lang, item.jnanodayamDay, item.date)
+        // date doubles as series badge when no day number (e.g. "10 Days") — omit from meta
+        const metaDate =
+          typeof item.jnanodayamDay === 'number' && item.jnanodayamDay > 0
+            ? item.date
+            : undefined
+        return toShortItem({
           month,
           lang,
           sectionKey: key,
@@ -219,10 +249,11 @@ export function shortItemsForSection(
           item,
           title: pickLangText(lang, item.titleTe, item.titleEn),
           body: pickLangText(lang, item.insightTe, item.insightEn),
-          meta: [item.speaker, item.date].filter(Boolean).join(' · '),
+          meta: [dayLabel, item.speaker, metaDate].filter(Boolean).join(' · '),
+          dayLabel: dayLabel || undefined,
           from,
-        }),
-      )
+        })
+      })
       .filter(Boolean) as ShortListItem[]
   }
 
@@ -456,13 +487,24 @@ export function findFullStory(
       if (!hit) continue
       const fullStory = pickLangText(lang, hit.item.fullStoryTe, hit.item.fullStoryEn)
       if (!fullStory) continue
+      const title = pickLangText(lang, hit.item.titleTe, hit.item.titleEn)
+      const day =
+        typeof hit.item.jnanodayamDay === 'number' && hit.item.jnanodayamDay > 0
+          ? lang === 'te'
+            ? `రోజు ${hit.item.jnanodayamDay}`
+            : `Day ${hit.item.jnanodayamDay}`
+          : ''
+      const { imageSrc, imageAlt, imageSrcs } = collectItemImages(hit.item, title)
       return {
-        title: pickLangText(lang, hit.item.titleTe, hit.item.titleEn),
-        meta: [hit.item.speaker, hit.item.date].filter(Boolean).join(' · '),
+        title,
+        meta: [day, hit.item.speaker, hit.item.date].filter(Boolean).join(' · '),
         blurb: pickLangText(lang, hit.item.insightTe, hit.item.insightEn),
         fullStory,
         sectionKey,
         itemKey: itemKeyAt(hit.item.id, hit.index),
+        imageSrc,
+        imageAlt,
+        imageSrcs,
       }
     }
 

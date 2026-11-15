@@ -131,11 +131,15 @@ const availableCount = programmes.filter((p) => p.live).length + dailySorted.len
                     <strong class="jnana-day__title">
                       {r.subtitleEn || r.titleEn}
                     </strong>
-                    {(r.subtitleTe || r.titleTe) && (
-                      <span class="jnana-day__title-te" lang="te">
-                        {r.subtitleTe || r.titleTe}
-                      </span>
-                    )}
+                    {(() => {
+                      const en = (r.subtitleEn || r.titleEn || '').trim()
+                      const te = (r.subtitleTe || r.titleTe || '').trim()
+                      return te && te !== en ? (
+                        <span class="jnana-day__title-te" lang="te">
+                          {te}
+                        </span>
+                      ) : null
+                    })()}
                   </span>
                 </a>
                 <div class="jnana-day__langs">

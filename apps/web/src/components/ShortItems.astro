@@ -15,8 +15,10 @@ interface Props {
 
 const { section, lang, month, from = 'news', class: className } = Astro.props
 const asCards = section.key === 'themes' && Boolean(section.asCard)
+/** Featured Classes: same thumb + day-badge tiles as /jnanodayam/ Highlight classes. */
+const asClassCards = section.key === 'highlight-classes'
 /** News reader: horizontal image+copy cards; print/flip keep masonry cards. */
-const asRows = asCards && from === 'news'
+const asRows = asCards && from === 'news' && !asClassCards
 const sectionMeta = isSectionKey(section.key) ? PDF_SECTION_TITLES[section.key] : null
 const sectionLabel = sectionMeta
   ? lang === 'te'
@@ -45,89 +47,190 @@ const items = shortItemsForSection(section, lang, month, from).map((item) => {
       class:list={[
         'short-items',
         asRows && 'short-items--rows',
-        asCards && !asRows && 'short-items--cards',
+        asCards && !asRows && !asClassCards && 'short-items--cards',
+        asClassCards && 'short-items--class-cards',
         className,
       ]}
-      {...(asCards && !asRows ? { 'data-card-masonry': true, 'data-masonry-min': '240' } : {})}
+      {...(asCards && !asRows && !asClassCards
+        ? { 'data-card-masonry': true, 'data-masonry-min': '240' }
+        : {})}
     >
-      {items.map((item) => (
-        <article
-          class:list={[
-            'short-item',
-            asRows && 'short-item--row',
-            asCards && !asRows && 'short-item--card',
-          ]}
-          id={item.anchorId}
-        >
-          {item.imageSrc ? (
-            <figure class="short-item-media">
-              <img src={item.imageSrc} alt={item.imageAlt || ''} loading="lazy" />
-            </figure>
-          ) : null}
-          <div class="short-item-copy">
-            {item.title ? <h3 class="short-item-title">{item.title}</h3> : null}
-            {item.meta ? <p class="short-item-meta">{item.meta}</p> : null}
-            {item.bodyHtml ? (
-              <div class="short-item-body md-prose" set:html={item.bodyHtml} />
-            ) : null}
-            <StoryLink
-              href={item.href}
-              external={item.external}
-              lang={lang}
-              drawerId={item.useDrawer ? item.anchorId : null}
-            />
-          </div>
-          {item.useDrawer ? (
-            <div hidden data-story-source={item.anchorId}>
-              <article class="story-reader story-reader--drawer">
-                <div class="story-reader__content">
-                  {(item.imageSrcs?.length ? item.imageSrcs : item.imageSrc
-                    ? [{ src: item.imageSrc, alt: item.imageAlt || '' }]
-                    : []
-                  ).length ? (
-                    <div
-                      class:list={[
-                        'story-reader__gallery',
-                        (item.imageSrcs?.length || 0) > 1 && 'story-reader__gallery--multi',
-                      ]}
-                    >
-                      {(item.imageSrcs?.length
-                        ? item.imageSrcs
-                        : [{ src: item.imageSrc!, alt: item.imageAlt || '' }]
-                      ).map((img, i) => (
-                        <figure class:list={['story-reader__hero', i > 0 && 'story-reader__hero--extra']}>
-                          <img
-                            src={img.src}
-                            alt={img.alt || item.title || ''}
-                            loading={i === 0 ? 'lazy' : 'lazy'}
-                            decoding="async"
-                          />
-                        </figure>
-                      ))}
-                    </div>
-                  ) : null}
-                  <div class="story-reader__copy">
-                    <p class="story-reader__kicker">
-                      {sectionNum ? `${sectionNum} · ` : ''}
-                      {sectionLabel}
-                      {' · '}
-                      {readMoreLabel}
-                    </p>
-                    {item.title ? <h1 class="story-reader__title">{item.title}</h1> : null}
-                    {item.meta ? <p class="story-reader__meta">{item.meta}</p> : null}
-                    {item.blurbHtml ? (
-                      <div class="story-reader__lede nr-prose" set:html={item.blurbHtml} />
-                    ) : null}
-                    {item.fullStoryHtml ? (
-                      <div class="story-reader__body nr-prose" set:html={item.fullStoryHtml} />
-                    ) : null}
-                  </div>
-                </div>
-              </article>
+      {items.map((item, i) =>
+        asClassCards ? (
+          <article
+            class="short-item short-item--class-card"
+            id={item.anchorId}
+            style={`--card-i: ${i}`}
+          >
+            <div class="short-item-class__main">
+              <span class="short-item-class__media">
+                {item.imageSrc ? (
+                  <img src={item.imageSrc} alt={item.imageAlt || ''} loading="lazy" />
+                ) : (
+                  <span class="short-item-class__fallback" aria-hidden="true" />
+                )}
+                {item.dayLabel ? (
+                  <span class="short-item-class__day">{item.dayLabel}</span>
+                ) : null}
+              </span>
+              <span class="short-item-class__body">
+                {item.title ? (
+                  <strong class="short-item-class__title">{item.title}</strong>
+                ) : null}
+                {item.bodyHtml ? (
+                  <div class="short-item-class__blurb md-prose" set:html={item.bodyHtml} />
+                ) : null}
+                <StoryLink
+                  href={item.href}
+                  external={item.external}
+                  lang={lang}
+                  drawerId={item.useDrawer ? item.anchorId : null}
+                />
+              </span>
             </div>
-          ) : null}
-        </article>
-      ))}
+            {item.useDrawer ? (
+              <div hidden data-story-source={item.anchorId}>
+                <article class="story-reader story-reader--drawer">
+                  <div class="story-reader__content">
+                    {(item.imageSrcs?.length
+                      ? item.imageSrcs
+                      : item.imageSrc
+                        ? [{ src: item.imageSrc, alt: item.imageAlt || '' }]
+                        : []
+                    ).length ? (
+                      <div
+                        class:list={[
+                          'story-reader__gallery',
+                          (item.imageSrcs?.length || 0) > 1 && 'story-reader__gallery--multi',
+                        ]}
+                      >
+                        {(item.imageSrcs?.length
+                          ? item.imageSrcs
+                          : [{ src: item.imageSrc!, alt: item.imageAlt || '' }]
+                        ).map((img, ii) => (
+                          <figure
+                            class:list={[
+                              'story-reader__hero',
+                              ii > 0 && 'story-reader__hero--extra',
+                            ]}
+                          >
+                            <img
+                              src={img.src}
+                              alt={img.alt || item.title || ''}
+                              loading="lazy"
+                              decoding="async"
+                            />
+                          </figure>
+                        ))}
+                      </div>
+                    ) : null}
+                    <div class="story-reader__copy">
+                      <p class="story-reader__kicker">
+                        {sectionNum ? `${sectionNum} · ` : ''}
+                        {sectionLabel}
+                        {' · '}
+                        {readMoreLabel}
+                      </p>
+                      {item.title ? <h1 class="story-reader__title">{item.title}</h1> : null}
+                      {item.meta ? <p class="story-reader__meta">{item.meta}</p> : null}
+                      {item.blurbHtml ? (
+                        <div class="story-reader__lede nr-prose" set:html={item.blurbHtml} />
+                      ) : null}
+                      {item.fullStoryHtml ? (
+                        <div class="story-reader__body nr-prose" set:html={item.fullStoryHtml} />
+                      ) : null}
+                    </div>
+                  </div>
+                </article>
+              </div>
+            ) : null}
+          </article>
+        ) : (
+          <article
+            class:list={[
+              'short-item',
+              asRows && 'short-item--row',
+              asCards && !asRows && 'short-item--card',
+            ]}
+            id={item.anchorId}
+          >
+            {item.imageSrc ? (
+              <figure class="short-item-media">
+                <img src={item.imageSrc} alt={item.imageAlt || ''} loading="lazy" />
+              </figure>
+            ) : null}
+            <div class="short-item-copy">
+              {item.title ? <h3 class="short-item-title">{item.title}</h3> : null}
+              {item.meta ? <p class="short-item-meta">{item.meta}</p> : null}
+              {item.bodyHtml ? (
+                <div class="short-item-body md-prose" set:html={item.bodyHtml} />
+              ) : null}
+              <StoryLink
+                href={item.href}
+                external={item.external}
+                lang={lang}
+                drawerId={item.useDrawer ? item.anchorId : null}
+              />
+            </div>
+            {item.useDrawer ? (
+              <div hidden data-story-source={item.anchorId}>
+                <article class="story-reader story-reader--drawer">
+                  <div class="story-reader__content">
+                    {(item.imageSrcs?.length
+                      ? item.imageSrcs
+                      : item.imageSrc
+                        ? [{ src: item.imageSrc, alt: item.imageAlt || '' }]
+                        : []
+                    ).length ? (
+                      <div
+                        class:list={[
+                          'story-reader__gallery',
+                          (item.imageSrcs?.length || 0) > 1 && 'story-reader__gallery--multi',
+                        ]}
+                      >
+                        {(item.imageSrcs?.length
+                          ? item.imageSrcs
+                          : [{ src: item.imageSrc!, alt: item.imageAlt || '' }]
+                        ).map((img, ii) => (
+                          <figure
+                            class:list={[
+                              'story-reader__hero',
+                              ii > 0 && 'story-reader__hero--extra',
+                            ]}
+                          >
+                            <img
+                              src={img.src}
+                              alt={img.alt || item.title || ''}
+                              loading="lazy"
+                              decoding="async"
+                            />
+                          </figure>
+                        ))}
+                      </div>
+                    ) : null}
+                    <div class="story-reader__copy">
+                      <p class="story-reader__kicker">
+                        {sectionNum ? `${sectionNum} · ` : ''}
+                        {sectionLabel}
+                        {' · '}
+                        {readMoreLabel}
+                      </p>
+                      {item.title ? <h1 class="story-reader__title">{item.title}</h1> : null}
+                      {item.meta ? <p class="story-reader__meta">{item.meta}</p> : null}
+                      {item.blurbHtml ? (
+                        <div class="story-reader__lede nr-prose" set:html={item.blurbHtml} />
+                      ) : null}
+                      {item.fullStoryHtml ? (
+                        <div class="story-reader__body nr-prose" set:html={item.fullStoryHtml} />
+                      ) : null}
+                    </div>
+                  </div>
+                </article>
+              </div>
+            ) : null}
+          </article>
+        ),
+      )}
     </div>
   ) : null
 }

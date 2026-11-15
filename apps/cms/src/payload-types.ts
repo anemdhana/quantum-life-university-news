@@ -248,6 +248,14 @@ export interface Issue {
           | {
               titleTe?: string | null;
               titleEn?: string | null;
+              /**
+               * Day number shown on the card (e.g. 574). Links to Highlight classes when published.
+               */
+              jnanodayamDay?: number | null;
+              /**
+               * Card / drawer still — usually the YouTube HQ thumb.
+               */
+              image?: (number | null) | Media;
               speaker?: string | null;
               date?: string | null;
               insightTe?: string | null;
@@ -646,6 +654,8 @@ export interface IssuesSelect<T extends boolean = true> {
           | {
               titleTe?: T;
               titleEn?: T;
+              jnanodayamDay?: T;
+              image?: T;
               speaker?: T;
               date?: T;
               insightTe?: T;

@@ -457,6 +457,25 @@ export const Issues: CollectionConfig = {
                   phTe: PDF_PH.classes.titleTe,
                   phEn: PDF_PH.classes.titleEn,
                 }),
+                {
+                  name: 'jnanodayamDay',
+                  type: 'number',
+                  label: 'Jnanodayam day',
+                  min: 1,
+                  max: 9999,
+                  admin: {
+                    description: 'Day number shown on the card (e.g. 574). Links to Highlight classes when published.',
+                  },
+                },
+                {
+                  name: 'image',
+                  type: 'upload',
+                  relationTo: 'media',
+                  label: 'Class thumbnail',
+                  admin: {
+                    description: 'Card / drawer still — usually the YouTube HQ thumb.',
+                  },
+                },
                 sharedText('speaker', 'Speaker', PDF_PH.classes.speaker),
                 sharedText('date', 'Date (if confirmed)', PDF_PH.classes.date),
                 ...langPair({

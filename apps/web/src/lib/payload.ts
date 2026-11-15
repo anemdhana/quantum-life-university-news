@@ -37,6 +37,8 @@ export type ClassItem = {
   id?: string
   titleTe?: string | null
   titleEn?: string | null
+  jnanodayamDay?: number | null
+  image?: MediaDoc | number | string | null
   speaker?: string | null
   date?: string | null
   insightTe?: string | null
