@@ -70,7 +70,7 @@ export function newsletterReturnHref(
 ): string {
   const anchor = storyAnchorId(sectionKey, itemKey)
   if (view === 'print') {
-    return `/issues/${month}/${lang}/?view=print#${anchor}`
+    return `/issues/${month}/${lang}/?view=print&story=${encodeURIComponent(anchor)}#${anchor}`
   }
   if (view === 'flip') {
     return `/issues/${month}/${lang}/?view=flip#${anchor}`

@@ -1,0 +1,248 @@
+---
+import type { Issue, Lang, MediaDoc } from '../../lib/payload'
+import { mediaUrl } from '../../lib/payload'
+import { mdToHtml } from '../../lib/markdown'
+import { PDF_SECTION_TITLES } from '../../lib/magazineSections'
+import { qluIssueStamp } from '../../lib/printBrand'
+import { deriveReelCopy } from '../../lib/reelCopy'
+import { shortItemsForSection, storyLinkLabel } from '../../lib/storyLink'
+import ReelSlide, { type ReelSlideModel } from './ReelSlide.astro'
+
+interface Props {
+  issue: Issue
+  lang: Lang
+  title: string
+  tagline?: string
+  hrefTe: string
+  hrefEn: string
+  flipHref: string
+  newsHref: string
+  printHref: string
+}
+
+const { issue, lang, title, tagline = '', hrefTe, hrefEn, flipHref, newsHref, printHref } =
+  Astro.props
+const monthLabel = qluIssueStamp(issue.month, lang)
+const coverSrc = mediaUrl(issue.coverImage as MediaDoc)
+const ctaLabel = storyLinkLabel(lang)
+const drawerCloseLabel = lang === 'te' ? 'మూసివేయి' : 'Close'
+const drawerBackLabel = lang === 'te' ? '← తిరిగి' : '← Back'
+const drawerTitle = lang === 'te' ? 'పూర్తి కథనం' : 'Full story'
+const jumpLabel = lang === 'te' ? 'విభాగానికి వెళ్ళండి' : 'Jump to section'
+const labelFlip = lang === 'te' ? 'ఫ్లిప్' : 'Flip'
+const labelNews = lang === 'te' ? 'న్యూస్' : 'News'
+const labelPrint = lang === 'te' ? 'ప్రింట్' : 'Print'
+
+const themeLabel = lang === 'te' ? PDF_SECTION_TITLES.themes.te : PDF_SECTION_TITLES.themes.en
+const classLabel =
+  lang === 'te'
+    ? PDF_SECTION_TITLES['highlight-classes'].te
+    : PDF_SECTION_TITLES['highlight-classes'].en
+
+const slides: ReelSlideModel[] = []
+
+slides.push({
+  id: 'nreel-cover',
+  kind: 'cover',
+  group: 'cover',
+  eyebrow: lang === 'te' ? 'నెలవారీ పత్రిక' : 'Monthly newsletter',
+  title,
+  hooks: tagline ? [tagline] : [],
+  imageSrc: coverSrc,
+  imageAlt: title,
+})
+
+for (const section of issue.sections || []) {
+  if (section.key !== 'themes') continue
+  const items = shortItemsForSection(section, lang, issue.month, 'news')
+  for (const item of items) {
+    const copy = deriveReelCopy({ title: item.title, blurb: item.body, lang })
+    const fullText = (item.fullStory || '').trim()
+    const useDrawer = Boolean(fullText) && !item.external && Boolean(item.href)
+    slides.push({
+      id: item.anchorId,
+      kind: 'theme',
+      group: 'themes',
+      eyebrow: themeLabel,
+      title: item.title,
+      question: copy.question,
+      hooks: copy.hooks,
+      imageSrc: item.imageSrc,
+      imageAlt: item.imageAlt || item.title,
+      ctaHref: item.href,
+      ctaExternal: item.external,
+      drawerId: useDrawer ? item.anchorId : null,
+      fullStoryHtml: fullText ? mdToHtml(fullText) : '',
+      blurbHtml: item.body && item.body !== fullText ? mdToHtml(item.body) : '',
+      sectionLabel: themeLabel,
+    })
+  }
+}
+
+for (const section of issue.sections || []) {
+  if (section.key !== 'highlight-classes') continue
+  const items = shortItemsForSection(section, lang, issue.month, 'news')
+  for (const item of items) {
+    const copy = deriveReelCopy({ title: item.title, blurb: item.body, lang })
+    const fullText = (item.fullStory || '').trim()
+    const useDrawer = Boolean(fullText) && !item.external && Boolean(item.href)
+    const badge = item.dayLabel || ''
+    slides.push({
+      id: item.anchorId,
+      kind: 'class',
+      group: 'classes',
+      eyebrow: classLabel,
+      title: item.title,
+      question: copy.question,
+      hooks: copy.hooks,
+      meta: [badge, item.meta].filter(Boolean).join(' · ') || undefined,
+      imageSrc: item.imageSrc,
+      imageAlt: item.imageAlt || item.title,
+      ctaHref: item.href,
+      ctaExternal: item.external,
+      drawerId: useDrawer ? item.anchorId : null,
+      fullStoryHtml: fullText ? mdToHtml(fullText) : '',
+      blurbHtml: item.body && item.body !== fullText ? mdToHtml(item.body) : '',
+      sectionLabel: classLabel,
+    })
+  }
+}
+
+const total = slides.length
+
+type JumpItem = { id: string; label: string; group: string }
+const jumps: JumpItem[] = []
+const seenGroup = new Set<string>()
+for (const s of slides) {
+  const g = s.group || s.kind
+  if (seenGroup.has(g)) continue
+  seenGroup.add(g)
+  const label =
+    g === 'cover'
+      ? lang === 'te'
+        ? 'ముఖచిత్రం'
+        : 'Cover'
+      : g === 'themes'
+        ? themeLabel
+        : classLabel
+  jumps.push({ id: s.id, label, group: g })
+}
+
+/** Per-item jump list under groups (compact select) */
+const jumpOptions = slides.map((s, i) => ({
+  id: s.id,
+  label: `${i + 1}. ${s.kind === 'cover' ? (lang === 'te' ? 'ముఖచిత్రం' : 'Cover') : s.title.slice(0, 42)}${s.title.length > 42 ? '…' : ''}`,
+  group: s.group || s.kind,
+}))
+---
+
+<div class="nreel" data-newsview>
+  <header class="nreel__chrome">
+    <a class="nreel__brand" href="/">
+      <img src="/qlu-logo.png" width="28" height="28" alt="" />
+      <span>QLU</span>
+    </a>
+    <div class="nreel__issue">
+      <span class="nreel__month">{monthLabel}</span>
+    </div>
+    <div class="nreel__actions">
+      <nav class="nreel__views" aria-label={lang === 'te' ? 'లేఅవుట్' : 'Layout'}>
+        <a href={newsHref}>{labelNews}</a>
+        <a href={flipHref}>{labelFlip}</a>
+        <a class="is-active" href={printHref} aria-current="page">{labelPrint}</a>
+      </nav>
+      <nav class="nreel__lang" aria-label="Language">
+        <a class:list={{ active: lang === 'te' }} href={hrefTe}>TE</a>
+        <a class:list={{ active: lang === 'en' }} href={hrefEn}>EN</a>
+      </nav>
+      <a class="nreel__archive" href="/issues/">
+        {lang === 'te' ? 'సంచికలు' : 'Issues'}
+      </a>
+    </div>
+  </header>
+
+  <div class="nreel__jump">
+    <div class="nreel__jump-chips" role="navigation" aria-label={jumpLabel}>
+      {
+        jumps.map((j) => (
+          <button type="button" class="nreel__chip" data-reel-jump={j.id}>
+            {j.label}
+          </button>
+        ))
+      }
+    </div>
+    <label class="visually-hidden" for="nreel-jump-select">{jumpLabel}</label>
+    <select id="nreel-jump-select" class="nreel__jump-select" data-reel-jump-select>
+      {
+        jumpOptions.map((o) => (
+          <option value={o.id}>{o.label}</option>
+        ))
+      }
+    </select>
+  </div>
+
+  <div class="nreel__progress" aria-hidden="true">
+    <div class="nreel__progress-bar" data-news-progress />
+  </div>
+
+  <div class="nreel__frame">
+    <div class="nreel__scroll" data-news-scroll>
+      {
+        slides.map((slide, index) => (
+          <ReelSlide
+            slide={slide}
+            lang={lang}
+            index={index}
+            total={total}
+            ctaLabel={ctaLabel}
+          />
+        ))
+      }
+    </div>
+  </div>
+
+  <nav class="nreel__dots" data-reel-dots aria-label={lang === 'te' ? 'స్లైడ్‌లు' : 'Slides'}>
+    {
+      slides.map((s, i) => (
+        <button
+          type="button"
+          class:list={['nreel__dot', i === 0 && 'is-active']}
+          data-reel-dot={i}
+          aria-label={`${i + 1}. ${s.kind === 'cover' ? (lang === 'te' ? 'ముఖచిత్రం' : 'Cover') : s.title}`}
+        />
+      ))
+    }
+  </nav>
+
+  <div class="nr-drawer" data-story-drawer aria-hidden="true">
+    <button
+      type="button"
+      class="nr-drawer__scrim"
+      data-story-drawer-close
+      tabindex="-1"
+      aria-label={drawerCloseLabel}
+    />
+    <aside
+      class="nr-drawer__panel"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="nr-drawer-heading"
+    >
+      <header class="nr-drawer__bar">
+        <button type="button" class="nr-drawer__back" data-story-drawer-close>
+          {drawerBackLabel}
+        </button>
+        <span class="nr-drawer__heading" id="nr-drawer-heading">{drawerTitle}</span>
+        <button
+          type="button"
+          class="nr-drawer__x"
+          data-story-drawer-close
+          aria-label={drawerCloseLabel}
+        >
+          ×
+        </button>
+      </header>
+      <div class="nr-drawer__scroll" data-story-drawer-mount></div>
+    </aside>
+  </div>
+</div>

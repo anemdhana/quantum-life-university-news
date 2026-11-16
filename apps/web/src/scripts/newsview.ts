@@ -19,7 +19,10 @@ function urlWithStory(storyId: string | null): string {
 }
 
 export function initNewsView(root: HTMLElement) {
-  const scroller = root.querySelector<HTMLElement>('.nr__scroll')
+  const scroller =
+    root.querySelector<HTMLElement>('[data-news-scroll]') ||
+    root.querySelector<HTMLElement>('.nr__scroll') ||
+    root.querySelector<HTMLElement>('.nreel__scroll')
   const selects = [...root.querySelectorAll<HTMLSelectElement>('[data-news-section-select]')]
   const progress = root.querySelector<HTMLElement>('[data-news-progress]')
   const heading = root.querySelector<HTMLElement>('[data-news-heading]')

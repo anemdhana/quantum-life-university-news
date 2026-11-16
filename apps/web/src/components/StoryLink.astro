@@ -7,11 +7,14 @@ interface Props {
   external?: boolean
   lang: Lang
   class?: string
+  /** Override default “Read more →” label */
+  label?: string | null
   /** When set, news view opens this story in the side drawer instead of navigating. */
   drawerId?: string | null
 }
 
-const { href, external = false, lang, class: className, drawerId } = Astro.props
+const { href, external = false, lang, class: className, label, drawerId } = Astro.props
+const text = (label || '').trim() || storyLinkLabel(lang)
 ---
 
 {
@@ -19,7 +22,7 @@ const { href, external = false, lang, class: className, drawerId } = Astro.props
     <p class:list={['story-link-wrap', className]}>
       {external ? (
         <a class="story-link" href={href} target="_blank" rel="noopener noreferrer">
-          {storyLinkLabel(lang)}
+          {text}
         </a>
       ) : (
         <a
@@ -27,7 +30,7 @@ const { href, external = false, lang, class: className, drawerId } = Astro.props
           href={href}
           {...(drawerId ? { 'data-story-drawer-open': drawerId } : {})}
         >
-          {storyLinkLabel(lang)}
+          {text}
         </a>
       )}
     </p>

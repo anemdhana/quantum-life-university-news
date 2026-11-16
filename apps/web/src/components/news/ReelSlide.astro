@@ -1,0 +1,164 @@
+---
+import StoryLink from '../StoryLink.astro'
+import type { Lang } from '../../lib/payload'
+
+export type ReelSlideModel = {
+  id: string
+  kind: 'cover' | 'theme' | 'class'
+  group?: 'cover' | 'themes' | 'classes'
+  eyebrow?: string
+  title: string
+  question?: string
+  hooks?: string[]
+  meta?: string
+  imageSrc?: string | null
+  imageAlt?: string
+  ctaHref?: string | null
+  ctaExternal?: boolean
+  drawerId?: string | null
+  fullStoryHtml?: string
+  blurbHtml?: string
+  sectionLabel?: string
+}
+
+interface Props {
+  slide: ReelSlideModel
+  lang: Lang
+  index: number
+  total: number
+  ctaLabel: string
+}
+
+const { slide, lang, index, total, ctaLabel } = Astro.props
+const isCover = slide.kind === 'cover'
+const hasCta = Boolean(slide.ctaHref || slide.drawerId)
+---
+
+<article
+  class:list={[
+    'nreel-slide',
+    `nreel-slide--${slide.kind}`,
+    isCover ? 'nreel-slide--cover' : 'nreel-slide--stacked',
+  ]}
+  id={slide.id}
+  data-news-section
+  data-news-label={slide.title}
+  data-reel-index={index}
+  data-reel-group={slide.group || slide.kind}
+  style={`--reel-i: ${index}`}
+>
+  {
+    isCover ? (
+      <>
+        <div class="nreel-slide__media" aria-hidden={slide.imageSrc ? undefined : 'true'}>
+          {slide.imageSrc ? (
+            <img
+              src={slide.imageSrc}
+              alt={slide.imageAlt || ''}
+              loading="eager"
+              decoding="async"
+            />
+          ) : (
+            <div class="nreel-slide__fallback" />
+          )}
+          <div class="nreel-slide__shade" />
+        </div>
+        <div class="nreel-slide__copy nreel-slide__copy--cover">
+          {slide.eyebrow ? <p class="nreel-slide__eyebrow">{slide.eyebrow}</p> : null}
+          <h2 class="nreel-slide__title nreel-slide__title--cover">{slide.title}</h2>
+          {slide.hooks?.length ? (
+            <p class="nreel-slide__tagline">{slide.hooks[0]}</p>
+          ) : null}
+          <p class="nreel-slide__scroll-cue" aria-hidden="true">
+            {lang === 'te' ? 'క్రిందికి స్క్రోల్ చేయండి' : 'Scroll for more'}
+            <span class="nreel-slide__chev">↓</span>
+          </p>
+          <p class="nreel-slide__pager">
+            {index + 1} / {total}
+          </p>
+        </div>
+      </>
+    ) : (
+      <div class="nreel-slide__stack">
+        <div class="nreel-slide__media nreel-slide__media--top">
+          {slide.imageSrc ? (
+            <img
+              src={slide.imageSrc}
+              alt={slide.imageAlt || ''}
+              loading={index < 2 ? 'eager' : 'lazy'}
+              decoding="async"
+            />
+          ) : (
+            <div class="nreel-slide__fallback" />
+          )}
+        </div>
+        <div class="nreel-slide__copy nreel-slide__copy--panel">
+          <div class="nreel-slide__body">
+            {slide.eyebrow ? <p class="nreel-slide__eyebrow">{slide.eyebrow}</p> : null}
+            {slide.question ? (
+              <h2 class="nreel-slide__question">{slide.question}</h2>
+            ) : (
+              <h2 class="nreel-slide__title">{slide.title}</h2>
+            )}
+            {slide.title && slide.question && slide.title !== slide.question ? (
+              <p class="nreel-slide__subtitle">{slide.title}</p>
+            ) : null}
+            {slide.meta ? <p class="nreel-slide__meta">{slide.meta}</p> : null}
+            {slide.hooks?.length ? (
+              <ul class="nreel-slide__hooks">
+                {slide.hooks.map((h) => (
+                  <li>{h}</li>
+                ))}
+              </ul>
+            ) : null}
+          </div>
+          <div class="nreel-slide__foot">
+            {hasCta ? (
+              <div class="nreel-slide__cta">
+                <StoryLink
+                  href={slide.ctaHref}
+                  external={Boolean(slide.ctaExternal)}
+                  lang={lang}
+                  drawerId={slide.drawerId || null}
+                  label={ctaLabel}
+                />
+              </div>
+            ) : null}
+            <p class="nreel-slide__pager">
+              {index + 1} / {total}
+            </p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  {
+    slide.drawerId && slide.fullStoryHtml ? (
+      <div hidden data-story-source={slide.drawerId}>
+        <article class="story-reader story-reader--drawer">
+          <div class="story-reader__content">
+            {slide.imageSrc ? (
+              <div class="story-reader__gallery">
+                <figure class="story-reader__hero">
+                  <img src={slide.imageSrc} alt={slide.imageAlt || slide.title || ''} loading="lazy" />
+                </figure>
+              </div>
+            ) : null}
+            <div class="story-reader__copy">
+              {slide.sectionLabel ? (
+                <p class="story-reader__kicker">{slide.sectionLabel}</p>
+              ) : null}
+              {slide.title ? <h1 class="story-reader__title">{slide.title}</h1> : null}
+              {slide.meta ? <p class="story-reader__meta">{slide.meta}</p> : null}
+              {slide.blurbHtml ? (
+                <div class="story-reader__lede nr-prose" set:html={slide.blurbHtml} />
+              ) : null}
+              <div class="story-reader__body nr-prose" set:html={slide.fullStoryHtml} />
+            </div>
+          </div>
+        </article>
+      </div>
+    ) : null
+  }
+</article>
