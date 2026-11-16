@@ -454,6 +454,7 @@ const newsToc = [
   import { initNewsletterReel } from '../../../scripts/newsletterReel'
   import { initBirthdaySplash } from '../../../scripts/birthdaySplash'
   import { initCardMasonry } from '../../../scripts/cardMasonry'
+  import { initCardGallery } from '../../../scripts/cardGallery'
 
   document.querySelectorAll<HTMLElement>('[data-flipbook]').forEach((el) => {
     initFlipbook(el)
@@ -466,4 +467,5 @@ const newsToc = [
     initBirthdaySplash(el)
   })
   initCardMasonry()
+  initCardGallery()
 </script>

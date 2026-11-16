@@ -1,5 +1,6 @@
 ---
-import type { IssueSection, Lang } from '../../lib/payload'
+import type { IssueSection, Lang, MediaDoc } from '../../lib/payload'
+import { mediaUrl } from '../../lib/payload'
 import { itemKeyAt, pickLangText, resolveStoryLink } from '../../lib/storyLink'
 import { linesToParagraphs } from '../../lib/printText'
 import StoryLink from '../StoryLink.astro'
@@ -15,7 +16,12 @@ interface Props {
 
 const { section, lang, month, bodyHtml, emptyLine } = Astro.props
 const items = (section.visitItems || []).filter(
-  (v) => v.date?.trim() || v.place?.trim() || (lang === 'te' ? v.noteTe : v.noteEn)?.trim(),
+  (v) =>
+    v.date?.trim() ||
+    v.place?.trim() ||
+    v.titleTe?.trim() ||
+    v.titleEn?.trim() ||
+    (lang === 'te' ? v.noteTe : v.noteEn)?.trim(),
 )
 const hasBody = Boolean(bodyHtml?.replace(/<[^>]+>/g, '').trim())
 ---
@@ -23,10 +29,21 @@ const hasBody = Boolean(bodyHtml?.replace(/<[^>]+>/g, '').trim())
 {
   items.length ? (
     <>
-      <div class="print-visits">
+      <div class="print-classes">
         {items.map((item, i) => {
-          const note = (lang === 'te' ? item.noteTe : item.noteEn) || ''
-          const head = [item.date, item.place].filter(Boolean).join(' / ')
+          const storyTitle = pickLangText(lang, item.titleTe, item.titleEn)
+          const where = [item.date, item.place].filter(Boolean).join(' · ')
+          const title = storyTitle || where || [item.date, item.place].filter(Boolean).join(' / ')
+          const note = pickLangText(lang, item.noteTe, item.noteEn)
+          const meta = [item.byline, where].filter(Boolean).join(' · ')
+          const day = (item.date || '').trim()
+          const imageSrc = mediaUrl(item.image as MediaDoc | number | string | null | undefined)
+          const imageAlt =
+            (typeof item.image === 'object' && item.image && 'alt' in item.image
+              ? item.image.alt
+              : '') ||
+            title ||
+            ''
           const itemKey = itemKeyAt(item.id, i)
           const link = resolveStoryLink({
             month,
@@ -38,8 +55,23 @@ const hasBody = Boolean(bodyHtml?.replace(/<[^>]+>/g, '').trim())
             from: 'print',
           })
           return (
-            <article class="print-row" id={link.anchorId}>
-              {head ? <h3 class="print-row-head">{head}</h3> : null}
+            <article class="print-card print-class-card" id={link.anchorId}>
+              {imageSrc ? (
+                <figure class="print-class-card__media">
+                  <img src={imageSrc} alt={imageAlt} loading="lazy" />
+                  {day ? <span class="print-class-card__day">{day}</span> : null}
+                </figure>
+              ) : day ? (
+                <p class="print-label">{day}</p>
+              ) : (
+                <p class="print-label">
+                  {(lang === 'te' ? 'యాత్ర' : 'Travelogue') +
+                    ' ' +
+                    String(i + 1).padStart(2, '0')}
+                </p>
+              )}
+              {title ? <h3>{title}</h3> : null}
+              {meta ? <p class="print-meta-line">{meta}</p> : null}
               {linesToParagraphs(note).map((p) =>
                 p ? <p>{p}</p> : <p class="print-spacer" aria-hidden="true" />,
               )}

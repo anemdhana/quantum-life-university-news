@@ -286,10 +286,26 @@ export interface Issue {
           | null;
         visitItems?:
           | {
+              titleTe?: string | null;
+              titleEn?: string | null;
               date?: string | null;
               place?: string | null;
+              byline?: string | null;
               noteTe?: string | null;
               noteEn?: string | null;
+              /**
+               * Primary still for the travelogue / visit card. Extra frames go in the gallery below.
+               */
+              image?: (number | null) | Media;
+              /**
+               * Additional stills — shown with left/right scroll on the card (and in Read more).
+               */
+              images?:
+                | {
+                    image: number | Media;
+                    id?: string | null;
+                  }[]
+                | null;
               fullStoryTe?: string | null;
               fullStoryEn?: string | null;
               /**
@@ -347,6 +363,10 @@ export interface Issue {
               venueEn?: string | null;
               detailsTe?: string | null;
               detailsEn?: string | null;
+              /**
+               * Poster / still for the upcoming program card (shown above the title).
+               */
+              image?: (number | null) | Media;
               fullStoryTe?: string | null;
               fullStoryEn?: string | null;
               /**
@@ -680,10 +700,20 @@ export interface IssuesSelect<T extends boolean = true> {
         visitItems?:
           | T
           | {
+              titleTe?: T;
+              titleEn?: T;
               date?: T;
               place?: T;
+              byline?: T;
               noteTe?: T;
               noteEn?: T;
+              image?: T;
+              images?:
+                | T
+                | {
+                    image?: T;
+                    id?: T;
+                  };
               fullStoryTe?: T;
               fullStoryEn?: T;
               storyUrl?: T;
@@ -726,6 +756,7 @@ export interface IssuesSelect<T extends boolean = true> {
               venueEn?: T;
               detailsTe?: T;
               detailsEn?: T;
+              image?: T;
               fullStoryTe?: T;
               fullStoryEn?: T;
               storyUrl?: T;

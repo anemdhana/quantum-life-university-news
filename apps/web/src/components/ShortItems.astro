@@ -15,8 +15,10 @@ interface Props {
 
 const { section, lang, month, from = 'news', class: className } = Astro.props
 const asCards = section.key === 'themes' && Boolean(section.asCard)
-/** Featured Classes: same thumb + day-badge tiles as /jnanodayam/ Highlight classes. */
-const asClassCards = section.key === 'highlight-classes'
+/** Featured Classes + Founders' Travelogue: thumb tiles (visits support multi-image scroll). */
+const asClassCards = section.key === 'highlight-classes' || section.key === 'visits'
+/** Upcoming programs: invitation / poster cards. */
+const asEventCards = section.key === 'upcoming'
 /** News reader: horizontal image+copy cards; print/flip keep masonry cards. */
 const asRows = asCards && from === 'news' && !asClassCards
 const sectionMeta = isSectionKey(section.key) ? PDF_SECTION_TITLES[section.key] : null
@@ -27,18 +29,31 @@ const sectionLabel = sectionMeta
   : section.key
 const sectionNum = sectionMeta?.num || ''
 const readMoreLabel = lang === 'te' ? 'పూర్తి కథనం' : 'Full story'
-const items = shortItemsForSection(section, lang, month, from).map((item) => {
-  const fullText = (item.fullStory || '').trim()
-  const blurbText = (item.body || '').trim()
-  const showBlurb = Boolean(blurbText) && blurbText !== fullText
-  return {
-    ...item,
-    bodyHtml: mdToHtml(item.body),
-    fullStoryHtml: fullText ? mdToHtml(fullText) : '',
-    blurbHtml: showBlurb ? mdToHtml(blurbText) : '',
-    useDrawer: from === 'news' && Boolean(fullText) && !item.external && Boolean(item.href),
-  }
-})
+const eventCtaLabel = lang === 'te' ? 'మరింత తెలుసుకోండి →' : 'Learn more →'
+const inviteCtaLabel = lang === 'te' ? 'కార్యక్రమాలను చూడండి →' : 'Explore programmes →'
+const items = shortItemsForSection(section, lang, month, from)
+  .map((item) => {
+    const fullText = (item.fullStory || '').trim()
+    const blurbText = (item.body || '').trim()
+    const showBlurb = Boolean(blurbText) && blurbText !== fullText
+    const gallery =
+      item.imageSrcs?.length
+        ? item.imageSrcs
+        : item.imageSrc
+          ? [{ src: item.imageSrc, alt: item.imageAlt || '' }]
+          : []
+    return {
+      ...item,
+      gallery,
+      multiGallery: gallery.length > 1,
+      bodyHtml: mdToHtml(item.body),
+      fullStoryHtml: fullText ? mdToHtml(fullText) : '',
+      blurbHtml: showBlurb ? mdToHtml(blurbText) : '',
+      useDrawer: from === 'news' && Boolean(fullText) && !item.external && Boolean(item.href),
+    }
+  })
+  // Keep invite / discovery spotlight at the top of Upcoming
+  .sort((a, b) => Number(Boolean(b.isSpotlight)) - Number(Boolean(a.isSpotlight)))
 ---
 
 {
@@ -47,25 +62,176 @@ const items = shortItemsForSection(section, lang, month, from).map((item) => {
       class:list={[
         'short-items',
         asRows && 'short-items--rows',
-        asCards && !asRows && !asClassCards && 'short-items--cards',
+        asCards && !asRows && !asClassCards && !asEventCards && 'short-items--cards',
         asClassCards && 'short-items--class-cards',
+        asEventCards && 'short-items--event-cards',
         className,
       ]}
-      {...(asCards && !asRows && !asClassCards
+      {...(asCards && !asRows && !asClassCards && !asEventCards
         ? { 'data-card-masonry': true, 'data-masonry-min': '240' }
         : {})}
     >
       {items.map((item, i) =>
-        asClassCards ? (
+        asEventCards ? (
+          <article
+            class:list={[
+              'short-item',
+              'short-item--event-card',
+              item.isSpotlight && 'short-item--event-spotlight',
+            ]}
+            id={item.anchorId}
+            style={`--card-i: ${i}`}
+          >
+            {item.isSpotlight ? (
+              <div class="event-card__spotlight">
+                <p class="event-card__eyebrow">
+                  {lang === 'te' ? 'ఈ నెల ఆహ్వానం' : 'This month’s invitation'}
+                </p>
+                {item.title ? <h3 class="event-card__title">{item.title}</h3> : null}
+                {item.bodyHtml ? (
+                  <div class="event-card__blurb md-prose" set:html={item.bodyHtml} />
+                ) : null}
+                <StoryLink
+                  href={item.href || `#${items.find((x) => !x.isSpotlight)?.anchorId || item.anchorId}`}
+                  external={item.external}
+                  lang={lang}
+                  label={inviteCtaLabel}
+                  drawerId={item.useDrawer ? item.anchorId : null}
+                />
+              </div>
+            ) : (
+              <>
+                <div class="event-card__media">
+                  {item.imageSrc ? (
+                    <img src={item.imageSrc} alt={item.imageAlt || item.title || ''} loading="lazy" />
+                  ) : (
+                    <span class="event-card__fallback" aria-hidden="true" />
+                  )}
+                  {item.whenLabel ? (
+                    <span class="event-card__when">{item.whenLabel}</span>
+                  ) : null}
+                </div>
+                <div class="event-card__body">
+                  {item.venueLabel ? (
+                    <p class="event-card__venue">{item.venueLabel}</p>
+                  ) : null}
+                  {item.title ? <h3 class="event-card__title">{item.title}</h3> : null}
+                  {item.bodyHtml ? (
+                    <div class="event-card__blurb md-prose" set:html={item.bodyHtml} />
+                  ) : null}
+                  {item.href ? (
+                    <StoryLink
+                      href={item.href}
+                      external={item.external}
+                      lang={lang}
+                      label={eventCtaLabel}
+                      drawerId={item.useDrawer ? item.anchorId : null}
+                    />
+                  ) : (
+                    <p class="event-card__soon">
+                      {lang === 'te' ? 'నమోదు వివరాలు త్వరలో' : 'Registration details soon'}
+                    </p>
+                  )}
+                </div>
+              </>
+            )}
+            {item.useDrawer ? (
+              <div hidden data-story-source={item.anchorId}>
+                <article class="story-reader story-reader--drawer">
+                  <div class="story-reader__content">
+                    {item.imageSrc ? (
+                      <div class="story-reader__gallery">
+                        <figure class="story-reader__hero">
+                          <img
+                            src={item.imageSrc}
+                            alt={item.imageAlt || item.title || ''}
+                            loading="lazy"
+                          />
+                        </figure>
+                      </div>
+                    ) : null}
+                    <div class="story-reader__copy">
+                      <p class="story-reader__kicker">
+                        {sectionNum ? `${sectionNum} · ` : ''}
+                        {sectionLabel}
+                      </p>
+                      {item.title ? <h1 class="story-reader__title">{item.title}</h1> : null}
+                      {item.meta ? <p class="story-reader__meta">{item.meta}</p> : null}
+                      {item.blurbHtml ? (
+                        <div class="story-reader__lede nr-prose" set:html={item.blurbHtml} />
+                      ) : null}
+                      {item.fullStoryHtml ? (
+                        <div class="story-reader__body nr-prose" set:html={item.fullStoryHtml} />
+                      ) : null}
+                    </div>
+                  </div>
+                </article>
+              </div>
+            ) : null}
+          </article>
+        ) : asClassCards ? (
           <article
             class="short-item short-item--class-card"
             id={item.anchorId}
             style={`--card-i: ${i}`}
           >
             <div class="short-item-class__main">
-              <span class="short-item-class__media">
-                {item.imageSrc ? (
-                  <img src={item.imageSrc} alt={item.imageAlt || ''} loading="lazy" />
+              <span
+                class:list={[
+                  'short-item-class__media',
+                  item.multiGallery && 'short-item-class__media--gallery',
+                ]}
+                {...(item.multiGallery ? { 'data-card-gallery': true } : {})}
+              >
+                {item.gallery.length ? (
+                  item.multiGallery ? (
+                    <>
+                      <div class="card-gallery__track" data-card-gallery-track>
+                        {item.gallery.map((img) => (
+                          <div class="card-gallery__slide" data-card-gallery-slide>
+                            <img
+                              src={img.src}
+                              alt={img.alt || item.title || ''}
+                              loading="lazy"
+                              decoding="async"
+                              draggable="false"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                      <button
+                        type="button"
+                        class="card-gallery__nav card-gallery__nav--prev"
+                        data-card-gallery-prev
+                        aria-label={lang === 'te' ? 'మునుపటి చిత్రం' : 'Previous image'}
+                      >
+                        ‹
+                      </button>
+                      <button
+                        type="button"
+                        class="card-gallery__nav card-gallery__nav--next"
+                        data-card-gallery-next
+                        aria-label={lang === 'te' ? 'తరువాతి చిత్రం' : 'Next image'}
+                      >
+                        ›
+                      </button>
+                      <span class="card-gallery__dots" aria-hidden="true">
+                        {item.gallery.map((_, gi) => (
+                          <button
+                            type="button"
+                            class:list={['card-gallery__dot', gi === 0 && 'is-active']}
+                            data-card-gallery-dot={gi}
+                          />
+                        ))}
+                      </span>
+                    </>
+                  ) : (
+                    <img
+                      src={item.gallery[0]!.src}
+                      alt={item.gallery[0]!.alt || item.title || ''}
+                      loading="lazy"
+                    />
+                  )
                 ) : (
                   <span class="short-item-class__fallback" aria-hidden="true" />
                 )}
@@ -77,6 +243,7 @@ const items = shortItemsForSection(section, lang, month, from).map((item) => {
                 {item.title ? (
                   <strong class="short-item-class__title">{item.title}</strong>
                 ) : null}
+                {item.meta ? <p class="short-item-class__meta">{item.meta}</p> : null}
                 {item.bodyHtml ? (
                   <div class="short-item-class__blurb md-prose" set:html={item.bodyHtml} />
                 ) : null}

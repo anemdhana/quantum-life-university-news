@@ -61,10 +61,15 @@ export type StoryItem = {
 
 export type VisitItem = {
   id?: string
+  titleTe?: string | null
+  titleEn?: string | null
   date?: string | null
   place?: string | null
+  byline?: string | null
   noteTe?: string | null
   noteEn?: string | null
+  image?: MediaDoc | number | string | null
+  images?: { id?: string; image?: MediaDoc | number | string | null }[] | null
   fullStoryTe?: string | null
   fullStoryEn?: string | null
   storyUrl?: string | null
@@ -90,6 +95,7 @@ export type EventItem = {
   venueEn?: string | null
   detailsTe?: string | null
   detailsEn?: string | null
+  image?: MediaDoc | number | string | null
   fullStoryTe?: string | null
   fullStoryEn?: string | null
   storyUrl?: string | null

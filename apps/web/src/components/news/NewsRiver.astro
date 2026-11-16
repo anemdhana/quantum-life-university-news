@@ -157,12 +157,17 @@ const drawerTitle = lang === 'te' ? 'పూర్తి కథనం' : 'Full st
             const lead = ch.images[0] || null
             const rest = ch.images.slice(1)
             const themeCards = ch.key === 'themes' && Boolean(ch.section.asCard)
-            const classCards = ch.key === 'highlight-classes'
+            const classCards = ch.key === 'highlight-classes' || ch.key === 'visits'
+            const eventCards = ch.key === 'upcoming'
             const lineTitle = ch.heading || ch.sectionTitle
             const isEmpty = ch.emptyBody && !ch.hasShortItems && ch.images.length === 0
             return (
               <article
-                class:list={['nr-chapter', i % 2 === 1 && 'nr-chapter--alt']}
+                class:list={[
+                  'nr-chapter',
+                  i % 2 === 1 && 'nr-chapter--alt',
+                  eventCards && 'nr-chapter--upcoming',
+                ]}
                 id={ch.id}
                 data-news-section
                 data-news-label={lineTitle}
@@ -185,7 +190,12 @@ const drawerTitle = lang === 'te' ? 'పూర్తి కథనం' : 'Full st
                   <div class="nr-chapter__body">
                     {isEmpty ? <p class="nr-empty">{emptyLine}</p> : null}
 
-                    {!ch.emptyBody ? <div class="nr-prose" set:html={ch.bodyHtml} /> : null}
+                    {!ch.emptyBody ? (
+                      <div
+                        class:list={['nr-prose', eventCards && 'nr-prose--upcoming-lead']}
+                        set:html={ch.bodyHtml}
+                      />
+                    ) : null}
 
                     {ch.hasShortItems ? (
                       <div
@@ -193,6 +203,7 @@ const drawerTitle = lang === 'te' ? 'పూర్తి కథనం' : 'Full st
                           'nr-chapter__items',
                           themeCards && 'nr-chapter__items--themes',
                           classCards && 'nr-chapter__items--classes',
+                          eventCards && 'nr-chapter__items--events',
                         ]}
                       >
                         <ShortItems

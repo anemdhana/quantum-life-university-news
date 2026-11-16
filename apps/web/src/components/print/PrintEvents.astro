@@ -1,5 +1,6 @@
 ---
-import type { IssueSection, Lang } from '../../lib/payload'
+import type { IssueSection, Lang, MediaDoc } from '../../lib/payload'
+import { mediaUrl } from '../../lib/payload'
 import { itemKeyAt, pickLangText, resolveStoryLink } from '../../lib/storyLink'
 import { linesToParagraphs } from '../../lib/printText'
 import StoryLink from '../StoryLink.astro'
@@ -20,16 +21,27 @@ const items = (section.eventItems || []).filter(
     (lang === 'te' ? e.titleTe || e.detailsTe : e.titleEn || e.detailsEn)?.trim(),
 )
 const hasBody = Boolean(bodyHtml?.replace(/<[^>]+>/g, '').trim())
+const ctaLabel = lang === 'te' ? 'మరింత తెలుసుకోండి →' : 'Learn more →'
 ---
 
 {
   items.length ? (
     <>
-      <div class="print-events">
+      <div class="print-events print-events--cards">
         {items.map((item, i) => {
           const title = (lang === 'te' ? item.titleTe : item.titleEn) || ''
           const venue = (lang === 'te' ? item.venueTe : item.venueEn) || ''
           const details = (lang === 'te' ? item.detailsTe : item.detailsEn) || ''
+          const isSpotlight =
+            !venue.trim() &&
+            /discovery|month of|explore the programme/i.test(title + ' ' + details)
+          const imageSrc = mediaUrl(item.image as MediaDoc | number | string | null | undefined)
+          const imageAlt =
+            (typeof item.image === 'object' && item.image && 'alt' in item.image
+              ? item.image.alt
+              : '') ||
+            title ||
+            ''
           const itemKey = itemKeyAt(item.id, i)
           const link = resolveStoryLink({
             month,
@@ -41,10 +53,21 @@ const hasBody = Boolean(bodyHtml?.replace(/<[^>]+>/g, '').trim())
             from: 'print',
           })
           return (
-            <article class="print-row" id={link.anchorId}>
-              {item.when ? <p class="print-label">{item.when}</p> : null}
-              {title ? <h3>{title}</h3> : null}
+            <article
+              class:list={['print-card', 'print-event-card', isSpotlight && 'print-event-card--spotlight']}
+              id={link.anchorId}
+            >
+              {!isSpotlight && imageSrc ? (
+                <figure class="print-event-card__media">
+                  <img src={imageSrc} alt={imageAlt} loading="lazy" />
+                  {item.when ? <span class="print-event-card__when">{item.when}</span> : null}
+                </figure>
+              ) : null}
+              {!isSpotlight && !imageSrc && item.when ? (
+                <p class="print-label">{item.when}</p>
+              ) : null}
               {venue ? <p class="print-meta-line">{venue}</p> : null}
+              {title ? <h3>{title}</h3> : null}
               {linesToParagraphs(details).map((p) =>
                 p ? <p>{p}</p> : <p class="print-spacer" aria-hidden="true" />,
               )}
@@ -52,6 +75,7 @@ const hasBody = Boolean(bodyHtml?.replace(/<[^>]+>/g, '').trim())
                 href={link.href}
                 external={link.external}
                 lang={lang}
+                label={ctaLabel}
                 class="print-story-link"
               />
             </article>

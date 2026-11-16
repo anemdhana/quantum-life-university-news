@@ -536,16 +536,55 @@ export const Issues: CollectionConfig = {
               type: 'array',
               labels: { singular: 'Visit', plural: 'Visits' },
               fields: [
+                ...langPair({
+                  nameTe: 'titleTe',
+                  nameEn: 'titleEn',
+                  label: 'Story / visit title',
+                  type: 'text',
+                  phTe: 'ఉదా: విశ్వానికి వేరే ప్రణాళిక ఉన్నప్పుడు',
+                  phEn: 'e.g. When the Universe Has Other Plans',
+                }),
                 sharedText('date', 'Date', PDF_PH.visits.date),
                 sharedText('place', 'Place', PDF_PH.visits.place),
+                sharedText('byline', 'As told by / byline (optional)', 'As told by …'),
                 ...langPair({
                   nameTe: 'noteTe',
                   nameEn: 'noteEn',
-                  label: 'Note',
-                  rows: 3,
+                  label: 'Teaser / note',
+                  rows: 4,
                   phTe: PDF_PH.visits.noteTe,
                   phEn: PDF_PH.visits.noteEn,
                 }),
+                {
+                  name: 'image',
+                  type: 'upload',
+                  relationTo: 'media',
+                  label: 'Card image (primary)',
+                  admin: {
+                    description:
+                      'Primary still for the travelogue / visit card. Extra frames go in the gallery below.',
+                  },
+                },
+                {
+                  name: 'images',
+                  type: 'array',
+                  label: 'Card image gallery',
+                  labels: { singular: 'Image', plural: 'Images' },
+                  admin: {
+                    description:
+                      'Additional stills — shown with left/right scroll on the card (and in Read more).',
+                    initCollapsed: true,
+                  },
+                  fields: [
+                    {
+                      name: 'image',
+                      type: 'upload',
+                      relationTo: 'media',
+                      required: true,
+                      label: 'Image',
+                    },
+                  ],
+                },
                 ...storyLinkFields(),
               ],
             },
@@ -672,6 +711,15 @@ export const Issues: CollectionConfig = {
                   phTe: PDF_PH.events.detailsTe,
                   phEn: PDF_PH.events.detailsEn,
                 }),
+                {
+                  name: 'image',
+                  type: 'upload',
+                  relationTo: 'media',
+                  label: 'Program card image',
+                  admin: {
+                    description: 'Poster / still for the upcoming program card (shown above the title).',
+                  },
+                },
                 ...storyLinkFields(),
               ],
             },

@@ -112,6 +112,12 @@ export type ShortListItem = {
   meta?: string
   /** e.g. "Day 574" — Featured Classes card badge */
   dayLabel?: string
+  /** Upcoming programs: date line on the poster */
+  whenLabel?: string
+  /** Upcoming programs: venue / city */
+  venueLabel?: string
+  /** Closing / invite strip (not a dated programme) */
+  isSpotlight?: boolean
   itemKey: string
   sectionKey: string
   anchorId: string
@@ -174,6 +180,9 @@ function toShortItem(opts: {
   body: string
   meta?: string
   dayLabel?: string
+  whenLabel?: string
+  venueLabel?: string
+  isSpotlight?: boolean
   from?: 'news' | 'print' | 'flip'
 }): ShortListItem | null {
   const itemKey = itemKeyAt(opts.item.id, opts.index)
@@ -194,6 +203,9 @@ function toShortItem(opts: {
     body: opts.body,
     meta: opts.meta,
     dayLabel: opts.dayLabel,
+    whenLabel: opts.whenLabel,
+    venueLabel: opts.venueLabel,
+    isSpotlight: opts.isSpotlight,
     itemKey,
     sectionKey: opts.sectionKey,
     anchorId: link.anchorId,
@@ -276,18 +288,27 @@ export function shortItemsForSection(
 
   if (key === 'visits') {
     return (section.visitItems || [])
-      .map((item, index) =>
-        toShortItem({
+      .map((item, index) => {
+        const storyTitle = pickLangText(lang, item.titleTe, item.titleEn)
+        const where = [item.date, item.place].filter(Boolean).join(' · ')
+        const title =
+          storyTitle || where || [item.date, item.place].filter(Boolean).join(' / ')
+        const note = pickLangText(lang, item.noteTe, item.noteEn)
+        const byline = (item.byline || '').trim()
+        const meta = [byline, where].filter(Boolean).join(' · ') || undefined
+        return toShortItem({
           month,
           lang,
           sectionKey: key,
           index,
           item,
-          title: [item.date, item.place].filter(Boolean).join(' / '),
-          body: pickLangText(lang, item.noteTe, item.noteEn),
+          title,
+          body: note,
+          meta,
+          dayLabel: (item.date || '').trim() || undefined,
           from,
-        }),
-      )
+        })
+      })
       .filter(Boolean) as ShortListItem[]
   }
 
@@ -368,16 +389,23 @@ export function shortItemsForSection(
   if (key === 'upcoming') {
     return (section.eventItems || [])
       .map((item, index) => {
+        const title = pickLangText(lang, item.titleTe, item.titleEn)
         const venue = pickLangText(lang, item.venueTe, item.venueEn)
+        const when = (item.when || '').trim()
+        const isSpotlight =
+          !venue && /discovery|month of|explore the programme/i.test(title + ' ' + (item.detailsEn || ''))
         return toShortItem({
           month,
           lang,
           sectionKey: key,
           index,
           item,
-          title: pickLangText(lang, item.titleTe, item.titleEn),
+          title,
           body: pickLangText(lang, item.detailsTe, item.detailsEn),
-          meta: [item.when, venue].filter(Boolean).join(' · '),
+          meta: [when, venue].filter(Boolean).join(' · '),
+          whenLabel: when || undefined,
+          venueLabel: venue || undefined,
+          isSpotlight,
           from,
         })
       })
@@ -527,12 +555,21 @@ export function findFullStory(
       if (!hit) continue
       const fullStory = pickLangText(lang, hit.item.fullStoryTe, hit.item.fullStoryEn)
       if (!fullStory) continue
+      const storyTitle = pickLangText(lang, hit.item.titleTe, hit.item.titleEn)
+      const where = [hit.item.date, hit.item.place].filter(Boolean).join(' · ')
+      const title =
+        storyTitle || where || [hit.item.date, hit.item.place].filter(Boolean).join(' / ')
+      const { imageSrc, imageAlt, imageSrcs } = collectItemImages(hit.item, title)
       return {
-        title: [hit.item.date, hit.item.place].filter(Boolean).join(' / '),
+        title,
         blurb: pickLangText(lang, hit.item.noteTe, hit.item.noteEn),
         fullStory,
+        meta: [hit.item.byline, where].filter(Boolean).join(' · ') || undefined,
         sectionKey,
         itemKey: itemKeyAt(hit.item.id, hit.index),
+        imageSrc,
+        imageAlt,
+        imageSrcs,
       }
     }
 
